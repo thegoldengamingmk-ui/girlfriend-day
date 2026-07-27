@@ -1,0 +1,149 @@
+@import 'tailwindcss';
+
+/* ── FONTS ── */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://static.figma.com/font/PlayfairDisplay_wght__1') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://static.figma.com/font/PlayfairDisplay-Italic_wght__1') format('woff2');
+}
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://static.figma.com/font/DMSans_opsz_wght__1') format('woff2');
+}
+
+@theme {
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+}
+
+/* ── SCROLLBAR ── */
+html { scrollbar-width: none; }
+html::-webkit-scrollbar { display: none; }
+
+/* ── KEYFRAMES ── */
+@keyframes float-heart {
+  0%   { transform: translateY(0) rotate(-8deg) scale(1); opacity: 0.75; }
+  100% { transform: translateY(-120vh) rotate(18deg) scale(0.4); opacity: 0; }
+}
+
+@keyframes sparkle-pulse {
+  0%, 100% { opacity: 0.08; transform: scale(0.4); }
+  50% { opacity: 1; transform: scale(1.6); }
+}
+
+@keyframes pulse-heart {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 22px rgba(255,80,140,0.7)) drop-shadow(0 0 55px rgba(255,80,140,0.35)); }
+  50% { transform: scale(1.1); filter: drop-shadow(0 0 40px rgba(255,80,140,0.95)) drop-shadow(0 0 90px rgba(255,80,140,0.55)); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(232,120,154,0.3); }
+  50% { box-shadow: 0 0 35px rgba(232,120,154,0.75), 0 0 70px rgba(232,120,154,0.3); }
+}
+
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -24px) scale(1.05); }
+  66% { transform: translate(-20px, 16px) scale(0.96); }
+}
+
+@keyframes btn-glow {
+  0%, 100% { box-shadow: 0 6px 24px rgba(232,120,154,0.45), 0 0 50px rgba(200,67,138,0.12); }
+  50% { box-shadow: 0 6px 36px rgba(232,120,154,0.72), 0 0 80px rgba(200,67,138,0.28); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gift-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-18px) rotate(2deg); }
+}
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(-30px) rotate(0deg); opacity: 0.9; }
+  100% { transform: translateY(120vh) rotate(760deg); opacity: 0; }
+}
+
+@keyframes bg-zoom {
+  0%   { transform: scale(1); }
+  100% { transform: scale(1.2); }
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  14% { transform: translateX(-13px); }
+  28% { transform: translateX(13px); }
+  42% { transform: translateX(-9px); }
+  57% { transform: translateX(9px); }
+  71% { transform: translateX(-5px); }
+  85% { transform: translateX(5px); }
+}
+
+@keyframes eq-bar {
+  from { height: 4px; }
+  to { height: 28px; }
+}
+
+@keyframes waveform-bar {
+  from { height: 3px; }
+  to { height: 32px; }
+}
+
+/* ── UTILITY CLASSES ── */
+@utility animate-float-heart {
+  animation: float-heart linear infinite;
+}
+@utility animate-sparkle {
+  animation: sparkle-pulse ease-in-out infinite;
+}
+@utility animate-pulse-heart {
+  animation: pulse-heart 2.4s ease-in-out infinite;
+}
+@utility animate-pulse-glow {
+  animation: pulse-glow 2.2s ease-in-out infinite;
+}
+@utility animate-float-orb {
+  animation: float-orb 10s ease-in-out infinite;
+}
+@utility animate-btn-glow {
+  animation: btn-glow 2.8s ease-in-out infinite;
+}
+@utility animate-fade-up {
+  animation: fade-up 0.8s ease-out forwards;
+}
+@utility animate-gift-float {
+  animation: gift-float 3.4s ease-in-out infinite;
+}
+@utility animate-confetti {
+  animation: confetti-fall linear infinite;
+}
+@utility animate-bg-zoom {
+  animation: bg-zoom 12s ease-out forwards;
+}
+@utility animate-blink-cursor {
+  animation: blink-cursor 1.1s ease-in-out infinite;
+}
+
+/* Input placeholder color */
+input::placeholder { color: #8c2262; opacity: 0.65; }
+textarea::placeholder { color: #8c2262; opacity: 0.65; }

@@ -1,0 +1,10 @@
+{
+  "description": "Creates a luxurious, cinematic digital gift experience for girlfriends featuring personalized photos, love letters, music, and interactive surprises.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
