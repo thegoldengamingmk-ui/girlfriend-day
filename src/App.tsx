@@ -2599,20 +2599,20 @@ function Dashboard({
           )}
         </div>
 
-        {/* 5. Her Special Song (MP3 Upload & Link Option) */}
+        {/* 5. Her Special Song (MP3 Upload Only) */}
         <div style={card}>
-          <div style={secTitle}>🎵 Her Special Song</div>
+          <div style={secTitle}>🎵 Her Special Song (MP3 Upload)</div>
           <div style={secSub}>
-            Upload an MP3 song for FULL playback, or paste a song/Spotify link!
+            Upload an MP3 song file so the full song plays when she opens the gift!
           </div>
 
           <div className="space-y-3">
-            {/* MP3 File Upload Area */}
+            {/* MP3 File Upload Box */}
             <div
-              className="p-4 rounded-xl border-2 border-dashed text-center transition-all cursor-pointer hover:border-pink-500"
+              className="p-5 rounded-xl border-2 border-dashed text-center transition-all cursor-pointer hover:border-pink-500"
               style={{
-                borderColor: musicFile ? "#c9438a" : "rgba(200,67,138,0.35)",
-                background: musicFile ? "rgba(255,240,246,0.85)" : "rgba(255,255,255,0.6)",
+                borderColor: musicFile ? "#c9438a" : "rgba(200,67,138,0.4)",
+                background: musicFile ? "rgba(255,240,246,0.9)" : "rgba(255,255,255,0.7)",
               }}
               onClick={() => musicFileInputRef.current?.click()}
             >
@@ -2632,33 +2632,20 @@ function Dashboard({
                   }
                 }}
               />
-              <div className="text-2xl mb-1">🎧</div>
-              <div className="text-xs font-bold text-[#7a0f50]">
-                {musicFile ? `Uploaded: ${musicFile.name}` : "Upload MP3 Song File (Full Playback)"}
+              <div className="text-3xl mb-2">🎶</div>
+              <div className="text-sm font-bold text-[#7a0f50]">
+                {musicFile ? `Uploaded: ${musicFile.name}` : "Click to Upload MP3 Song File"}
               </div>
-              <div className="text-[10px] text-gray-500 mt-1">
-                {musicFile ? "Click to change audio file" : "Supports .mp3, .m4a, .wav (Plays 100% of full song)"}
+              <div className="text-xs text-pink-700/70 mt-1">
+                {musicFile
+                  ? `Size: ${(musicFile.size / (1024 * 1024)).toFixed(2)} MB • Click to change`
+                  : "Supports MP3, M4A, WAV audio files (100% full song playback)"}
               </div>
             </div>
 
-            {/* Direct Audio URL or Spotify Fallback Link */}
-            <div>
-              <label style={lbl}>Or Paste Song Audio URL / Spotify Link</label>
-              <input
-                style={inp}
-                value={musicFile ? musicFile.name : spotifyQ}
-                disabled={!!musicFile}
-                onChange={(e) => {
-                  playTypeSound()
-                  const val = e.target.value
-                  setSpotifyQ(val)
-                  setSpotifyTrackId(val)
-                }}
-                placeholder="https://.../song.mp3 or Spotify Track Link"
-                onFocus={focusInp}
-                onBlur={blurInp}
-              />
-              {musicFile && (
+            {/* Remove file button if uploaded */}
+            {musicFile && (
+              <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={(e) => {
@@ -2666,86 +2653,30 @@ function Dashboard({
                     playButtonSound()
                     setMusicFile(null)
                     setSpotifyQ("")
-                    setSpotifyTrackId("4cOdK2wGLETKBW3PvgPWqT")
+                    setSpotifyTrackId("")
                   }}
-                  className="mt-1 text-[11px] text-pink-600 underline font-medium cursor-pointer"
+                  className="text-xs text-pink-600 hover:text-pink-800 underline font-medium cursor-pointer"
                 >
-                  Remove uploaded file & use link
+                  🗑️ Remove Uploaded Song
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Live Player Preview */}
-            <div className="mt-3">
-              <p
-                style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: "11px",
-                  color: "#7a0f50",
-                  fontWeight: "600",
-                  marginBottom: "6px",
-                }}
-              >
-                Live Player Preview:
-              </p>
-              <SpotifyPlayer trackId={spotifyQ || spotifyTrackId} />
-            </div>
-
-            {!musicFile && (
-              <div>
+            {(musicFile || (spotifyQ && spotifyQ.startsWith("http"))) && (
+              <div className="mt-3">
                 <p
                   style={{
                     fontFamily: "'DM Sans', sans-serif",
                     fontSize: "11px",
                     color: "#7a0f50",
                     fontWeight: "600",
-                    marginTop: "10px",
                     marginBottom: "6px",
                   }}
                 >
-                  Or Select Romantic Favorites:
+                  Live Player Preview:
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    {
-                      title: "Perfect - Ed Sheeran",
-                      id: "4cOdK2wGLETKBW3PvgPWqT",
-                    },
-                    {
-                      title: "All of Me - John Legend",
-                      id: "3U4isOIWM3VvDubwSI3y7a",
-                    },
-                    { title: "A Thousand Years", id: "6RUKwULelqY2FmRUt5K3wE" },
-                    { title: "Die With A Smile", id: "2plbrEY59IikOBgBGLjaoe" },
-                  ].map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => {
-                        playButtonSound()
-                        setMusicFile(null)
-                        setSpotifyTrackId(s.id)
-                        setSpotifyQ(`https://open.spotify.com/track/${s.id}`)
-                      }}
-                      className="px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all duration-200"
-                      style={{
-                        background:
-                          extractSpotifyTrackId(spotifyQ || spotifyTrackId) ===
-                            s.id && !musicFile
-                            ? "#c9438a"
-                            : "rgba(255,240,246,0.9)",
-                        color:
-                          extractSpotifyTrackId(spotifyQ || spotifyTrackId) ===
-                            s.id && !musicFile
-                            ? "#ffffff"
-                            : "#7a0f50",
-                        border: "1px solid rgba(200,67,138,0.2)",
-                      }}
-                    >
-                      🎵 {s.title}
-                    </button>
-                  ))}
-                </div>
+                <SpotifyPlayer trackId={spotifyQ || spotifyTrackId} />
               </div>
             )}
           </div>
