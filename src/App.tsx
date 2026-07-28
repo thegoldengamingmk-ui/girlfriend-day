@@ -2170,6 +2170,518 @@ function S7({
   )
 }
 
+// ── WITHDRAW MODAL ─────────────────────────────────────────────────────────
+
+function WithdrawModal({
+  isOpen,
+  onClose,
+  onSubmit,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (details: { type: "upi" | "bank"; value: string }) => void
+}) {
+  const [method, setMethod] = useState<"upi" | "bank">("upi")
+  const [upiId, setUpiId] = useState("")
+  const [accountName, setAccountName] = useState("")
+  const [accountNumber, setAccountNumber] = useState("")
+  const [ifscCode, setIfscCode] = useState("")
+  const [error, setError] = useState("")
+
+  if (!isOpen) return null
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (method === "upi") {
+      if (!upiId.trim()) {
+        setError("Please enter your UPI ID")
+        return
+      }
+      onSubmit({ type: "upi", value: upiId.trim() })
+    } else {
+      if (!accountName.trim() || !accountNumber.trim() || !ifscCode.trim()) {
+        setError("Please fill in all bank details")
+        return
+      }
+      onSubmit({
+        type: "bank",
+        value: `${accountName} (${accountNumber}, ${ifscCode.toUpperCase()})`,
+      })
+    }
+  }
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[320] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="relative z-10 w-full max-w-sm p-6 rounded-3xl text-white shadow-2xl overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, rgba(25, 5, 45, 0.98), rgba(65, 12, 55, 0.98))",
+            backdropFilter: "blur(24px)",
+            border: "1.5px solid rgba(255, 192, 203, 0.35)",
+          }}
+        >
+          <div className="text-center mb-5">
+            <div className="text-3xl mb-1">🏦</div>
+            <h3
+              className="text-xl font-bold text-white"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Withdraw Earnings
+            </h3>
+            <p className="text-xs text-pink-200/70">
+              Enter your UPI ID or Bank account details below
+            </p>
+          </div>
+
+          <div className="flex gap-2 p-1 rounded-2xl bg-black/40 border border-white/10 mb-4">
+            <button
+              type="button"
+              onClick={() => { setMethod("upi"); setError("") }}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                method === "upi" ? "bg-pink-600 text-white shadow-md" : "text-pink-200/60 hover:text-white"
+              }`}
+            >
+              UPI ID
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMethod("bank"); setError("") }}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                method === "bank" ? "bg-pink-600 text-white shadow-md" : "text-pink-200/60 hover:text-white"
+              }`}
+            >
+              Bank Transfer
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {method === "upi" ? (
+              <div>
+                <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
+                  UPI ID (Google Pay, PhonePe, Paytm)
+                </label>
+                <input
+                  type="text"
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                  placeholder="e.g. name@upi or 9876543210@paytm"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white outline-none placeholder:text-pink-200/40"
+                />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
+                    Account Holder Name
+                  </label>
+                  <input
+                    type="text"
+                    value={accountName}
+                    onChange={(e) => setAccountName(e.target.value)}
+                    placeholder="e.g. Rahul Sharma"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white outline-none placeholder:text-pink-200/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
+                    Account Number
+                  </label>
+                  <input
+                    type="text"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                    placeholder="Enter Account Number"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white outline-none placeholder:text-pink-200/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
+                    IFSC Code
+                  </label>
+                  <input
+                    type="text"
+                    value={ifscCode}
+                    onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. SBIN0001234"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white outline-none uppercase placeholder:normal-case placeholder:text-pink-200/40"
+                  />
+                </div>
+              </>
+            )}
+
+            {error && (
+              <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
+                ⚠️ {error}
+              </p>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 border border-white/10 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-3 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Submit Request
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  )
+}
+
+// ── REFERRAL DASHBOARD MODAL ───────────────────────────────────────────────
+
+function ReferralDashboardModal({
+  isOpen,
+  onClose,
+  walletBalance = 0,
+  successfulReferrals = 0,
+  totalEarnings = 0,
+  pendingWithdrawal = 0,
+  referralCode = "LOVE123",
+  referralHistory = [],
+  onRequestWithdraw,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  walletBalance?: number
+  successfulReferrals?: number
+  totalEarnings?: number
+  pendingWithdrawal?: number
+  referralCode?: string
+  referralHistory?: any[]
+  onRequestWithdraw: (details: { type: "upi" | "bank"; value: string }) => void
+}) {
+  const [copied, setCopied] = useState(false)
+  const [toastMsg, setToastMsg] = useState("")
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+
+  if (!isOpen) return null
+
+  const handleCopyCode = async () => {
+    playButtonSound()
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(referralCode)
+      } else {
+        const textarea = document.createElement("textarea")
+        textarea.value = referralCode
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand("copy")
+        document.body.removeChild(textarea)
+      }
+      setCopied(true)
+      setToastMsg("Referral Code Copied ❤️")
+      setTimeout(() => {
+        setCopied(false)
+        setToastMsg("")
+      }, 2500)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const isWithdrawEnabled = walletBalance >= 100
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[280] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-black/80 backdrop-blur-md"
+        />
+
+        {/* Modal Container */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92, y: 25 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.92, y: 25 }}
+          transition={{ type: "spring", stiffness: 280, damping: 24 }}
+          className="relative z-10 w-full max-w-lg p-5 sm:p-7 rounded-3xl text-white shadow-2xl my-auto overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, rgba(20, 5, 35, 0.98), rgba(55, 10, 48, 0.98))",
+            backdropFilter: "blur(28px)",
+            border: "1.5px solid rgba(255, 192, 203, 0.35)",
+            boxShadow: "0 20px 70px rgba(0,0,0,0.85), 0 0 50px rgba(255,105,180,0.25)",
+            maxHeight: "90vh",
+            overflowY: "auto",
+          }}
+        >
+          {/* Toast Notification */}
+          <AnimatePresence>
+            {toastMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="fixed top-5 left-1/2 -translate-x-1/2 z-[350] px-4 py-2 rounded-full bg-emerald-500 text-white text-xs font-bold shadow-xl border border-emerald-300 flex items-center gap-1.5"
+              >
+                <span>✨</span> {toastMsg}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Close Button */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-sm font-bold text-pink-200 cursor-pointer transition-all"
+          >
+            ✕
+          </button>
+
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/30 text-2xl mb-2 shadow-inner">
+              🎁
+            </div>
+            <h2
+              className="text-2xl sm:text-3xl font-bold text-white mb-1"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Earn Rewards ❤️
+            </h2>
+            <p className="text-xs sm:text-sm text-pink-200/75 max-w-sm mx-auto leading-relaxed">
+              Invite your friends and earn ₹10 every time someone successfully purchases using your referral code.
+            </p>
+          </div>
+
+          {/* Referral Code Card */}
+          <div className="p-5 rounded-2xl bg-white/5 border border-pink-400/30 text-center mb-6 shadow-md">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-pink-300/80 mb-2">
+              Your Referral Code
+            </p>
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <span className="text-2xl sm:text-3xl font-mono font-bold tracking-widest text-pink-100 bg-black/40 px-4 py-1.5 rounded-xl border border-white/10">
+                {referralCode}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyCode}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 shadow-md cursor-pointer transition-all hover:scale-105 active:scale-95"
+              >
+                {copied ? "✓ Copied" : "Copy Code"}
+              </button>
+            </div>
+            <p className="text-[11px] text-pink-200/70 font-sans leading-relaxed max-w-xs mx-auto">
+              Share this code with your friends. They get <strong className="text-emerald-300">50% OFF</strong>. You earn <strong className="text-emerald-300">₹10</strong> after every successful purchase.
+            </p>
+          </div>
+
+          {/* Wallet Statistics (4 Grid Cards) */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-center">
+              <p className="text-[10px] font-semibold uppercase text-pink-200/60 mb-1">Wallet Balance</p>
+              <p className="text-xl sm:text-2xl font-bold font-serif text-pink-100">₹{walletBalance}</p>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-center">
+              <p className="text-[10px] font-semibold uppercase text-pink-200/60 mb-1">Successful Referrals</p>
+              <p className="text-xl sm:text-2xl font-bold font-serif text-pink-100">{successfulReferrals}</p>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-center">
+              <p className="text-[10px] font-semibold uppercase text-pink-200/60 mb-1">Lifetime Earnings</p>
+              <p className="text-xl sm:text-2xl font-bold font-serif text-pink-100">₹{totalEarnings}</p>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-center">
+              <p className="text-[10px] font-semibold uppercase text-pink-200/60 mb-1">Pending Withdrawal</p>
+              <p className="text-xl sm:text-2xl font-bold font-serif text-pink-100">₹{pendingWithdrawal}</p>
+            </div>
+          </div>
+
+          {/* Withdrawal Section */}
+          <div className="p-5 rounded-2xl bg-white/5 border border-white/10 mb-6 text-center">
+            <div className="flex justify-between items-center text-xs mb-3 font-semibold">
+              <span className="text-pink-200/80">Available Balance: <strong className="text-white">₹{walletBalance}</strong></span>
+              <span className="text-pink-300/70">Min Withdrawal: <strong>₹100</strong></span>
+            </div>
+
+            <button
+              type="button"
+              disabled={!isWithdrawEnabled}
+              onClick={() => setShowWithdrawModal(true)}
+              className="w-full py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: isWithdrawEnabled
+                  ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                  : "rgba(255,255,255,0.08)",
+                color: isWithdrawEnabled ? "#ffffff" : "rgba(255,200,220,0.5)",
+                border: isWithdrawEnabled ? "none" : "1px solid rgba(255,255,255,0.1)",
+              }}
+            >
+              {isWithdrawEnabled ? "Withdraw Earnings 💸" : "Withdraw (Min ₹100 Required)"}
+            </button>
+
+            {!isWithdrawEnabled && (
+              <p className="text-[10px] text-pink-300/60 mt-2 font-medium">
+                Minimum ₹100 required to withdraw.
+              </p>
+            )}
+          </div>
+
+          {/* Referral History */}
+          <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
+            <h4 className="text-sm font-bold text-white mb-3 font-serif">
+              Referral History
+            </h4>
+
+            {referralHistory.length === 0 ? (
+              <div className="text-center py-6 px-3 rounded-xl bg-black/20 border border-white/5">
+                <div className="text-2xl mb-1">📜</div>
+                <p className="text-xs font-semibold text-pink-200 mb-1">No referrals yet.</p>
+                <p className="text-[10px] text-pink-200/60">
+                  Share your referral code with friends and start earning rewards.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {referralHistory.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-xs p-2.5 rounded-xl bg-white/5">
+                    <div>
+                      <p className="font-bold text-white">{item.friendName}</p>
+                      <p className="text-[10px] text-pink-200/60">{item.date}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-emerald-400">+₹{item.reward}</p>
+                      <p className="text-[10px] text-pink-300">{item.status}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        <WithdrawModal
+          isOpen={showWithdrawModal}
+          onClose={() => setShowWithdrawModal(false)}
+          onSubmit={(details) => {
+            setShowWithdrawModal(false)
+            onRequestWithdraw(details)
+          }}
+        />
+      </div>
+    </AnimatePresence>
+  )
+}
+
+// ── HAMBURGER MENU ─────────────────────────────────────────────────────────
+
+function HamburgerMenu({
+  onOpenReferrals,
+  onOpenDashboard,
+  onPreview,
+}: {
+  onOpenReferrals: () => void
+  onOpenDashboard: () => void
+  onPreview: () => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <div className="fixed top-4 left-4 z-[200]">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-10 h-10 rounded-full flex items-center justify-center text-lg text-white cursor-pointer transition-all duration-300 hover:scale-105 shadow-lg select-none"
+        style={{
+          background: "rgba(255,255,255,0.15)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          border: "1px solid rgba(255,255,255,0.2)",
+        }}
+        title="Menu"
+      >
+        {isOpen ? "✕" : "☰"}
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-black/50 z-[-1]"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="absolute top-12 left-0 w-52 p-3 rounded-2xl shadow-2xl space-y-1.5 z-10 overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, rgba(25, 5, 45, 0.96), rgba(65, 12, 55, 0.96))",
+                backdropFilter: "blur(24px)",
+                border: "1px solid rgba(255, 192, 203, 0.3)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false)
+                  playButtonSound()
+                  onOpenReferrals()
+                }}
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <span>🎁</span> My Referrals
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false)
+                  playButtonSound()
+                  onOpenDashboard()
+                }}
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <span>💖</span> Create Surprise
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false)
+                  playButtonSound()
+                  onPreview()
+                }}
+                className="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <span>👀</span> Preview Flow
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 // ── REFERRAL POPUP MODAL ───────────────────────────────────────────────────
 
 function ReferralPopupModal({
@@ -3365,30 +3877,40 @@ function Dashboard({
             </div>
 
             {/* Feature List */}
-            <div className="my-6 space-y-2.5 text-left max-w-xs mx-auto">
+            <div className="my-6 space-y-3 text-left max-w-xs mx-auto">
               {[
-                "✔ Unlimited memories & photos",
-                "✔ Premium romantic animations",
-                "✔ Personalized love experience",
-                "✔ Forever shareable private link",
-                "✔ Mobile & Desktop compatible",
-                "✔ Instant link generation after payment",
+                { icon: "❤️", text: "Personalized Love Experience" },
+                { icon: "📸", text: "Upload up to 5 Special Photos" },
+                { icon: "🎵", text: "Add Your Personal Voice Message" },
+                { icon: "💌", text: "Write a Beautiful Love Letter" },
+                { icon: "✨", text: "Premium Romantic Animations" },
+                { icon: "🔗", text: "Forever Shareable Private Link" },
               ].map((f, i) => (
                 <div key={i} className="flex items-center gap-2.5">
-                  <span className="text-pink-300 text-sm font-bold">{f.slice(0, 1)}</span>
+                  <span className="text-pink-300 text-sm">{f.icon}</span>
                   <span
-                    className="text-xs sm:text-sm text-pink-100/85 font-medium"
+                    className="text-xs sm:text-sm text-pink-100/90 font-medium"
                     style={{ fontFamily: "'DM Sans', sans-serif" }}
                   >
-                    {f.slice(2)}
+                    {f.text}
                   </span>
                 </div>
               ))}
+
+              {/* Privacy Notice Box */}
+              <div className="mt-4 p-3 rounded-2xl bg-white/5 border border-pink-400/20 text-left">
+                <p
+                  className="text-[11px] leading-relaxed text-pink-200/80"
+                  style={{ fontFamily: "'DM Sans', sans-serif" }}
+                >
+                  🔒 <strong>Your memories stay private.</strong> Photos, voice notes, love letters and personal details are securely processed and are not permanently stored on our platform, ensuring complete privacy.
+                </p>
+              </div>
             </div>
 
             {/* Trust Badge */}
             <div className="my-4 inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold text-pink-200 bg-white/5 border border-white/10">
-              ❤️ One-Time Payment • No Subscription
+              🔒 One-Time Payment • No Subscription • Complete Privacy
             </div>
 
             {/* Pay Button / Generated Link */}
@@ -3515,6 +4037,21 @@ export default function App() {
   const [surpriseData, setSurpriseData] = useState<SurpriseDetailResponse | null>(null)
   const [isLoadingSlug, setIsLoadingSlug] = useState(false)
 
+  // Referral State Architecture
+  const [showReferralModal, setShowReferralModal] = useState(false)
+  const [walletBalance, setWalletBalance] = useState(0)
+  const [successfulReferrals, setSuccessfulReferrals] = useState(0)
+  const [totalEarnings, setTotalEarnings] = useState(0)
+  const [pendingWithdrawal, setPendingWithdrawal] = useState(0)
+  const [userReferralCode] = useState("LOVE123")
+  const [referralHistory, setReferralHistory] = useState<any[]>([])
+
+  const handleWithdrawRequest = (details: { type: "upi" | "bank"; value: string }) => {
+    playButtonSound()
+    setPendingWithdrawal((prev) => prev + walletBalance)
+    setWalletBalance(0)
+  }
+
   const [screen, setScreen] = useState<Screen>(() => {
     if (typeof window !== "undefined") {
       const search = window.location.search
@@ -3581,6 +4118,24 @@ export default function App() {
 
   return (
     <div>
+      <HamburgerMenu
+        onOpenReferrals={() => setShowReferralModal(true)}
+        onOpenDashboard={() => go("dashboard")}
+        onPreview={() => go(1)}
+      />
+
+      <ReferralDashboardModal
+        isOpen={showReferralModal}
+        onClose={() => setShowReferralModal(false)}
+        walletBalance={walletBalance}
+        successfulReferrals={successfulReferrals}
+        totalEarnings={totalEarnings}
+        pendingWithdrawal={pendingWithdrawal}
+        referralCode={userReferralCode}
+        referralHistory={referralHistory}
+        onRequestWithdraw={handleWithdrawRequest}
+      />
+
       {isFemaleUserExperience && <RomanticBGMPlayer />}
 
       {/* Transition overlay */}
