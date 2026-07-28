@@ -1999,35 +1999,55 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
         <div className="flex justify-center mb-5">
           <button
             onClick={() => setPlay((p) => !p)}
-            className="relative w-20 h-20 cursor-pointer hover:scale-105 transition-transform duration-200"
+            className="relative w-36 h-24 rounded-2xl cursor-pointer hover:scale-105 transition-all duration-300 p-3 flex flex-col justify-between overflow-hidden shadow-2xl"
+            style={{
+              background: "linear-gradient(135deg, rgba(35,10,45,0.95), rgba(85,15,70,0.95))",
+              border: "1.5px solid rgba(255,182,193,0.4)",
+              boxShadow: play
+                ? "0 0 30px rgba(255,105,180,0.65)"
+                : "0 8px 25px rgba(0,0,0,0.5)",
+            }}
           >
-            <svg viewBox="0 0 100 90" className="w-full h-full">
-              <defs>
-                <linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#e8789a" />
-                  <stop offset="100%" stopColor="#c9438a" />
-                </linearGradient>
-                <clipPath id="hc">
-                  <path d="M50 85C50 85 5 55 5 28C5 14 14 5 28 5C36 5 44 9 50 16C56 9 64 5 72 5C86 5 95 14 95 28C95 55 50 85 50 85Z" />
-                </clipPath>
-              </defs>
-              <path
-                d="M50 85C50 85 5 55 5 28C5 14 14 5 28 5C36 5 44 9 50 16C56 9 64 5 72 5C86 5 95 14 95 28C95 55 50 85 50 85Z"
-                fill="url(#hg)"
-                style={{
-                  filter: "drop-shadow(0 0 20px rgba(232,120,154,0.75))",
-                }}
-              />
-              <image
-                href="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&auto=format"
-                x="5"
-                y="5"
-                width="90"
-                height="80"
-                clipPath="url(#hc)"
-                preserveAspectRatio="xMidYMid slice"
-              />
-            </svg>
+            {/* Cassette Header Label */}
+            <div className="flex justify-between items-center px-1">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-pink-300 font-mono">
+                📼 HIS VOICE NOTE
+              </span>
+              <span className="text-[10px] text-pink-200 font-medium">{play ? "🔊 PLAYING" : "▶ PLAY"}</span>
+            </div>
+
+            {/* Cassette Tape Reels Window */}
+            <div className="my-1 py-1.5 px-3 rounded-xl bg-black/70 border border-pink-400/30 flex items-center justify-between">
+              {/* Left Reel */}
+              <div
+                className={`w-7 h-7 rounded-full border-2 border-pink-400 flex items-center justify-center ${
+                  play ? "animate-spin" : ""
+                }`}
+                style={{ animationDuration: "2.5s" }}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-pink-200 border border-pink-500" />
+              </div>
+
+              {/* Tape Window Ribbon */}
+              <div className="h-1.5 flex-1 mx-2 bg-gradient-to-r from-pink-500 via-purple-400 to-pink-500 rounded-full" />
+
+              {/* Right Reel */}
+              <div
+                className={`w-7 h-7 rounded-full border-2 border-pink-400 flex items-center justify-center ${
+                  play ? "animate-spin" : ""
+                }`}
+                style={{ animationDuration: "2.5s" }}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-pink-200 border border-pink-500" />
+              </div>
+            </div>
+
+            {/* Cassette Bottom Screws / Details */}
+            <div className="flex justify-between items-center px-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
+              <span className="text-[8px] font-mono text-pink-300/60 uppercase">HIGH FIDELITY STEREO</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
+            </div>
           </button>
         </div>
 
