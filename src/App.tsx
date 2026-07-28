@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { uploadPhoto, uploadVoiceNote, uploadMusicTrack } from "./lib/storage"
 import {
   createSurprise,
@@ -10,6 +11,22 @@ import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
 type Screen = 1 | 2 | 3 | 4 | 5 | 6 | 7 | "dashboard"
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
+
+const ROMANTIC_CAPTIONS = [
+  "The day my world changed forever ❤️",
+  "Every smile with you feels like home ✨",
+  "My favorite place in the whole world is right next to you 🌹",
+  "Little moments with you become everlasting memories 💖",
+  "Forever wouldn't be long enough with you 💕",
+  "You make every single day feel magical 🥂",
+  "Our happiest chapter, written together ❤️",
+]
+
+const MEMORY_QUOTES = [
+  "“In all the world, there is no heart for me like yours. In all the world, there is no love for you like mine.”",
+  "“If I had a flower for every time I thought of you... I could walk through my garden forever.”",
+  "“You are my today and all of my tomorrows.”",
+]
 
 const DEFAULT_PHOTOS = [
   "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=500&fit=crop&auto=format",
@@ -1518,101 +1535,330 @@ function SpotifyPlayer({
   )
 }
 
-function Slideshow({ photos }: { photos?: string[] }) {
-  const photoList = photos && photos.length > 0 ? photos : DEFAULT_PHOTOS
-  const [active, setActive] = useState(0)
+function SparkleBurst() {
+  const particles = useRef(
+    Array.from({ length: 7 }, (_, i) => ({
+      id: i,
+      x: (Math.random() - 0.5) * 130,
+      y: (Math.random() - 0.5) * 110 - 30,
+      icon: ["✨", "❤️", "💖", "🌸", "💕"][i % 5],
+      scale: Math.random() * 0.5 + 0.75,
+      delay: i * 0.07,
+    })),
+  ).current
 
   return (
-    <div className="mb-8">
-      <p
-        className="text-xs text-center mb-4"
-        style={{
-          color: "rgba(255,200,220,0.45)",
-          fontFamily: "'DM Sans', sans-serif",
-        }}
-      >
-        Our Memories ✨
-      </p>
+    <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-center">
+      {particles.map((p) => (
+        <motion.span
+          key={p.id}
+          initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+          animate={{
+            opacity: [0, 1, 0],
+            scale: [0, p.scale, 0.4],
+            x: p.x,
+            y: p.y,
+          }}
+          transition={{ duration: 1.4, delay: p.delay, ease: "easeOut" }}
+          className="absolute text-sm select-none"
+        >
+          {p.icon}
+        </motion.span>
+      ))}
+    </div>
+  )
+}
 
-      <div className="relative h-72 mb-5">
-        {photoList.map((photo, i) => {
-          const d = i - active
-          let tx = "0px",
-            sc = "0.55",
-            op = 0,
-            z = 0,
-            rot = "0deg"
-          if (d === 0) {
-            tx = "0px"
-            sc = "1"
-            op = 1
-            z = 10
-            rot = "0deg"
-          } else if (d === -1) {
-            tx = "-78%"
-            sc = "0.8"
-            op = 0.48
-            z = 5
-            rot = "-8deg"
-          } else if (d === 1) {
-            tx = "78%"
-            sc = "0.8"
-            op = 0.48
-            z = 5
-            rot = "8deg"
-          } else {
-            op = 0
-            z = 0
-          }
+function MemoryBreak({ quoteIndex }: { quoteIndex: number }) {
+  const quote = MEMORY_QUOTES[quoteIndex % MEMORY_QUOTES.length]
 
-          return (
-            <div
-              key={i}
-              className="absolute inset-0 flex items-center justify-center transition-all duration-500 ease-out"
-              style={{
-                transform: `translateX(${tx}) scale(${sc}) rotate(${rot})`,
-                opacity: op,
-                zIndex: z,
-              }}
-              onClick={() => {
-                if (d === 1) setActive(i)
-                else if (d === -1) setActive(i)
-              }}
-            >
-              <div
-                className="bg-white p-3 pb-10"
-                style={{
-                  borderRadius: "3px",
-                  boxShadow:
-                    "0 22px 65px rgba(0,0,0,0.55), 0 4px 18px rgba(232,120,154,0.28)",
-                  maxWidth: "224px",
-                  width: "100%",
-                }}
-              >
-                <img
-                  src={photo}
-                  alt=""
-                  className="w-full h-56 object-cover rounded-sm mb-2"
-                />
-              </div>
-            </div>
-          )
-        })}
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 1.0 }}
+      className="my-16 sm:my-20 text-center relative px-2"
+    >
+      {/* Animated Glowing Divider */}
+      <div className="flex items-center justify-center gap-4 mb-5">
+        <motion.div
+          initial={{ width: 0 }}
+          whileInView={{ width: "70px" }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.2 }}
+          className="h-px bg-gradient-to-r from-transparent via-pink-400/60 to-pink-300/80"
+        />
+        <motion.span
+          animate={{ scale: [1, 1.25, 1], opacity: [0.8, 1, 0.8] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          className="text-xl select-none"
+        >
+          💖
+        </motion.span>
+        <motion.div
+          initial={{ width: 0 }}
+          whileInView={{ width: "70px" }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.2 }}
+          className="h-px bg-gradient-to-l from-transparent via-pink-400/60 to-pink-300/80"
+        />
       </div>
 
-      <div className="flex justify-center gap-2">
-        {photoList.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setActive(i)}
-            className="w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer"
-            style={{
-              background:
-                active === i ? "#e8789a" : "rgba(255,255,255,0.18)",
-              transform: active === i ? "scale(1.3)" : "scale(1)",
+      <p
+        className="text-sm sm:text-base italic font-serif leading-relaxed text-pink-100/90 max-w-xs sm:max-w-md mx-auto drop-shadow-md"
+        style={{ fontFamily: "'Playfair Display', serif" }}
+      >
+        {quote}
+      </p>
+    </motion.div>
+  )
+}
+
+function CinematicMemoryCard({
+  photo,
+  index,
+}: {
+  photo: string
+  index: number
+}) {
+  const isEven = index % 2 === 0
+  const caption = ROMANTIC_CAPTIONS[index % ROMANTIC_CAPTIONS.length]
+  const [hasEntered, setHasEntered] = useState(false)
+
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 70,
+        scale: 0.9,
+        filter: "blur(14px)",
+        rotate: isEven ? -2.5 : 2.5,
+      }}
+      whileInView={{
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        filter: "blur(0px)",
+        rotate: 0,
+      }}
+      viewport={{ once: true, margin: "-60px" }}
+      onViewportEnter={() => setHasEntered(true)}
+      transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+      className={`my-12 sm:my-16 relative flex flex-col ${
+        isEven ? "items-start" : "items-end"
+      }`}
+    >
+      {hasEntered && <SparkleBurst />}
+
+      <div className="w-full max-w-[290px] sm:max-w-[340px] group">
+        {/* Photo Card Container */}
+        <motion.div
+          whileHover={{ scale: 1.03, rotate: isEven ? 1.5 : -1.5 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="relative overflow-hidden rounded-3xl p-2.5 shadow-2xl cursor-pointer transition-all duration-500 hover:shadow-pink-500/25"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,192,203,0.08))",
+            backdropFilter: "blur(16px)",
+            border: "1px solid rgba(255,200,220,0.3)",
+            boxShadow: "0 20px 50px rgba(0,0,0,0.65)",
+          }}
+        >
+          <div className="relative overflow-hidden rounded-2xl h-72 sm:h-80 w-full">
+            <motion.img
+              src={photo}
+              alt={`Memory ${index + 1}`}
+              loading="lazy"
+              className="w-full h-full object-cover rounded-2xl"
+              initial={{ scale: 1.15 }}
+              animate={{ scale: [1.15, 1.05] }}
+              transition={{
+                duration: 7,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "easeInOut",
+              }}
+            />
+            {/* Subtle Gradient Shadow Overlay */}
+            <div className="absolute inset-0 rounded-2xl pointer-events-none bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity duration-300" />
+          </div>
+
+          {/* Number Badge */}
+          <div className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase text-pink-200 bg-black/60 backdrop-blur-md border border-white/20">
+            Memory #{index + 1}
+          </div>
+        </motion.div>
+
+        {/* Animated Glassmorphism Caption */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.25 }}
+          className="mt-3 px-4 py-3 rounded-2xl backdrop-blur-md shadow-lg text-center"
+          style={{
+            background: "rgba(255, 255, 255, 0.08)",
+            border: "1px solid rgba(255, 200, 220, 0.2)",
+          }}
+        >
+          <p
+            className="text-xs sm:text-sm font-medium text-pink-100 leading-snug"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            {caption}
+          </p>
+        </motion.div>
+      </div>
+    </motion.div>
+  )
+}
+
+function FinalGrandMemory({ photo }: { photo: string }) {
+  const [hasFiredConfetti, setHasFiredConfetti] = useState(false)
+
+  const handleEnter = () => {
+    if (!hasFiredConfetti) {
+      setHasFiredConfetti(true)
+      if (typeof window !== "undefined" && (window as any).confetti) {
+        ;(window as any).confetti({
+          particleCount: 60,
+          spread: 80,
+          origin: { y: 0.8 },
+          colors: ["#ffc8d6", "#f4a0b5", "#c4b5fd", "#ffffff"],
+        })
+      }
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 90, scale: 0.88, filter: "blur(20px)" }}
+      whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-40px" }}
+      onViewportEnter={handleEnter}
+      transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+      className="my-20 text-center relative"
+    >
+      <motion.div
+        animate={{ scale: [1, 1.2, 1] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        className="text-4xl mb-3"
+      >
+        👑❤️✨
+      </motion.div>
+
+      <h3
+        className="text-xl sm:text-2xl font-bold text-pink-200 mb-1 drop-shadow-md"
+        style={{ fontFamily: "'Playfair Display', serif" }}
+      >
+        Our Greatest Chapter Begins
+      </h3>
+      <p className="text-xs text-pink-300/70 mb-5 font-sans">
+        The memory that holds my whole heart forever
+      </p>
+
+      {/* Main Spotlight Image */}
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        transition={{ duration: 0.5 }}
+        className="relative max-w-full mx-auto rounded-3xl p-3 shadow-2xl overflow-hidden cursor-pointer"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,105,180,0.35))",
+          backdropFilter: "blur(20px)",
+          border: "2px solid rgba(255,220,240,0.5)",
+          boxShadow:
+            "0 0 60px rgba(255,105,180,0.45), 0 30px 70px rgba(0,0,0,0.8)",
+        }}
+      >
+        <div className="relative overflow-hidden rounded-2xl h-80 sm:h-96 w-full">
+          <motion.img
+            src={photo}
+            alt="Final Memory Spotlight"
+            loading="lazy"
+            className="w-full h-full object-cover rounded-2xl"
+            initial={{ scale: 1.2 }}
+            animate={{ scale: [1.2, 1.05] }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              repeatType: "reverse",
+              ease: "easeInOut",
             }}
           />
-        ))}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+        </div>
+      </motion.div>
+
+      {/* Final Romantic Glow Caption */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.9, delay: 0.4 }}
+        className="mt-4 p-4 rounded-2xl backdrop-blur-xl border border-pink-400/30 text-center shadow-xl max-w-xs sm:max-w-sm mx-auto"
+        style={{ background: "rgba(20, 0, 35, 0.65)" }}
+      >
+        <p
+          className="text-xs sm:text-sm font-serif italic text-pink-100"
+          style={{ fontFamily: "'Playfair Display', serif" }}
+        >
+          “You are my today, my tomorrow, and my entire forever.” ❤️
+        </p>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+function Slideshow({ photos }: { photos?: string[] }) {
+  const photoList = photos && photos.length > 0 ? photos : DEFAULT_PHOTOS
+
+  return (
+    <div className="relative my-10">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+        className="text-center mb-10"
+      >
+        <span className="text-[10px] uppercase tracking-widest text-pink-300 font-bold px-3 py-1 rounded-full bg-pink-500/15 border border-pink-400/30">
+          Our Romantic Journey ✨
+        </span>
+        <h2
+          className="text-2xl font-bold text-white mt-3"
+          style={{ fontFamily: "'Playfair Display', serif" }}
+        >
+          Memories Unlocked ❤️
+        </h2>
+        <p className="text-xs text-pink-200/60 mt-1 font-sans">
+          Scroll down to relive our sweet moments together
+        </p>
+      </motion.div>
+
+      {/* Timeline items */}
+      <div className="relative">
+        {photoList.map((photo, i) => {
+          const isLast = i === photoList.length - 1
+          const isMemoryBreak = i > 0 && i % 3 === 0 && !isLast
+
+          return (
+            <React.Fragment key={i}>
+              {isMemoryBreak && <MemoryBreak quoteIndex={Math.floor(i / 3) - 1} />}
+
+              {isLast ? (
+                <FinalGrandMemory photo={photo} />
+              ) : (
+                <CinematicMemoryCard
+                  photo={photo}
+                  index={i}
+                />
+              )}
+            </React.Fragment>
+          )
+        })}
       </div>
     </div>
   )
