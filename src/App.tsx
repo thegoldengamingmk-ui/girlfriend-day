@@ -18,10 +18,11 @@ import {
 } from "./lib/referralService"
 import { AdminLoginModal } from "./components/AdminLoginModal"
 import { AdminDashboard } from "./components/AdminDashboard"
+import { SuperAdminSetupModal } from "./components/SuperAdminSetupModal"
 import { getActiveAdminSession, type AdminUser } from "./lib/adminAuthService"
 import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
 
-type Screen = 1 | 2 | 3 | 4 | 5 | 6 | 7 | "dashboard" | "admin-login" | "admin-dashboard"
+type Screen = 1 | 2 | 3 | 4 | 5 | 6 | 7 | "dashboard" | "admin-login" | "admin-dashboard" | "setup-super-admin"
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 
@@ -4776,11 +4777,15 @@ export default function App() {
   // Admin State
   const [adminUser, setAdminUser] = useState<AdminUser | null>(() => getActiveAdminSession())
   const [showAdminLoginModal, setShowAdminLoginModal] = useState(false)
+  const [showSuperAdminSetupModal, setShowSuperAdminSetupModal] = useState(false)
 
   const [screen, setScreen] = useState<Screen>(() => {
     if (typeof window !== "undefined") {
       const search = window.location.search
       const path = window.location.pathname
+      if (path.includes("setup-super-admin") || search.includes("setup=super-admin")) {
+        return "setup-super-admin"
+      }
       if (path.includes("admin-login") || path.includes("admin") || search.includes("admin=true")) {
         const session = getActiveAdminSession()
         if (session) return "admin-dashboard"
@@ -4803,6 +4808,11 @@ export default function App() {
     const searchParams = new URLSearchParams(window.location.search)
     let slug = searchParams.get("s") || searchParams.get("surprise") || ""
     const path = window.location.pathname
+
+    if (path.includes("setup-super-admin") || searchParams.get("setup") === "super-admin") {
+      setShowSuperAdminSetupModal(true)
+      return
+    }
 
     if (path.includes("admin-login") || path.includes("admin") || searchParams.get("admin") === "true") {
       const session = getActiveAdminSession()
@@ -4890,6 +4900,15 @@ export default function App() {
         isOpen={showAdminLoginModal}
         onClose={() => setShowAdminLoginModal(false)}
         onLoginSuccess={(admin) => {
+          setAdminUser(admin)
+          go("admin-dashboard")
+        }}
+      />
+
+      <SuperAdminSetupModal
+        isOpen={showSuperAdminSetupModal}
+        onClose={() => setShowSuperAdminSetupModal(false)}
+        onSetupSuccess={(admin) => {
           setAdminUser(admin)
           go("admin-dashboard")
         }}

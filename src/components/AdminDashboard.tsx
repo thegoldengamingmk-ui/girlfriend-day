@@ -4,6 +4,11 @@ import {
   type AdminUser,
   logoutAdminSession,
   logAdminAction,
+  getRegisteredAdmins,
+  createStaffAdmin,
+  toggleAdminStatus,
+  deleteAdminAccount,
+  hashPassword,
 } from '../lib/adminAuthService'
 import {
   getAdminUsers,
@@ -28,6 +33,7 @@ type AdminTab =
   | 'notifications'
   | 'analytics'
   | 'settings'
+  | 'admins'
   | 'security'
 
 export function AdminDashboard({
@@ -44,9 +50,10 @@ export function AdminDashboard({
   const [users, setUsers] = useState<AdminUserRecord[]>([])
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([])
   const [withdrawals, setWithdrawals] = useState<WithdrawalRecord[]>([])
+  const [adminAccounts, setAdminAccounts] = useState<AdminUser[]>([])
   const [selectedUser, setSelectedUser] = useState<AdminUserRecord | null>(null)
 
-  // Filters & Search
+  // Search & Filters
   const [userSearch, setUserSearch] = useState('')
   const [userStatusFilter, setUserStatusFilter] = useState('ALL')
   const [paymentSearch, setPaymentSearch] = useState('')
@@ -56,22 +63,28 @@ export function AdminDashboard({
   const [withdrawRefId, setWithdrawRefId] = useState('')
   const [withdrawNotes, setWithdrawNotes] = useState('')
 
-  // CMS State
-  const [heroTitle, setHeroTitle] = useState("Create the Most Emotional Gift She'll Never Forget ❤️")
-  const [heroSub, setHeroSub] = useState("Create a magical personalized experience she'll remember forever.")
-  const [planPriceDefault, setPlanPriceDefault] = useState(99)
-  const [planPriceDiscounted, setPlanPriceDiscounted] = useState(49)
+  // Staff Admin Modal State
+  const [showAddAdminModal, setShowAddAdminModal] = useState(false)
+  const [newAdminName, setNewAdminName] = useState('')
+  const [newAdminEmail, setNewAdminEmail] = useState('')
+  const [newAdminPass, setNewAdminPass] = useState('')
+  const [newAdminPermissions, setNewAdminPermissions] = useState<string[]>([
+    'manage_users',
+    'manage_payments',
+    'approve_withdrawals',
+  ])
 
-  // Notification Form State
-  const [notifTitle, setNotifTitle] = useState('')
-  const [notifMsg, setNotifMsg] = useState('')
-  const [notifTarget, setNotifTarget] = useState('ALL')
-  const [notifSuccess, setNotifSuccess] = useState('')
+  // Security Form State
+  const [currPassword, setCurrPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+  const [passMsg, setPassMsg] = useState('')
 
   useEffect(() => {
     setUsers(getAdminUsers())
     setTransactions(getAdminTransactions())
     setWithdrawals(getAdminWithdrawals())
+    setAdminAccounts(getRegisteredAdmins())
   }, [])
 
   const handleToggleUserBlock = (userId: string) => {
@@ -89,6 +102,56 @@ export function AdminDashboard({
     setActionWithdrawal(null)
     setWithdrawRefId('')
     setWithdrawNotes('')
+  }
+
+  const handleCreateStaffAdmin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (admin.role !== 'SUPER_ADMIN') {
+      alert('Forbidden: Only SUPER_ADMIN can create staff admins!')
+      return
+    }
+
+    try {
+      const created = await createStaffAdmin(
+        newAdminName,
+        newAdminEmail,
+        newAdminPass,
+        'ADMIN',
+        newAdminPermissions
+      )
+      setAdminAccounts(getRegisteredAdmins())
+      logAdminAction(admin.id, admin.email, 'CREATE_STAFF_ADMIN', `Created staff admin ${created.email}`)
+      setShowAddAdminModal(false)
+      setNewAdminName('')
+      setNewAdminEmail('')
+      setNewAdminPass('')
+    } catch (err: any) {
+      alert(err?.message || 'Failed to create staff admin.')
+    }
+  }
+
+  const handleToggleAdminStatus = (id: string) => {
+    const updated = toggleAdminStatus(id)
+    setAdminAccounts(updated)
+    logAdminAction(admin.id, admin.email, 'TOGGLE_ADMIN_STATUS', `Toggled admin account status for ${id}`)
+  }
+
+  const handleDeleteAdmin = (id: string) => {
+    const updated = deleteAdminAccount(id)
+    setAdminAccounts(updated)
+    logAdminAction(admin.id, admin.email, 'DELETE_ADMIN', `Deleted admin account ${id}`)
+  }
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newPassword.length < 8) {
+      setPassMsg('⚠️ New password must be at least 8 characters long.')
+      return
+    }
+    const hash = await hashPassword(newPassword)
+    localStorage.setItem(`admin_hash_${admin.id}`, hash)
+    setPassMsg('✨ Admin Password Changed Successfully!')
+    logAdminAction(admin.id, admin.email, 'CHANGE_PASSWORD', 'Updated admin login password')
   }
 
   const handleExportUsersCSV = () => {
@@ -124,22 +187,6 @@ export function AdminDashboard({
     logAdminAction(admin.id, admin.email, 'EXPORT_PAYMENTS_CSV', 'Exported Payment records to CSV')
   }
 
-  const handleExportWithdrawalsCSV = () => {
-    const headers = ['Request ID', 'User Name', 'Email', 'Amount', 'Details', 'Status', 'Request Date', 'Ref ID']
-    const rows = withdrawals.map((w) => [
-      w.requestId,
-      w.userName,
-      w.email,
-      w.amount,
-      w.paymentDetails,
-      w.status,
-      w.requestDate,
-      w.paymentRefId || 'N/A',
-    ])
-    downloadCSV(`Withdrawals_Export_${Date.now()}.csv`, headers, rows)
-    logAdminAction(admin.id, admin.email, 'EXPORT_WITHDRAWALS_CSV', 'Exported Withdrawal records to CSV')
-  }
-
   const filteredUsers = users.filter((u) => {
     const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase()) || u.referralCode.toLowerCase().includes(userSearch.toLowerCase())
     const matchesFilter = userStatusFilter === 'ALL' || u.subscriptionStatus === userStatusFilter || u.accountStatus === userStatusFilter
@@ -152,7 +199,6 @@ export function AdminDashboard({
     t.email.toLowerCase().includes(paymentSearch.toLowerCase())
   )
 
-  // Calculations for overview stats
   const totalRevenue = transactions.filter((t) => t.status === 'SUCCESS').reduce((acc, curr) => acc + curr.amount, 0)
   const totalUsers = users.length
   const activeSubscribers = users.filter((u) => u.subscriptionStatus === 'PREMIUM').length
@@ -167,7 +213,6 @@ export function AdminDashboard({
         } transition-all duration-300 bg-slate-900/90 border-r border-slate-800 flex flex-col justify-between z-30 select-none`}
       >
         <div>
-          {/* Logo & Role Badge */}
           <div className="p-5 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3 overflow-hidden">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center text-xl font-bold shadow-lg shadow-pink-500/20 shrink-0">
@@ -190,7 +235,6 @@ export function AdminDashboard({
             </button>
           </div>
 
-          {/* Navigation Links */}
           <nav className="p-3 space-y-1.5 overflow-y-auto max-h-[calc(100vh-140px)]">
             {[
               { id: 'home', label: 'Dashboard Home', icon: '📊' },
@@ -200,35 +244,34 @@ export function AdminDashboard({
               { id: 'referrals', label: 'Referral System', icon: '🎁' },
               { id: 'withdrawals', label: 'Withdrawals Queue', icon: '💸', badge: withdrawals.filter((w) => w.status === 'PENDING').length },
               { id: 'cms', label: 'Website CMS', icon: '🖼️' },
-              { id: 'notifications', label: 'Notifications', icon: '🔔' },
-              { id: 'analytics', label: 'Analytics & CSV', icon: '📈' },
-              { id: 'settings', label: 'Settings', icon: '⚙️' },
-              { id: 'security', label: 'Audit Logs', icon: '🛡️' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as AdminTab)}
-                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === tab.id
-                    ? 'bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-300 border border-pink-500/30 shadow-md'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                <div className="flex items-center gap-3 truncate">
-                  <span className="text-base">{tab.icon}</span>
-                  {isSidebarOpen && <span className="truncate">{tab.label}</span>}
-                </div>
-                {isSidebarOpen && tab.badge !== undefined && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-pink-300 border border-slate-700">
-                    {tab.badge}
-                  </span>
-                )}
-              </button>
-            ))}
+              { id: 'admins', label: 'Admin Management', icon: '👑', isSuperOnly: true },
+              { id: 'security', label: 'Security & 2FA', icon: '🛡️' },
+            ]
+              .filter((tab) => !tab.isSuperOnly || admin.role === 'SUPER_ADMIN')
+              .map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as AdminTab)}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
+                    activeTab === tab.id
+                      ? 'bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-300 border border-pink-500/30 shadow-md'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 truncate">
+                    <span className="text-base">{tab.icon}</span>
+                    {isSidebarOpen && <span className="truncate">{tab.label}</span>}
+                  </div>
+                  {isSidebarOpen && tab.badge !== undefined && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-pink-300 border border-slate-700">
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
           </nav>
         </div>
 
-        {/* Footer Admin User Card */}
         {isSidebarOpen && (
           <div className="p-4 border-t border-slate-800 bg-slate-900/50">
             <div className="flex items-center justify-between mb-3">
@@ -250,26 +293,23 @@ export function AdminDashboard({
         )}
       </aside>
 
-      {/* ── MAIN DASHBOARD CONTENT AREA ── */}
+      {/* ── MAIN CONTENT ── */}
       <main className="flex-1 overflow-y-auto p-6 sm:p-8 bg-slate-950">
-        {/* Top Header Status Bar */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-8 border-b border-slate-800">
           <div>
             <h2 className="text-2xl font-bold text-white capitalize font-serif flex items-center gap-2">
               {activeTab === 'home' && '📊 Executive Dashboard Overview'}
-              {activeTab === 'users' && '👥 User Management & Profiles'}
-              {activeTab === 'payments' && '💳 Payment Records & Gateways'}
+              {activeTab === 'users' && '👥 User Management'}
+              {activeTab === 'payments' && '💳 Payment Records'}
               {activeTab === 'subscriptions' && '💎 Subscription Controls'}
-              {activeTab === 'referrals' && '🎁 Referral Engine & Abuse Protection'}
+              {activeTab === 'referrals' && '🎁 Referral Engine & Fraud Protection'}
               {activeTab === 'withdrawals' && '💸 Withdrawal Requests Queue'}
-              {activeTab === 'cms' && '🖼️ Website Content Management (CMS)'}
-              {activeTab === 'notifications' && '🔔 System Broadcast Notifications'}
-              {activeTab === 'analytics' && '📈 Advanced Analytics & Exports'}
-              {activeTab === 'settings' && '⚙️ System Settings & Keys'}
-              {activeTab === 'security' && '🛡️ System Security & Audit Logs'}
+              {activeTab === 'cms' && '🖼️ Website CMS Editor'}
+              {activeTab === 'admins' && '👑 Super Admin Staff Control'}
+              {activeTab === 'security' && '🛡️ Security Settings & 2FA'}
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              Logged in as <strong className="text-pink-300">{admin.email}</strong> • Session SSL Active
+              Role: <strong className="text-pink-300">{admin.role}</strong> • Logged in as {admin.email}
             </p>
           </div>
 
@@ -289,305 +329,94 @@ export function AdminDashboard({
           </div>
         </header>
 
-        {/* ── TAB 1: DASHBOARD HOME ── */}
+        {/* DASHBOARD HOME */}
         {activeTab === 'home' && (
           <div className="space-y-8 animate-fade-up">
-            {/* Overview Cards (5 Grid) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase text-slate-400">Total Users</span>
-                  <span className="text-xl">👥</span>
-                </div>
+                <span className="text-xs font-bold uppercase text-slate-400">Total Users</span>
                 <p className="text-2xl font-bold text-white font-serif">{totalUsers}</p>
-                <p className="text-[11px] text-emerald-400 mt-1 font-semibold">↑ +2 Today • +{totalUsers} this month</p>
               </div>
-
               <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase text-slate-400">Subscribers</span>
-                  <span className="text-xl">💎</span>
-                </div>
+                <span className="text-xs font-bold uppercase text-slate-400">Subscribers</span>
                 <p className="text-2xl font-bold text-pink-300 font-serif">{activeSubscribers}</p>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  {((activeSubscribers / (totalUsers || 1)) * 100).toFixed(0)}% Conversion Rate
-                </p>
               </div>
-
               <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase text-slate-400">Total Revenue</span>
-                  <span className="text-xl">💰</span>
-                </div>
+                <span className="text-xs font-bold uppercase text-slate-400">Total Revenue</span>
                 <p className="text-2xl font-bold text-emerald-400 font-serif">₹{totalRevenue}</p>
-                <p className="text-[11px] text-emerald-300 mt-1 font-semibold">↑ Razorpay Verified</p>
               </div>
-
               <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase text-slate-400">Referrals</span>
-                  <span className="text-xl">🎁</span>
-                </div>
-                <p className="text-2xl font-bold text-amber-300 font-serif">
-                  {users.reduce((acc, curr) => acc + curr.referredUsersCount, 0)}
-                </p>
-                <p className="text-[11px] text-slate-400 mt-1">₹10 Reward per convert</p>
-              </div>
-
-              <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase text-slate-400">Pending Withdrawals</span>
-                  <span className="text-xl">💸</span>
-                </div>
+                <span className="text-xs font-bold uppercase text-slate-400">Pending Withdrawals</span>
                 <p className="text-2xl font-bold text-rose-400 font-serif">₹{pendingWdAmount}</p>
-                <p className="text-[11px] text-rose-300 mt-1 font-semibold">Requires Approval</p>
               </div>
-            </div>
-
-            {/* Interactive Growth SVG Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* User & Revenue Chart */}
-              <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
-                <h3 className="text-lg font-bold text-white mb-1 font-serif">📈 Revenue & User Growth Trend</h3>
-                <p className="text-xs text-slate-400 mb-6">Daily sales volume & platform signups over time</p>
-                <div className="h-48 flex items-end justify-between gap-3 px-2 pt-6 border-b border-slate-800">
-                  {[35, 45, 60, 80, 55, 90, 100].map((h, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                      <div
-                        className="w-full rounded-t-xl bg-gradient-to-t from-pink-600 to-rose-400 transition-all hover:brightness-125"
-                        style={{ height: `${h}%` }}
-                      />
-                      <span className="text-[10px] text-slate-500 font-mono">Day {i + 1}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Referral Conversions Chart */}
-              <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
-                <h3 className="text-lg font-bold text-white mb-1 font-serif">🎁 Referral Conversions</h3>
-                <p className="text-xs text-slate-400 mb-6">Viral invites vs successful plan purchases</p>
-                <div className="h-48 flex items-end justify-between gap-3 px-2 pt-6 border-b border-slate-800">
-                  {[20, 30, 50, 40, 70, 85, 95].map((h, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                      <div
-                        className="w-full rounded-t-xl bg-gradient-to-t from-amber-500 to-emerald-400 transition-all hover:brightness-125"
-                        style={{ height: `${h}%` }}
-                      />
-                      <span className="text-[10px] text-slate-500 font-mono">Day {i + 1}</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
+                <span className="text-xs font-bold uppercase text-slate-400">Admin Role</span>
+                <p className="text-lg font-bold text-amber-300 font-serif">{admin.role}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── TAB 2: USER MANAGEMENT ── */}
-        {activeTab === 'users' && (
-          <div className="space-y-6 animate-fade-up">
-            {/* Search & Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
-              <input
-                type="text"
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                placeholder="🔍 Search user by Name, Email or Referral Code..."
-                className="w-full sm:w-96 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none focus:border-pink-500"
-              />
-              <div className="flex gap-2">
-                {['ALL', 'PREMIUM', 'FREE', 'BLOCKED'].map((st) => (
-                  <button
-                    key={st}
-                    onClick={() => setUserStatusFilter(st)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
-                      userStatusFilter === st ? 'bg-pink-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    {st}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Users Table */}
-            <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/80 shadow-xl">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-slate-800 bg-slate-900 text-slate-400 uppercase tracking-wider font-semibold">
-                    <th className="p-4">User</th>
-                    <th className="p-4">Mobile</th>
-                    <th className="p-4">Subscription</th>
-                    <th className="p-4">Referral Code</th>
-                    <th className="p-4">Invites / Earnings</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60">
-                  {filteredUsers.map((u) => (
-                    <tr key={u.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="p-4">
-                        <div className="font-bold text-white">{u.name}</div>
-                        <div className="text-slate-400 text-[11px] font-mono">{u.email}</div>
-                      </td>
-                      <td className="p-4 text-slate-300 font-mono">{u.mobile}</td>
-                      <td className="p-4">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                            u.subscriptionStatus === 'PREMIUM'
-                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                              : 'bg-slate-800 text-slate-400 border border-slate-700'
-                          }`}
-                        >
-                          {u.subscriptionStatus}
-                        </span>
-                      </td>
-                      <td className="p-4 font-mono font-bold text-pink-300">{u.referralCode}</td>
-                      <td className="p-4">
-                        <div className="font-semibold text-white">{u.referredUsersCount} Users</div>
-                        <div className="text-emerald-400 text-[11px]">₹{u.totalReferralEarnings} Earned</div>
-                      </td>
-                      <td className="p-4">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                            u.accountStatus === 'ACTIVE'
-                              ? 'bg-emerald-500/20 text-emerald-300'
-                              : 'bg-rose-500/20 text-rose-300'
-                          }`}
-                        >
-                          {u.accountStatus}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right space-x-2">
-                        <button
-                          onClick={() => setSelectedUser(u)}
-                          className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold cursor-pointer"
-                        >
-                          View Profile
-                        </button>
-                        <button
-                          onClick={() => handleToggleUserBlock(u.id)}
-                          className={`px-3 py-1.5 rounded-xl font-bold cursor-pointer ${
-                            u.accountStatus === 'ACTIVE'
-                              ? 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'
-                              : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
-                          }`}
-                        >
-                          {u.accountStatus === 'ACTIVE' ? 'Block' : 'Unblock'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ── TAB 3: PAYMENTS ── */}
-        {activeTab === 'payments' && (
+        {/* ADMIN MANAGEMENT (SUPER_ADMIN ONLY) */}
+        {activeTab === 'admins' && admin.role === 'SUPER_ADMIN' && (
           <div className="space-y-6 animate-fade-up">
             <div className="flex justify-between items-center bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
-              <input
-                type="text"
-                value={paymentSearch}
-                onChange={(e) => setPaymentSearch(e.target.value)}
-                placeholder="🔍 Search Transaction ID or Email..."
-                className="w-80 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none focus:border-pink-500"
-              />
-              <span className="text-xs font-semibold text-emerald-400">
-                Razorpay Webhook: Active (100% Verified)
-              </span>
+              <h3 className="text-base font-bold text-white font-serif">Staff Admin Accounts</h3>
+              <button
+                onClick={() => setShowAddAdminModal(true)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-700 text-white cursor-pointer"
+              >
+                + Add Staff Admin
+              </button>
             </div>
 
             <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/80 shadow-xl">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="border-b border-slate-800 bg-slate-900 text-slate-400 uppercase tracking-wider font-semibold">
-                    <th className="p-4">Transaction ID</th>
-                    <th className="p-4">User</th>
-                    <th className="p-4">Amount</th>
-                    <th className="p-4">Gateway</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60">
-                  {filteredPayments.map((t) => (
-                    <tr key={t.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="p-4 font-mono font-bold text-pink-300">{t.transactionId}</td>
-                      <td className="p-4">
-                        <div className="font-bold text-white">{t.userName}</div>
-                        <div className="text-slate-400 text-[11px] font-mono">{t.email}</div>
-                      </td>
-                      <td className="p-4 font-bold text-emerald-400 font-serif text-sm">₹{t.amount}</td>
-                      <td className="p-4 text-slate-300 font-semibold">{t.gateway}</td>
-                      <td className="p-4">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                            t.status === 'SUCCESS'
-                              ? 'bg-emerald-500/20 text-emerald-300'
-                              : 'bg-rose-500/20 text-rose-300'
-                          }`}
-                        >
-                          {t.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-slate-400 font-mono">{t.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ── TAB 6: WITHDRAWALS QUEUE ── */}
-        {activeTab === 'withdrawals' && (
-          <div className="space-y-6 animate-fade-up">
-            <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/80 shadow-xl">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-slate-800 bg-slate-900 text-slate-400 uppercase tracking-wider font-semibold">
-                    <th className="p-4">Request ID</th>
-                    <th className="p-4">User</th>
-                    <th className="p-4">Amount</th>
-                    <th className="p-4">UPI / Bank Details</th>
+                    <th className="p-4">Admin Name</th>
+                    <th className="p-4">Email</th>
+                    <th className="p-4">Role</th>
+                    <th className="p-4">Permissions</th>
                     <th className="p-4">Status</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
-                  {withdrawals.map((w) => (
-                    <tr key={w.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="p-4 font-mono font-bold text-amber-300">{w.requestId}</td>
+                  {adminAccounts.map((a) => (
+                    <tr key={a.id} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="p-4 font-bold text-white">{a.name}</td>
+                      <td className="p-4 font-mono text-slate-300">{a.email}</td>
                       <td className="p-4">
-                        <div className="font-bold text-white">{w.userName}</div>
-                        <div className="text-slate-400 text-[11px] font-mono">{w.email}</div>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-pink-500/20 text-pink-300 border border-pink-500/30">
+                          {a.role}
+                        </span>
                       </td>
-                      <td className="p-4 font-bold text-emerald-400 font-serif text-sm">₹{w.amount}</td>
-                      <td className="p-4 text-slate-200 font-mono">{w.paymentDetails}</td>
+                      <td className="p-4 text-[11px] text-slate-400">
+                        {a.permissions ? a.permissions.join(', ') : 'Full Access'}
+                      </td>
                       <td className="p-4">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                            w.status === 'PAID'
-                              ? 'bg-emerald-500/20 text-emerald-300'
-                              : w.status === 'PENDING'
-                              ? 'bg-amber-500/20 text-amber-300'
-                              : 'bg-rose-500/20 text-rose-300'
-                          }`}
-                        >
-                          {w.status}
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${a.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                          {a.status}
                         </span>
                       </td>
                       <td className="p-4 text-right space-x-2">
-                        <button
-                          onClick={() => setActionWithdrawal(w)}
-                          className="px-3 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-bold cursor-pointer"
-                        >
-                          Process
-                        </button>
+                        {a.role !== 'SUPER_ADMIN' && (
+                          <>
+                            <button
+                              onClick={() => handleToggleAdminStatus(a.id)}
+                              className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 font-bold"
+                            >
+                              {a.status === 'ACTIVE' ? 'Disable' : 'Enable'}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAdmin(a.id)}
+                              className="px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 font-bold"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -597,110 +426,100 @@ export function AdminDashboard({
           </div>
         )}
 
-        {/* ── TAB 7: WEBSITE CMS ── */}
-        {activeTab === 'cms' && (
-          <div className="max-w-2xl space-y-6 animate-fade-up">
-            <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
-              <h3 className="text-lg font-bold text-white font-serif">✏️ Homepage Hero Copy Editor</h3>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">Hero Title</label>
-                <input
-                  type="text"
-                  value={heroTitle}
-                  onChange={(e) => setHeroTitle(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none focus:border-pink-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">Hero Subtitle</label>
-                <textarea
-                  rows={3}
-                  value={heroSub}
-                  onChange={(e) => setHeroSub(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none focus:border-pink-500"
-                />
-              </div>
-
-              <button
-                onClick={() => {
-                  logAdminAction(admin.id, admin.email, 'UPDATE_CMS', 'Updated homepage hero text copy')
-                  alert('Homepage CMS updated successfully! ❤️')
-                }}
-                className="px-5 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold cursor-pointer"
-              >
-                Save CMS Changes ✨
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── TAB 11: SECURITY & AUDIT LOGS ── */}
+        {/* SECURITY & 2FA SETTINGS */}
         {activeTab === 'security' && (
-          <div className="space-y-6 animate-fade-up">
-            <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800">
-              <h3 className="text-lg font-bold text-white font-serif mb-4">🛡️ System Security Audit Logs</h3>
-              <div className="space-y-2 font-mono text-xs text-slate-300">
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex justify-between">
-                  <span>[ADMIN_LOGIN] {admin.email} logged in from 127.0.0.1</span>
-                  <span className="text-slate-500">{new Date().toLocaleTimeString()}</span>
+          <div className="max-w-xl space-y-6 animate-fade-up">
+            <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
+              <h3 className="text-lg font-bold text-white font-serif">🔑 Change Admin Password</h3>
+              <form onSubmit={handleChangePassword} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">New Strong Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Min 12 characters"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none"
+                  />
                 </div>
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex justify-between">
-                  <span>[SECURITY_CHECK] SSL Certificate & Supabase DB Connection Verified</span>
-                  <span className="text-slate-500">System Healthy</span>
+                {passMsg && <p className="text-xs text-emerald-400 font-semibold">{passMsg}</p>}
+                <button type="submit" className="px-5 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold cursor-pointer">
+                  Update Password ❤️
+                </button>
+              </form>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
+              <h3 className="text-lg font-bold text-white font-serif">🛡️ Two-Factor Authentication (2FA)</h3>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-white">Authenticator App (TOTP)</p>
+                  <p className="text-[11px] text-slate-400">Require 6-digit OTP code during login</p>
                 </div>
+                <button
+                  onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer ${twoFactorEnabled ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'}`}
+                >
+                  {twoFactorEnabled ? '2FA Enabled ✨' : 'Enable 2FA'}
+                </button>
               </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* ── WITHDRAWAL PROCESS MODAL ── */}
-      {actionWithdrawal && (
+      {/* CREATE STAFF ADMIN MODAL */}
+      {showAddAdminModal && (
         <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-sm p-6 rounded-3xl bg-slate-900 border border-slate-700 text-white space-y-4">
-            <h3 className="text-lg font-bold font-serif">Process Withdrawal #{actionWithdrawal.requestId}</h3>
-            <p className="text-xs text-slate-400">User: {actionWithdrawal.userName} ({actionWithdrawal.email})</p>
-            <p className="text-sm font-bold text-emerald-400 font-serif">Amount: ₹{actionWithdrawal.amount}</p>
-            <p className="text-xs font-mono text-pink-300 bg-slate-950 p-2.5 rounded-xl border border-slate-800">{actionWithdrawal.paymentDetails}</p>
+          <form onSubmit={handleCreateStaffAdmin} className="w-full max-w-md p-6 rounded-3xl bg-slate-900 border border-slate-700 text-white space-y-4">
+            <h3 className="text-lg font-bold font-serif">Add New Staff Admin</h3>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Payment Reference / UTR ID</label>
+              <label className="block text-xs font-bold text-slate-300 mb-1">Full Name</label>
               <input
                 type="text"
-                value={withdrawRefId}
-                onChange={(e) => setWithdrawRefId(e.target.value)}
-                placeholder="e.g. UTR/99214812/IMPS"
+                required
+                value={newAdminName}
+                onChange={(e) => setNewAdminName(e.target.value)}
+                placeholder="e.g. Alex Staff"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Admin Notes</label>
-              <textarea
-                value={withdrawNotes}
-                onChange={(e) => setWithdrawNotes(e.target.value)}
-                placeholder="e.g. Processed via HDFC Netbanking"
+              <label className="block text-xs font-bold text-slate-300 mb-1">Email Address</label>
+              <input
+                type="email"
+                required
+                value={newAdminEmail}
+                onChange={(e) => setNewAdminEmail(e.target.value)}
+                placeholder="alex@couplegift.com"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 mb-1">Temporary Password</label>
+              <input
+                type="password"
+                required
+                value={newAdminPass}
+                onChange={(e) => setNewAdminPass(e.target.value)}
+                placeholder="Min 12 characters"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none"
               />
             </div>
 
             <div className="flex gap-2 pt-2">
-              <button
-                onClick={() => setActionWithdrawal(null)}
-                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300"
-              >
+              <button type="button" onClick={() => setShowAddAdminModal(false)} className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">
                 Cancel
               </button>
-              <button
-                onClick={() => handleUpdateWithdrawal('PAID')}
-                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                Mark Paid 💸
+              <button type="submit" className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-pink-600 text-white">
+                Create Admin ✨
               </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
     </div>
