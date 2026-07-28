@@ -12,14 +12,17 @@ import {
 } from '../lib/adminAuthService'
 import {
   getAdminUsers,
-  toggleUserStatus,
   getAdminTransactions,
   getAdminWithdrawals,
+  getUserLoginHistory,
+  toggleUserStatus,
   updateWithdrawalStatus,
+  subscribeToAdminRealtimeUpdates,
   downloadCSV,
   type AdminUserRecord,
   type PaymentTransaction,
   type WithdrawalRecord,
+  type UserLoginRecord,
 } from '../lib/adminDataService'
 
 type AdminTab =
@@ -46,14 +49,18 @@ export function AdminDashboard({
   const [activeTab, setActiveTab] = useState<AdminTab>('home')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
-  // System Data States
+  // Live Supabase Data States (0 Default / Clean State)
   const [users, setUsers] = useState<AdminUserRecord[]>([])
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([])
   const [withdrawals, setWithdrawals] = useState<WithdrawalRecord[]>([])
   const [adminAccounts, setAdminAccounts] = useState<AdminUser[]>([])
-  const [selectedUser, setSelectedUser] = useState<AdminUserRecord | null>(null)
 
-  // Search & Filters
+  // User Profile Drawer State
+  const [selectedUser, setSelectedUser] = useState<AdminUserRecord | null>(null)
+  const [userLoginHistory, setUserLoginHistory] = useState<UserLoginRecord[]>([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+
+  // Filters & Search
   const [userSearch, setUserSearch] = useState('')
   const [userStatusFilter, setUserStatusFilter] = useState('ALL')
   const [paymentSearch, setPaymentSearch] = useState('')
@@ -75,33 +82,55 @@ export function AdminDashboard({
   ])
 
   // Security Form State
-  const [currPassword, setCurrPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
   const [passMsg, setPassMsg] = useState('')
 
-  useEffect(() => {
-    setUsers(getAdminUsers())
-    setTransactions(getAdminTransactions())
-    setWithdrawals(getAdminWithdrawals())
+  // Load Real Data from Supabase
+  const reloadSupabaseData = async () => {
+    const liveUsers = await getAdminUsers()
+    const liveTransactions = await getAdminTransactions()
+    const liveWithdrawals = await getAdminWithdrawals()
+    setUsers(liveUsers)
+    setTransactions(liveTransactions)
+    setWithdrawals(liveWithdrawals)
     setAdminAccounts(getRegisteredAdmins())
-  }, [])
-
-  const handleToggleUserBlock = (userId: string) => {
-    const updated = toggleUserStatus(userId)
-    setUsers(updated)
-    const target = updated.find((u) => u.id === userId)
-    logAdminAction(admin.id, admin.email, 'TOGGLE_USER_STATUS', `Updated account status for ${target?.email} to ${target?.accountStatus}`)
   }
 
-  const handleUpdateWithdrawal = (status: 'APPROVED' | 'REJECTED' | 'PAID') => {
+  useEffect(() => {
+    reloadSupabaseData()
+    // Subscribe to Supabase Realtime changes
+    const unsubscribe = subscribeToAdminRealtimeUpdates(() => {
+      reloadSupabaseData()
+    })
+    return () => unsubscribe()
+  }, [])
+
+  // Load User Login History on profile drawer view
+  useEffect(() => {
+    if (selectedUser) {
+      setIsLoadingHistory(true)
+      getUserLoginHistory(selectedUser.id).then((history) => {
+        setUserLoginHistory(history)
+        setIsLoadingHistory(false)
+      })
+    }
+  }, [selectedUser])
+
+  const handleToggleUserBlock = async (user: AdminUserRecord) => {
+    await toggleUserStatus(user.id, user.accountStatus)
+    logAdminAction(admin.id, admin.email, 'TOGGLE_USER_STATUS', `Toggled account status for ${user.email}`)
+    await reloadSupabaseData()
+  }
+
+  const handleUpdateWithdrawal = async (status: 'APPROVED' | 'REJECTED' | 'PAID') => {
     if (!actionWithdrawal) return
-    const updated = updateWithdrawalStatus(actionWithdrawal.id, status, withdrawNotes, withdrawRefId)
-    setWithdrawals(updated)
+    await updateWithdrawalStatus(actionWithdrawal.id, status, withdrawNotes, withdrawRefId)
     logAdminAction(admin.id, admin.email, `WITHDRAWAL_${status}`, `Updated withdrawal request ${actionWithdrawal.requestId} to ${status}`)
     setActionWithdrawal(null)
     setWithdrawRefId('')
     setWithdrawNotes('')
+    await reloadSupabaseData()
   }
 
   const handleCreateStaffAdmin = async (e: React.FormEvent) => {
@@ -302,15 +331,17 @@ export function AdminDashboard({
               {activeTab === 'users' && '👥 User Management'}
               {activeTab === 'payments' && '💳 Payment Records'}
               {activeTab === 'subscriptions' && '💎 Subscription Controls'}
-              {activeTab === 'referrals' && '🎁 Referral Engine & Fraud Protection'}
+              {activeTab === 'referrals' && '🎁 Referral Engine'}
               {activeTab === 'withdrawals' && '💸 Withdrawal Requests Queue'}
               {activeTab === 'cms' && '🖼️ Website CMS Editor'}
               {activeTab === 'admins' && '👑 Super Admin Staff Control'}
               {activeTab === 'security' && '🛡️ Security Settings & 2FA'}
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Role: <strong className="text-pink-300">{admin.role}</strong> • Logged in as {admin.email}
-            </p>
+            <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Supabase Live Data Active</span>
+              <span>• Role: <strong className="text-pink-300">{admin.role}</strong></span>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -336,190 +367,384 @@ export function AdminDashboard({
               <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
                 <span className="text-xs font-bold uppercase text-slate-400">Total Users</span>
                 <p className="text-2xl font-bold text-white font-serif">{totalUsers}</p>
+                <p className="text-[10px] text-slate-400 mt-1">Live from database</p>
               </div>
               <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
                 <span className="text-xs font-bold uppercase text-slate-400">Subscribers</span>
                 <p className="text-2xl font-bold text-pink-300 font-serif">{activeSubscribers}</p>
+                <p className="text-[10px] text-slate-400 mt-1">Active Premium</p>
               </div>
               <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
                 <span className="text-xs font-bold uppercase text-slate-400">Total Revenue</span>
                 <p className="text-2xl font-bold text-emerald-400 font-serif">₹{totalRevenue}</p>
+                <p className="text-[10px] text-slate-400 mt-1">Successful Payments</p>
               </div>
               <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
                 <span className="text-xs font-bold uppercase text-slate-400">Pending Withdrawals</span>
                 <p className="text-2xl font-bold text-rose-400 font-serif">₹{pendingWdAmount}</p>
+                <p className="text-[10px] text-slate-400 mt-1">Awaiting Approval</p>
               </div>
               <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl">
                 <span className="text-xs font-bold uppercase text-slate-400">Admin Role</span>
                 <p className="text-lg font-bold text-amber-300 font-serif">{admin.role}</p>
+                <p className="text-[10px] text-slate-400 mt-1">Full Access</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* ADMIN MANAGEMENT (SUPER_ADMIN ONLY) */}
-        {activeTab === 'admins' && admin.role === 'SUPER_ADMIN' && (
+        {/* USER MANAGEMENT */}
+        {activeTab === 'users' && (
+          <div className="space-y-6 animate-fade-up">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+              <input
+                type="text"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                placeholder="🔍 Search user by Name, Email or Referral Code..."
+                className="w-full sm:w-96 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none focus:border-pink-500"
+              />
+              <div className="flex gap-2">
+                {['ALL', 'PREMIUM', 'FREE', 'BLOCKED'].map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setUserStatusFilter(st)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
+                      userStatusFilter === st ? 'bg-pink-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {filteredUsers.length === 0 ? (
+              <div className="text-center p-12 bg-slate-900/60 rounded-3xl border border-slate-800 space-y-3">
+                <div className="text-4xl">👥</div>
+                <h3 className="text-lg font-bold text-white font-serif">No Users Found</h3>
+                <p className="text-xs text-slate-400">There are currently no registered users matching your criteria.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/80 shadow-xl">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 bg-slate-900 text-slate-400 uppercase tracking-wider font-semibold">
+                      <th className="p-4">User</th>
+                      <th className="p-4">Mobile</th>
+                      <th className="p-4">Subscription</th>
+                      <th className="p-4">Referral Code</th>
+                      <th className="p-4">Last Login</th>
+                      <th className="p-4">Status</th>
+                      <th className="p-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {filteredUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-slate-800/40 transition-colors">
+                        <td className="p-4">
+                          <div className="font-bold text-white">{u.name}</div>
+                          <div className="text-slate-400 text-[11px] font-mono">{u.email}</div>
+                        </td>
+                        <td className="p-4 text-slate-300 font-mono">{u.mobile}</td>
+                        <td className="p-4">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                              u.subscriptionStatus === 'PREMIUM'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                : 'bg-slate-800 text-slate-400 border border-slate-700'
+                            }`}
+                          >
+                            {u.subscriptionStatus}
+                          </span>
+                        </td>
+                        <td className="p-4 font-mono font-bold text-pink-300">{u.referralCode}</td>
+                        <td className="p-4 text-slate-400 font-mono text-[11px]">{u.lastLogin}</td>
+                        <td className="p-4">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                              u.accountStatus === 'ACTIVE'
+                                ? 'bg-emerald-500/20 text-emerald-300'
+                                : 'bg-rose-500/20 text-rose-300'
+                            }`}
+                          >
+                            {u.accountStatus}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right space-x-2">
+                          <button
+                            onClick={() => setSelectedUser(u)}
+                            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold cursor-pointer"
+                          >
+                            View Profile
+                          </button>
+                          <button
+                            onClick={() => handleToggleUserBlock(u)}
+                            className={`px-3 py-1.5 rounded-xl font-bold cursor-pointer ${
+                              u.accountStatus === 'ACTIVE'
+                                ? 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'
+                                : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
+                            }`}
+                          >
+                            {u.accountStatus === 'ACTIVE' ? 'Block' : 'Unblock'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PAYMENTS */}
+        {activeTab === 'payments' && (
           <div className="space-y-6 animate-fade-up">
             <div className="flex justify-between items-center bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
-              <h3 className="text-base font-bold text-white font-serif">Staff Admin Accounts</h3>
-              <button
-                onClick={() => setShowAddAdminModal(true)}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-700 text-white cursor-pointer"
-              >
-                + Add Staff Admin
-              </button>
+              <input
+                type="text"
+                value={paymentSearch}
+                onChange={(e) => setPaymentSearch(e.target.value)}
+                placeholder="🔍 Search Transaction ID or Email..."
+                className="w-80 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none focus:border-pink-500"
+              />
+              <span className="text-xs font-semibold text-emerald-400">
+                Razorpay Webhook: Active
+              </span>
             </div>
 
-            <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/80 shadow-xl">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-slate-800 bg-slate-900 text-slate-400 uppercase tracking-wider font-semibold">
-                    <th className="p-4">Admin Name</th>
-                    <th className="p-4">Email</th>
-                    <th className="p-4">Role</th>
-                    <th className="p-4">Permissions</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60">
-                  {adminAccounts.map((a) => (
-                    <tr key={a.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="p-4 font-bold text-white">{a.name}</td>
-                      <td className="p-4 font-mono text-slate-300">{a.email}</td>
-                      <td className="p-4">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-pink-500/20 text-pink-300 border border-pink-500/30">
-                          {a.role}
-                        </span>
-                      </td>
-                      <td className="p-4 text-[11px] text-slate-400">
-                        {a.permissions ? a.permissions.join(', ') : 'Full Access'}
-                      </td>
-                      <td className="p-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${a.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
-                          {a.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right space-x-2">
-                        {a.role !== 'SUPER_ADMIN' && (
-                          <>
-                            <button
-                              onClick={() => handleToggleAdminStatus(a.id)}
-                              className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 font-bold"
-                            >
-                              {a.status === 'ACTIVE' ? 'Disable' : 'Enable'}
-                            </button>
-                            <button
-                              onClick={() => handleDeleteAdmin(a.id)}
-                              className="px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 font-bold"
-                            >
-                              Delete
-                            </button>
-                          </>
-                        )}
-                      </td>
+            {filteredPayments.length === 0 ? (
+              <div className="text-center p-12 bg-slate-900/60 rounded-3xl border border-slate-800 space-y-3">
+                <div className="text-4xl">💳</div>
+                <h3 className="text-lg font-bold text-white font-serif">No Payment Records</h3>
+                <p className="text-xs text-slate-400">No payment transactions found in database.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/80 shadow-xl">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 bg-slate-900 text-slate-400 uppercase tracking-wider font-semibold">
+                      <th className="p-4">Transaction ID</th>
+                      <th className="p-4">User</th>
+                      <th className="p-4">Amount</th>
+                      <th className="p-4">Gateway</th>
+                      <th className="p-4">Status</th>
+                      <th className="p-4">Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {filteredPayments.map((t) => (
+                      <tr key={t.id} className="hover:bg-slate-800/40 transition-colors">
+                        <td className="p-4 font-mono font-bold text-pink-300">{t.transactionId}</td>
+                        <td className="p-4">
+                          <div className="font-bold text-white">{t.userName}</div>
+                          <div className="text-slate-400 text-[11px] font-mono">{t.email}</div>
+                        </td>
+                        <td className="p-4 font-bold text-emerald-400 font-serif text-sm">₹{t.amount}</td>
+                        <td className="p-4 text-slate-300 font-semibold">{t.gateway}</td>
+                        <td className="p-4">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                              t.status === 'SUCCESS'
+                                ? 'bg-emerald-500/20 text-emerald-300'
+                                : 'bg-rose-500/20 text-rose-300'
+                            }`}
+                          >
+                            {t.status}
+                          </span>
+                        </td>
+                        <td className="p-4 text-slate-400 font-mono">{t.date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
-        {/* SECURITY & 2FA SETTINGS */}
-        {activeTab === 'security' && (
-          <div className="max-w-xl space-y-6 animate-fade-up">
-            <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
-              <h3 className="text-lg font-bold text-white font-serif">🔑 Change Admin Password</h3>
-              <form onSubmit={handleChangePassword} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1">New Strong Password</label>
-                  <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 12 characters"
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none"
-                  />
-                </div>
-                {passMsg && <p className="text-xs text-emerald-400 font-semibold">{passMsg}</p>}
-                <button type="submit" className="px-5 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold cursor-pointer">
-                  Update Password ❤️
-                </button>
-              </form>
-            </div>
-
-            <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-4">
-              <h3 className="text-lg font-bold text-white font-serif">🛡️ Two-Factor Authentication (2FA)</h3>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-white">Authenticator App (TOTP)</p>
-                  <p className="text-[11px] text-slate-400">Require 6-digit OTP code during login</p>
-                </div>
-                <button
-                  onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer ${twoFactorEnabled ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'}`}
-                >
-                  {twoFactorEnabled ? '2FA Enabled ✨' : 'Enable 2FA'}
-                </button>
+        {/* WITHDRAWALS QUEUE */}
+        {activeTab === 'withdrawals' && (
+          <div className="space-y-6 animate-fade-up">
+            {withdrawals.length === 0 ? (
+              <div className="text-center p-12 bg-slate-900/60 rounded-3xl border border-slate-800 space-y-3">
+                <div className="text-4xl">💸</div>
+                <h3 className="text-lg font-bold text-white font-serif">No Withdrawal Requests</h3>
+                <p className="text-xs text-slate-400">No user withdrawal requests currently pending in database.</p>
               </div>
-            </div>
+            ) : (
+              <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/80 shadow-xl">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 bg-slate-900 text-slate-400 uppercase tracking-wider font-semibold">
+                      <th className="p-4">Request ID</th>
+                      <th className="p-4">User</th>
+                      <th className="p-4">Amount</th>
+                      <th className="p-4">UPI / Bank Details</th>
+                      <th className="p-4">Status</th>
+                      <th className="p-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {withdrawals.map((w) => (
+                      <tr key={w.id} className="hover:bg-slate-800/40 transition-colors">
+                        <td className="p-4 font-mono font-bold text-amber-300">{w.requestId}</td>
+                        <td className="p-4">
+                          <div className="font-bold text-white">{w.userName}</div>
+                          <div className="text-slate-400 text-[11px] font-mono">{w.email}</div>
+                        </td>
+                        <td className="p-4 font-bold text-emerald-400 font-serif text-sm">₹{w.amount}</td>
+                        <td className="p-4 text-slate-200 font-mono">{w.paymentDetails}</td>
+                        <td className="p-4">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                              w.status === 'PAID'
+                                ? 'bg-emerald-500/20 text-emerald-300'
+                                : w.status === 'PENDING'
+                                ? 'bg-amber-500/20 text-amber-300'
+                                : 'bg-rose-500/20 text-rose-300'
+                            }`}
+                          >
+                            {w.status}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right space-x-2">
+                          <button
+                            onClick={() => setActionWithdrawal(w)}
+                            className="px-3 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-bold cursor-pointer"
+                          >
+                            Process
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </main>
 
-      {/* CREATE STAFF ADMIN MODAL */}
-      {showAddAdminModal && (
+      {/* ── USER PROFILE DRAWER MODAL ── */}
+      {selectedUser && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-end p-4 bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-lg h-full overflow-y-auto p-7 rounded-3xl bg-slate-900 border border-slate-700 text-white space-y-6">
+            <div className="flex justify-between items-center pb-4 border-b border-slate-800">
+              <div>
+                <h3 className="text-xl font-bold font-serif text-white">{selectedUser.name}</h3>
+                <p className="text-xs text-pink-300 font-mono">{selectedUser.email}</p>
+              </div>
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Personal Information */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+              <h4 className="font-bold text-pink-300 uppercase tracking-wider text-[11px]">Personal & Account Info</h4>
+              <div className="grid grid-cols-2 gap-2 text-slate-300">
+                <div>User ID: <span className="font-mono text-white">{selectedUser.id}</span></div>
+                <div>Phone: <span className="text-white">{selectedUser.mobile}</span></div>
+                <div>Status: <span className="text-emerald-400 font-bold">{selectedUser.accountStatus}</span></div>
+                <div>Subscription: <span className="text-pink-300 font-bold">{selectedUser.subscriptionStatus}</span></div>
+                <div>Referral Code: <span className="font-mono font-bold text-amber-300">{selectedUser.referralCode}</span></div>
+                <div>Signup Date: <span className="text-white">{selectedUser.signupDate}</span></div>
+              </div>
+            </div>
+
+            {/* Authentication & Login History */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+              <h4 className="font-bold text-pink-300 uppercase tracking-wider text-[11px]">🔐 Login History & Activity Log</h4>
+              {isLoadingHistory ? (
+                <p className="text-slate-400 text-xs">Loading login logs...</p>
+              ) : (
+                <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                  {userLoginHistory.map((h) => (
+                    <div key={h.id} className="p-2 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center text-[11px]">
+                      <div>
+                        <p className="font-semibold text-white">{h.loginTime}</p>
+                        <p className="text-[10px] text-slate-400">{h.browser} • IP: {h.ipAddress}</p>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">Authenticated</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Payment & Withdrawal Actions */}
+            <div className="pt-2 flex gap-3">
+              <button
+                onClick={() => handleToggleUserBlock(selectedUser)}
+                className={`flex-1 py-3 rounded-2xl font-bold text-xs cursor-pointer ${
+                  selectedUser.accountStatus === 'ACTIVE'
+                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                }`}
+              >
+                {selectedUser.accountStatus === 'ACTIVE' ? 'Block Account ⛔' : 'Unblock Account ✨'}
+              </button>
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="flex-1 py-3 rounded-2xl bg-slate-800 text-slate-200 font-bold text-xs cursor-pointer"
+              >
+                Close Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WITHDRAWAL PROCESS MODAL */}
+      {actionWithdrawal && (
         <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <form onSubmit={handleCreateStaffAdmin} className="w-full max-w-md p-6 rounded-3xl bg-slate-900 border border-slate-700 text-white space-y-4">
-            <h3 className="text-lg font-bold font-serif">Add New Staff Admin</h3>
+          <div className="w-full max-w-sm p-6 rounded-3xl bg-slate-900 border border-slate-700 text-white space-y-4">
+            <h3 className="text-lg font-bold font-serif">Process Withdrawal #{actionWithdrawal.requestId}</h3>
+            <p className="text-xs text-slate-400">User: {actionWithdrawal.userName} ({actionWithdrawal.email})</p>
+            <p className="text-sm font-bold text-emerald-400 font-serif">Amount: ₹{actionWithdrawal.amount}</p>
+            <p className="text-xs font-mono text-pink-300 bg-slate-950 p-2.5 rounded-xl border border-slate-800">{actionWithdrawal.paymentDetails}</p>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Full Name</label>
+              <label className="block text-xs font-bold text-slate-300 mb-1">Payment Reference / UTR ID</label>
               <input
                 type="text"
-                required
-                value={newAdminName}
-                onChange={(e) => setNewAdminName(e.target.value)}
-                placeholder="e.g. Alex Staff"
+                value={withdrawRefId}
+                onChange={(e) => setWithdrawRefId(e.target.value)}
+                placeholder="e.g. UTR/99214812/IMPS"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Email Address</label>
-              <input
-                type="email"
-                required
-                value={newAdminEmail}
-                onChange={(e) => setNewAdminEmail(e.target.value)}
-                placeholder="alex@couplegift.com"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Temporary Password</label>
-              <input
-                type="password"
-                required
-                value={newAdminPass}
-                onChange={(e) => setNewAdminPass(e.target.value)}
-                placeholder="Min 12 characters"
+              <label className="block text-xs font-bold text-slate-300 mb-1">Admin Notes</label>
+              <textarea
+                value={withdrawNotes}
+                onChange={(e) => setWithdrawNotes(e.target.value)}
+                placeholder="e.g. Processed via HDFC Netbanking"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white outline-none"
               />
             </div>
 
             <div className="flex gap-2 pt-2">
-              <button type="button" onClick={() => setShowAddAdminModal(false)} className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">
+              <button
+                onClick={() => setActionWithdrawal(null)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300"
+              >
                 Cancel
               </button>
-              <button type="submit" className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-pink-600 text-white">
-                Create Admin ✨
+              <button
+                onClick={() => handleUpdateWithdrawal('PAID')}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                Mark Paid 💸
               </button>
             </div>
-          </form>
+          </div>
         </div>
       )}
     </div>

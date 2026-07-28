@@ -2,7 +2,9 @@ import { supabase } from './supabase'
 
 export interface UserReferralProfile {
   id: string
+  name?: string
   email: string
+  phone?: string
   referralCode: string
   walletBalance: number
   successfulReferrals: number
@@ -12,11 +14,37 @@ export interface UserReferralProfile {
 }
 
 /**
- * Generate a unique personal referral code (e.g. GF-LOVE-8921)
+ * Generate unique personal referral code (e.g. GF-LOVE-8921)
  */
-export function generateUserReferralCode(length = 4): string {
+export function generateUserReferralCode(): string {
   const digits = Math.floor(1000 + Math.random() * 9000)
   return `GF-LOVE-${digits}`
+}
+
+/**
+ * Record user login history in Supabase user_login_history table
+ */
+export async function recordUserLoginHistory(userId: string, email: string) {
+  const deviceInfo = typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown Device'
+  const browser = deviceInfo.includes('Chrome')
+    ? 'Chrome'
+    : deviceInfo.includes('Safari')
+    ? 'Safari'
+    : 'Mobile Browser'
+
+  try {
+    await supabase.from('user_login_history').insert([
+      {
+        user_id: userId.includes('-') ? userId : undefined,
+        email,
+        ip_address: '127.0.0.1',
+        device: 'Desktop/Mobile',
+        browser,
+      },
+    ])
+  } catch (err) {
+    console.warn('Supabase user_login_history notice:', err)
+  }
 }
 
 /**
@@ -46,7 +74,7 @@ export async function sendEmailOtp(email: string) {
 }
 
 /**
- * Verify 6-digit OTP token for signup or login
+ * Verify 6-digit OTP token
  */
 export async function verifyEmailOtpToken(
   email: string,
@@ -59,7 +87,6 @@ export async function verifyEmailOtpToken(
     type,
   })
 
-  // Fallback for signup/email OTP types
   if (error) {
     const fallback = await supabase.auth.verifyOtp({
       email,
@@ -82,6 +109,10 @@ export async function signInUserWithPassword(email: string, password: string) {
     password,
   })
   if (error) throw error
+
+  if (data?.user) {
+    await recordUserLoginHistory(data.user.id, email)
+  }
   return data
 }
 
@@ -95,7 +126,7 @@ export async function sendPasswordResetOtp(email: string) {
 }
 
 /**
- * Update user password after verifying password reset OTP
+ * Update user password after verifying OTP
  */
 export async function updatePassword(newPassword: string) {
   const { data, error } = await supabase.auth.updateUser({
@@ -106,7 +137,7 @@ export async function updatePassword(newPassword: string) {
 }
 
 /**
- * Fetch or create referral profile in Supabase database / local storage
+ * Fetch or create referral profile in Supabase database / local state
  */
 export async function getOrCreateReferralProfile(
   userId: string,
@@ -118,31 +149,32 @@ export async function getOrCreateReferralProfile(
     const { data: profile, error } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('email', email)
       .single()
 
     if (!error && profile) {
       return {
         id: profile.id,
+        name: profile.full_name || email.split('@')[0],
         email: profile.email || email,
+        phone: profile.phone || '',
         referralCode: profile.referral_code || defaultCode,
-        walletBalance: profile.wallet_balance || 0,
-        successfulReferrals: profile.successful_referrals || 0,
-        totalEarnings: profile.total_earnings || 0,
-        pendingWithdrawal: profile.pending_withdrawal || 0,
-        referralHistory: profile.referral_history || [],
+        walletBalance: 0,
+        successfulReferrals: 0,
+        totalEarnings: 0,
+        pendingWithdrawal: 0,
+        referralHistory: [],
       }
     }
 
-    // Try inserting into Supabase DB table if available
     const newProfile = {
-      id: userId,
+      full_name: email.split('@')[0],
       email,
+      account_status: 'ACTIVE',
+      subscription_status: 'PREMIUM',
       referral_code: defaultCode,
-      wallet_balance: 0,
-      successful_referrals: 0,
-      total_earnings: 0,
-      pending_withdrawal: 0,
+      last_login: new Date().toISOString(),
+      last_login_ip: '127.0.0.1',
     }
 
     const { data: inserted } = await supabase
@@ -152,8 +184,10 @@ export async function getOrCreateReferralProfile(
       .single()
 
     if (inserted) {
+      await recordUserLoginHistory(inserted.id, email)
       return {
         id: inserted.id,
+        name: inserted.full_name,
         email: inserted.email,
         referralCode: inserted.referral_code,
         walletBalance: 0,
@@ -164,11 +198,13 @@ export async function getOrCreateReferralProfile(
       }
     }
   } catch (err) {
-    console.warn('Supabase DB table fallback to local state:', err)
+    console.warn('Supabase user_profiles table notice:', err)
   }
 
-  return {
+  // Local state fallback
+  const localProfile: UserReferralProfile = {
     id: userId,
+    name: email.split('@')[0],
     email,
     referralCode: defaultCode,
     walletBalance: 0,
@@ -177,4 +213,14 @@ export async function getOrCreateReferralProfile(
     pendingWithdrawal: 0,
     referralHistory: [],
   }
+
+  try {
+    const usersList = JSON.parse(localStorage.getItem('live_users_cache') || '[]')
+    if (!usersList.some((u: any) => u.email === email)) {
+      usersList.push(localProfile)
+      localStorage.setItem('live_users_cache', JSON.stringify(usersList))
+    }
+  } catch {}
+
+  return localProfile
 }
