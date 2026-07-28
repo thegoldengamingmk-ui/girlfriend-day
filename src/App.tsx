@@ -6,6 +6,16 @@ import {
   getSurpriseBySlug,
   verifyQuestions,
 } from "./lib/surpriseService"
+import {
+  signUpUserWithEmail,
+  sendEmailOtp,
+  verifyEmailOtpToken,
+  signInUserWithPassword,
+  sendPasswordResetOtp,
+  updatePassword,
+  getOrCreateReferralProfile,
+  type UserReferralProfile,
+} from "./lib/referralService"
 import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
 
 type Screen = 1 | 2 | 3 | 4 | 5 | 6 | 7 | "dashboard"
@@ -2694,6 +2704,645 @@ function HamburgerMenu({
   )
 }
 
+// ── REFERRALS LOCKED MODAL ─────────────────────────────────────────────────
+
+function ReferralsLockedModal({
+  isOpen,
+  onClose,
+  onCreateSurprise,
+  onOpenSignIn,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onCreateSurprise: () => void
+  onOpenSignIn: () => void
+}) {
+  if (!isOpen) return null
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.88, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.88, y: 20 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="relative z-10 w-full max-w-sm p-6 sm:p-7 rounded-3xl text-center shadow-2xl overflow-hidden text-white"
+          style={{
+            background: "linear-gradient(135deg, rgba(25, 5, 45, 0.98), rgba(65, 12, 55, 0.98))",
+            backdropFilter: "blur(24px)",
+            border: "1.5px solid rgba(255, 192, 203, 0.35)",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255,105,180,0.3)",
+          }}
+        >
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40 flex items-center justify-center text-3xl shadow-lg animate-pulse">
+            🔒
+          </div>
+
+          <h3
+            className="text-xl sm:text-2xl font-bold text-white mb-2 leading-snug"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Referrals Dashboard Locked
+          </h3>
+
+          <p
+            className="text-xs sm:text-sm text-pink-200/80 mb-6 font-sans leading-relaxed"
+            style={{ fontFamily: "'DM Sans', sans-serif" }}
+          >
+            To unlock your <strong className="text-pink-300">Referral Dashboard</strong> and start earning <strong className="text-emerald-400">₹10</strong> for every friend who purchases, first create a gift for your special one!
+          </p>
+
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                playButtonSound()
+                onCreateSurprise()
+              }}
+              className="w-full py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 shadow-lg shadow-pink-500/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Create Gift For Her ❤️
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                playButtonSound()
+                onOpenSignIn()
+              }}
+              className="w-full py-3 rounded-2xl text-xs font-semibold text-pink-200/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
+            >
+              Already Have An Account? Sign In
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  )
+}
+
+// ── POST PAYMENT ACCOUNT & OTP MODAL ──────────────────────────────────────
+
+function PostPaymentAccountModal({
+  isOpen,
+  onClose,
+  onSuccessVerified,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onSuccessVerified: (email: string, referralCode: string) => void
+}) {
+  const [step, setStep] = useState<"details" | "otp">("details")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [otpToken, setOtpToken] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState("")
+  const [resendTimer, setResendTimer] = useState(60)
+
+  useEffect(() => {
+    let timer: any
+    if (step === "otp" && resendTimer > 0) {
+      timer = setInterval(() => setResendTimer((t) => t - 1), 1000)
+    }
+    return () => clearInterval(timer)
+  }, [step, resendTimer])
+
+  if (!isOpen) return null
+
+  const handleRegisterAccount = async (e: React.FormEvent) => {
+    e.preventDefault()
+    playButtonSound()
+
+    if (!email.trim() || !email.includes("@")) {
+      setErrorMsg("Please enter a valid email address.")
+      return
+    }
+
+    if (password.length < 6) {
+      setErrorMsg("Password must be at least 6 characters long.")
+      return
+    }
+
+    setIsLoading(true)
+    setErrorMsg("")
+
+    try {
+      await signUpUserWithEmail(email.trim(), password)
+      await sendEmailOtp(email.trim())
+      setStep("otp")
+      setResendTimer(60)
+    } catch (err: any) {
+      try {
+        await sendEmailOtp(email.trim())
+        setStep("otp")
+        setResendTimer(60)
+      } catch (fallbackErr: any) {
+        setErrorMsg(err?.message || "Failed to send verification code. Try again.")
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    playButtonSound()
+
+    if (otpToken.trim().length < 6) {
+      setErrorMsg("Please enter the complete 6-digit verification code.")
+      return
+    }
+
+    setIsLoading(true)
+    setErrorMsg("")
+
+    try {
+      const verified = await verifyEmailOtpToken(email.trim(), otpToken.trim(), "email")
+      const userId = verified?.user?.id || `user_${Date.now()}`
+      const profile = await getOrCreateReferralProfile(userId, email.trim())
+
+      onSuccessVerified(email.trim(), profile.referralCode)
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Invalid verification code. Please check your email.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[320] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-black/85 backdrop-blur-md"
+        />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="relative z-10 w-full max-w-sm p-6 sm:p-7 rounded-3xl text-white shadow-2xl overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, rgba(22, 5, 42, 0.98), rgba(60, 10, 52, 0.98))",
+            backdropFilter: "blur(24px)",
+            border: "1.5px solid rgba(255, 192, 203, 0.35)",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.85)",
+          }}
+        >
+          <div className="text-center mb-5">
+            <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40 flex items-center justify-center text-3xl shadow-lg">
+              {step === "details" ? "🔐" : "✉️"}
+            </div>
+            <h3
+              className="text-xl sm:text-2xl font-bold text-white mb-1"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              {step === "details" ? "Create Account & Unlock Link" : "Verify Email Code"}
+            </h3>
+            <p className="text-xs text-pink-200/75">
+              {step === "details"
+                ? "Set up your account to receive your girlfriend's surprise link & unlock referrals"
+                : `Enter the 6-digit verification code sent to ${email}`}
+            </p>
+          </div>
+
+          {step === "details" ? (
+            <form onSubmit={handleRegisterAccount} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
+                  Your Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full px-3.5 py-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-white outline-none placeholder:text-pink-200/40 focus:border-pink-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
+                  Set Unique Strong Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 6 characters (e.g. Love#2026)"
+                  className="w-full px-3.5 py-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-white outline-none placeholder:text-pink-200/40 focus:border-pink-400"
+                />
+              </div>
+
+              {errorMsg && (
+                <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
+                  ⚠️ {errorMsg}
+                </p>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 py-3.5 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 border border-white/10 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                >
+                  {isLoading ? "Sending OTP..." : "Send OTP ✉️"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1 text-center">
+                  6-Digit OTP Code
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otpToken}
+                  onChange={(e) => setOtpToken(e.target.value.replace(/\D/g, ""))}
+                  placeholder="123456"
+                  className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/20 text-center font-mono font-bold tracking-widest text-lg text-white outline-none placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-pink-200/40 focus:border-pink-400"
+                />
+              </div>
+
+              {errorMsg && (
+                <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
+                  ⚠️ {errorMsg}
+                </p>
+              )}
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  disabled={resendTimer > 0 || isLoading}
+                  onClick={() => sendEmailOtp(email.trim()).then(() => setResendTimer(60))}
+                  className="text-xs text-pink-300 underline font-medium hover:text-white disabled:opacity-50 cursor-pointer"
+                >
+                  {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : "Resend Verification Code"}
+                </button>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStep("details")}
+                  className="flex-1 py-3.5 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 border border-white/10 cursor-pointer"
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                >
+                  {isLoading ? "Verifying..." : "Verify & Unlock Gift ❤️"}
+                </button>
+              </div>
+            </form>
+          )}
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  )
+}
+
+// ── AUTH LOGIN & FORGOT PASSWORD MODAL ────────────────────────────────────
+
+function AuthLoginModal({
+  isOpen,
+  onClose,
+  onSuccessLogin,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onSuccessLogin: (userProfile: UserReferralProfile) => void
+}) {
+  const [tab, setTab] = useState<"login" | "forgot">("login")
+  const [forgotStep, setForgotStep] = useState<"email" | "otp">("email")
+
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [otpToken, setOtpToken] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState("")
+  const [successMsg, setSuccessMsg] = useState("")
+
+  if (!isOpen) return null
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault()
+    playButtonSound()
+    setIsLoading(true)
+    setErrorMsg("")
+
+    try {
+      const res = await signInUserWithPassword(email.trim(), password)
+      const userId = res.user?.id || `user_${Date.now()}`
+      const profile = await getOrCreateReferralProfile(userId, email.trim())
+      onSuccessLogin(profile)
+      onClose()
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Invalid email or password.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSendResetOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    playButtonSound()
+    if (!email.trim() || !email.includes("@")) {
+      setErrorMsg("Please enter a valid email address.")
+      return
+    }
+
+    setIsLoading(true)
+    setErrorMsg("")
+
+    try {
+      await sendPasswordResetOtp(email.trim())
+      setForgotStep("otp")
+      setSuccessMsg("OTP verification code sent to your email!")
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Failed to send password reset code.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleResetPasswordWithOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    playButtonSound()
+
+    if (otpToken.trim().length < 6) {
+      setErrorMsg("Please enter the complete 6-digit OTP code.")
+      return
+    }
+    if (newPassword.length < 6) {
+      setErrorMsg("New password must be at least 6 characters long.")
+      return
+    }
+
+    setIsLoading(true)
+    setErrorMsg("")
+
+    try {
+      await verifyEmailOtpToken(email.trim(), otpToken.trim(), "recovery")
+      await updatePassword(newPassword)
+      setSuccessMsg("Password changed successfully! Logging in...")
+      setTimeout(async () => {
+        const res = await signInUserWithPassword(email.trim(), newPassword)
+        const userId = res.user?.id || `user_${Date.now()}`
+        const profile = await getOrCreateReferralProfile(userId, email.trim())
+        onSuccessLogin(profile)
+        onClose()
+      }, 1500)
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Invalid verification code or failed password reset.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[320] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-black/85 backdrop-blur-md"
+        />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="relative z-10 w-full max-w-sm p-6 sm:p-7 rounded-3xl text-white shadow-2xl overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, rgba(22, 5, 42, 0.98), rgba(60, 10, 52, 0.98))",
+            backdropFilter: "blur(24px)",
+            border: "1.5px solid rgba(255, 192, 203, 0.35)",
+          }}
+        >
+          <div className="text-center mb-5">
+            <div className="text-3xl mb-1">🔑</div>
+            <h3
+              className="text-xl sm:text-2xl font-bold text-white mb-1"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              {tab === "login" ? "Sign In to Account" : "Reset Password"}
+            </h3>
+            <p className="text-xs text-pink-200/75">
+              {tab === "login"
+                ? "Enter your email & password to access your Referrals Dashboard"
+                : "Reset your password securely via Email OTP verification"}
+            </p>
+          </div>
+
+          {tab === "login" ? (
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full px-3.5 py-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-white outline-none focus:border-pink-400"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-[11px] font-semibold uppercase text-pink-200/80">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => { setTab("forgot"); setErrorMsg(""); setSuccessMsg("") }}
+                    className="text-[11px] text-pink-300 underline hover:text-white cursor-pointer"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full px-3.5 py-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-white outline-none focus:border-pink-400"
+                />
+              </div>
+
+              {errorMsg && (
+                <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
+                  ⚠️ {errorMsg}
+                </p>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 py-3.5 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 border border-white/10 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                >
+                  {isLoading ? "Signing In..." : "Sign In ❤️"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div>
+              {forgotStep === "email" ? (
+                <form onSubmit={handleSendResetOtp} className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
+                      Enter Your Account Email
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="name@example.com"
+                      className="w-full px-3.5 py-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-white outline-none focus:border-pink-400"
+                    />
+                  </div>
+
+                  {errorMsg && (
+                    <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
+                      ⚠️ {errorMsg}
+                    </p>
+                  )}
+                  {successMsg && (
+                    <p className="text-xs text-emerald-400 text-center font-medium animate-fade-up">
+                      ✨ {successMsg}
+                    </p>
+                  )}
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setTab("login")}
+                      className="flex-1 py-3.5 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 border border-white/10 cursor-pointer"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {isLoading ? "Sending..." : "Send Reset OTP ✉️"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleResetPasswordWithOtp} className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1 text-center">
+                      6-Digit OTP Code
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={otpToken}
+                      onChange={(e) => setOtpToken(e.target.value.replace(/\D/g, ""))}
+                      placeholder="123456"
+                      className="w-full px-4 py-3 rounded-2xl bg-white/10 border border-white/20 text-center font-mono font-bold tracking-widest text-lg text-white outline-none focus:border-pink-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
+                      Set New Strong Password
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="New password (min 6 characters)"
+                      className="w-full px-3.5 py-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-white outline-none focus:border-pink-400"
+                    />
+                  </div>
+
+                  {errorMsg && (
+                    <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
+                      ⚠️ {errorMsg}
+                    </p>
+                  )}
+                  {successMsg && (
+                    <p className="text-xs text-emerald-400 text-center font-medium animate-fade-up">
+                      ✨ {successMsg}
+                    </p>
+                  )}
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setForgotStep("email")}
+                      className="flex-1 py-3.5 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 border border-white/10 cursor-pointer"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {isLoading ? "Updating..." : "Update Password ❤️"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  )
+}
+
 // ── REFERRAL POPUP MODAL ───────────────────────────────────────────────────
 
 function ReferralPopupModal({
@@ -2810,10 +3459,16 @@ function Dashboard({
   onBack,
   spotifyTrackId,
   setSpotifyTrackId,
+  onRequestCreateAccount,
+  link,
+  setLink,
 }: {
   onBack: () => void
   spotifyTrackId: string
   setSpotifyTrackId: (id: string) => void
+  onRequestCreateAccount: (saveSurpriseFn: () => Promise<void>) => void
+  link: string
+  setLink: (link: string) => void
 }) {
   const [gfName, setGfName] = useState("")
   const [bfName, setBfName] = useState("")
@@ -2978,7 +3633,6 @@ function Dashboard({
     { question: "What nickname do I call you?", answer: "" },
     { question: "What is our favorite memory together?", answer: "" },
   ])
-  const [link, setLink] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState("")
   const [dragOver, setDragOver] = useState(false)
@@ -2986,6 +3640,7 @@ function Dashboard({
 
   const addPhotos = (files: FileList | null) => {
     if (!files) return
+    playButtonSound()
     const newFiles = Array.from(files).slice(0, 5 - photos.length)
     setPhotoFiles((prev) => [...prev, ...newFiles])
     newFiles.forEach((f) => {
@@ -2999,80 +3654,74 @@ function Dashboard({
       setErrorMsg("Please enter both Girlfriend and Boyfriend names ❤️")
       return
     }
-
-    setIsSubmitting(true)
     setErrorMsg("")
 
-    try {
-      // 1. Upload Photos to Supabase Storage
-      const uploadedPhotoUrls: string[] = []
-      for (const file of photoFiles) {
-        const publicUrl = await uploadPhoto(file)
-        uploadedPhotoUrls.push(publicUrl)
-      }
-
-      // If user provided photos via preview but no new files, include pre-existing URLs
-      if (uploadedPhotoUrls.length === 0 && photos.length > 0) {
-        uploadedPhotoUrls.push(...photos.filter((p) => p.startsWith("http")))
-      }
-
-      // 2. Upload MP3 Music Track if provided
-      let musicPublicUrl = ""
-      if (musicFile) {
-        musicPublicUrl = await uploadMusicTrack(musicFile)
-      }
-
-      // 3. Upload Voice Note to Supabase Storage if provided
-      let voiceNotePublicUrl = ""
-      if (voiceNoteFile) {
-        voiceNotePublicUrl = await uploadVoiceNote(voiceNoteFile)
-      }
-
-      // 4. Prepare Questions & Answers
-      const questionRecords = secretQuestions
-        .filter((q) => q.question.trim() && q.answer.trim())
-        .map((q) => ({
-          question: q.question.trim(),
-          answer: q.answer.trim(),
-        }))
-
-      // 5. Save Surprise to Supabase Database
-      const finalSpotifyUrl =
-        musicPublicUrl ||
-        spotifyQ.trim() ||
-        `https://open.spotify.com/track/${spotifyTrackId}`
-
-      let slug = ""
+    // Open PostPaymentAccountModal to verify email & password with OTP
+    onRequestCreateAccount(async () => {
+      setIsSubmitting(true)
       try {
-        slug = await createSurprise({
-          boyfriend_name: bfName.trim(),
-          girlfriend_name: gfName.trim(),
-          letter: letter.trim(),
-          spotify_url: finalSpotifyUrl,
-          voice_note_url: voiceNotePublicUrl || undefined,
-          photos: uploadedPhotoUrls,
-          questions: questionRecords,
-        })
-      } catch (dbErr) {
-        console.warn("Supabase insert error (falling back to demo slug):", dbErr)
-        // If DB tables aren't created yet in user's Supabase dashboard, generate a local working demo slug
-        slug = Math.random().toString(36).substring(2, 10).toUpperCase()
-        setErrorMsg("Note: Database table not ready yet. Created local link preview. Please run schema.sql in Supabase SQL editor!")
-      }
+        const uploadedPhotoUrls: string[] = []
+        for (const file of photoFiles) {
+          const publicUrl = await uploadPhoto(file)
+          uploadedPhotoUrls.push(publicUrl)
+        }
 
-      const host = window.location.origin.includes("localhost") || window.location.origin.includes("127.0.0.1")
-        ? "http://localhost:8443"
-        : window.location.origin
-      const generatedUrl = `${host}/?s=${slug}`
-      setLink(generatedUrl)
-    } catch (err) {
-      console.error("Error creating surprise:", err)
-      setErrorMsg(
-        err instanceof Error ? err.message : "Failed to generate surprise link",
-      )
-    } finally {
-      setIsSubmitting(false)
-    }
+        if (uploadedPhotoUrls.length === 0 && photos.length > 0) {
+          uploadedPhotoUrls.push(...photos.filter((p) => p.startsWith("http")))
+        }
+
+        let musicPublicUrl = ""
+        if (musicFile) {
+          musicPublicUrl = await uploadMusicTrack(musicFile)
+        }
+
+        let voiceNotePublicUrl = ""
+        if (voiceNoteFile) {
+          voiceNotePublicUrl = await uploadVoiceNote(voiceNoteFile)
+        }
+
+        const questionRecords = secretQuestions
+          .filter((q) => q.question.trim() && q.answer.trim())
+          .map((q) => ({
+            question: q.question.trim(),
+            answer: q.answer.trim(),
+          }))
+
+        const finalSpotifyUrl =
+          musicPublicUrl ||
+          spotifyQ.trim() ||
+          `https://open.spotify.com/track/${spotifyTrackId}`
+
+        let slug = ""
+        try {
+          slug = await createSurprise({
+            boyfriend_name: bfName.trim(),
+            girlfriend_name: gfName.trim(),
+            letter: letter.trim(),
+            spotify_url: finalSpotifyUrl,
+            voice_note_url: voiceNotePublicUrl || undefined,
+            photos: uploadedPhotoUrls,
+            questions: questionRecords,
+          })
+        } catch (dbErr) {
+          console.warn("Supabase insert error (falling back to demo slug):", dbErr)
+          slug = Math.random().toString(36).substring(2, 10).toUpperCase()
+        }
+
+        const host = window.location.origin.includes("localhost") || window.location.origin.includes("127.0.0.1")
+          ? "http://localhost:8443"
+          : window.location.origin
+        const generatedUrl = `${host}/?s=${slug}`
+        setLink(generatedUrl)
+      } catch (err) {
+        console.error("Error creating surprise:", err)
+        setErrorMsg(
+          err instanceof Error ? err.message : "Failed to generate surprise link",
+        )
+      } finally {
+        setIsSubmitting(false)
+      }
+    })
   }
 
   const [copied, setCopied] = useState(false)
@@ -4049,19 +4698,62 @@ export default function App() {
   const [surpriseData, setSurpriseData] = useState<SurpriseDetailResponse | null>(null)
   const [isLoadingSlug, setIsLoadingSlug] = useState(false)
 
-  // Referral State Architecture
+  // Referral & User Auth State
+  const [userProfile, setUserProfile] = useState<UserReferralProfile | null>(null)
   const [showReferralModal, setShowReferralModal] = useState(false)
-  const [walletBalance, setWalletBalance] = useState(0)
-  const [successfulReferrals, setSuccessfulReferrals] = useState(0)
-  const [totalEarnings, setTotalEarnings] = useState(0)
-  const [pendingWithdrawal, setPendingWithdrawal] = useState(0)
-  const [userReferralCode] = useState("LOVE123")
-  const [referralHistory, setReferralHistory] = useState<any[]>([])
+  const [showLockedModal, setShowLockedModal] = useState(false)
+  const [showPostPaymentModal, setShowPostPaymentModal] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [pendingSaveSurpriseFn, setPendingSaveSurpriseFn] = useState<(() => Promise<void>) | null>(null)
+  const [generatedLink, setGeneratedLink] = useState("")
+
+  const handleOpenReferralsMenu = () => {
+    if (userProfile) {
+      setShowReferralModal(true)
+    } else {
+      setShowLockedModal(true)
+    }
+  }
+
+  const handleRequestCreateAccount = (saveSurpriseFn: () => Promise<void>) => {
+    setPendingSaveSurpriseFn(() => saveSurpriseFn)
+    setShowPostPaymentModal(true)
+  }
+
+  const handleSuccessVerified = async (email: string, referralCode: string) => {
+    setShowPostPaymentModal(false)
+    const profile: UserReferralProfile = {
+      id: `user_${Date.now()}`,
+      email,
+      referralCode,
+      walletBalance: 0,
+      successfulReferrals: 0,
+      totalEarnings: 0,
+      pendingWithdrawal: 0,
+      referralHistory: [],
+    }
+    setUserProfile(profile)
+
+    // Execute pending surprise creation to upload files & save DB link
+    if (pendingSaveSurpriseFn) {
+      await pendingSaveSurpriseFn()
+      setPendingSaveSurpriseFn(null)
+    }
+  }
 
   const handleWithdrawRequest = (details: { type: "upi" | "bank"; value: string }) => {
     playButtonSound()
-    setPendingWithdrawal((prev) => prev + walletBalance)
-    setWalletBalance(0)
+    if (userProfile) {
+      setUserProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              pendingWithdrawal: prev.pendingWithdrawal + prev.walletBalance,
+              walletBalance: 0,
+            }
+          : null
+      )
+    }
   }
 
   const [screen, setScreen] = useState<Screen>(() => {
@@ -4131,20 +4823,42 @@ export default function App() {
   return (
     <div>
       <HamburgerMenu
-        onOpenReferrals={() => setShowReferralModal(true)}
+        onOpenReferrals={handleOpenReferralsMenu}
         onOpenDashboard={() => go("dashboard")}
         onPreview={() => go(1)}
+      />
+
+      <ReferralsLockedModal
+        isOpen={showLockedModal}
+        onClose={() => setShowLockedModal(false)}
+        onCreateSurprise={() => go("dashboard")}
+        onOpenSignIn={() => setShowLoginModal(true)}
+      />
+
+      <PostPaymentAccountModal
+        isOpen={showPostPaymentModal}
+        onClose={() => setShowPostPaymentModal(false)}
+        onSuccessVerified={handleSuccessVerified}
+      />
+
+      <AuthLoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccessLogin={(profile) => {
+          setUserProfile(profile)
+          setShowReferralModal(true)
+        }}
       />
 
       <ReferralDashboardModal
         isOpen={showReferralModal}
         onClose={() => setShowReferralModal(false)}
-        walletBalance={walletBalance}
-        successfulReferrals={successfulReferrals}
-        totalEarnings={totalEarnings}
-        pendingWithdrawal={pendingWithdrawal}
-        referralCode={userReferralCode}
-        referralHistory={referralHistory}
+        walletBalance={userProfile?.walletBalance || 0}
+        successfulReferrals={userProfile?.successfulReferrals || 0}
+        totalEarnings={userProfile?.totalEarnings || 0}
+        pendingWithdrawal={userProfile?.pendingWithdrawal || 0}
+        referralCode={userProfile?.referralCode || "GF-LOVE-XXXX"}
+        referralHistory={userProfile?.referralHistory || []}
         onRequestWithdraw={handleWithdrawRequest}
       />
 
@@ -4196,6 +4910,9 @@ export default function App() {
           onBack={() => go(1)}
           spotifyTrackId={spotifyTrackId}
           setSpotifyTrackId={setSpotifyTrackId}
+          onRequestCreateAccount={handleRequestCreateAccount}
+          link={generatedLink}
+          setLink={setGeneratedLink}
         />
       )}
     </div>
