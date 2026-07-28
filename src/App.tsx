@@ -2170,6 +2170,116 @@ function S7({
   )
 }
 
+// ── REFERRAL POPUP MODAL ───────────────────────────────────────────────────
+
+function ReferralPopupModal({
+  isOpen,
+  onClose,
+  onApply,
+  errorMsg,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onApply: (code: string) => void
+  errorMsg: string
+}) {
+  const [code, setCode] = useState("")
+
+  if (!isOpen) return null
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-black/75 backdrop-blur-md"
+        />
+
+        {/* Modal Card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.88, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.88, y: 20 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="relative z-10 w-full max-w-xs sm:max-w-sm p-6 sm:p-7 rounded-3xl text-center shadow-2xl overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, rgba(25, 5, 45, 0.96), rgba(65, 12, 55, 0.96))",
+            backdropFilter: "blur(24px)",
+            border: "1.5px solid rgba(255, 192, 203, 0.35)",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255,105,180,0.3)",
+          }}
+        >
+          {/* Top Icon Badge */}
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40 flex items-center justify-center text-3xl shadow-lg animate-pulse-heart">
+            🎁
+          </div>
+
+          <h3
+            className="text-xl sm:text-2xl font-bold text-white mb-2 leading-snug"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Have a Referral Code?
+          </h3>
+          <p
+            className="text-xs sm:text-sm text-pink-200/80 mb-6 font-sans leading-relaxed"
+            style={{ fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Use a friend's referral code and unlock <span className="text-emerald-400 font-bold">50% OFF</span> instantly!
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => {
+                  setCode(e.target.value.toUpperCase())
+                }}
+                placeholder="Enter Referral Code (e.g. LOVE50)"
+                className="w-full px-4 py-3.5 rounded-2xl text-center font-mono font-bold tracking-widest text-white text-sm outline-none transition-all uppercase placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-pink-200/40"
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: errorMsg ? "1.5px solid #ef4444" : "1px solid rgba(255,192,203,0.3)",
+                  boxShadow: "inset 0 2px 4px rgba(0,0,0,0.2)",
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") onApply(code)
+                }}
+              />
+              {errorMsg && (
+                <p className="text-xs text-red-400 font-semibold mt-2 animate-fade-up">
+                  ⚠️ {errorMsg}
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3.5 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
+              >
+                Skip
+              </button>
+              <button
+                type="button"
+                onClick={() => onApply(code)}
+                className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 shadow-lg shadow-pink-500/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Apply Code ✨
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  )
+}
+
 // ── DASHBOARD ──────────────────────────────────────────────────────────────
 
 function Dashboard({
@@ -2195,6 +2305,53 @@ function Dashboard({
   const recordTimerRef = useRef<any>(null)
 
   const nativeMicInputRef = useRef<HTMLInputElement>(null)
+
+  // Pricing & Referral Architecture State
+  const ORIGINAL_PRICE = 99
+  const DISCOUNTED_PRICE = 49
+
+  const [isReferralApplied, setIsReferralApplied] = useState(false)
+  const [appliedReferralCode, setAppliedReferralCode] = useState("")
+  const [referralCodeInput, setReferralCodeInput] = useState("")
+  const [referralErrorMsg, setReferralErrorMsg] = useState("")
+
+  const [showReferralPopup, setShowReferralPopup] = useState(true)
+  const [popupErrorMsg, setPopupErrorMsg] = useState("")
+
+  const finalPrice = isReferralApplied ? DISCOUNTED_PRICE : ORIGINAL_PRICE
+
+  const applyDiscountCode = (code: string, isFromPopup = false) => {
+    playButtonSound()
+    const trimmed = code.trim().toUpperCase()
+    if (trimmed === "LOVE50") {
+      setIsReferralApplied(true)
+      setAppliedReferralCode("LOVE50")
+      if (isFromPopup) {
+        setShowReferralPopup(false)
+        setPopupErrorMsg("")
+      }
+      setReferralErrorMsg("")
+
+      // Confetti celebration
+      if (typeof window !== "undefined" && (window as any).confetti) {
+        ;(window as any).confetti({
+          particleCount: 75,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ["#22c55e", "#ffc8d6", "#f4a0b5", "#ffffff"],
+        })
+      }
+      return true
+    } else {
+      const errText = "Invalid Referral Code"
+      if (isFromPopup) {
+        setPopupErrorMsg(errText)
+      } else {
+        setReferralErrorMsg(errText)
+      }
+      return false
+    }
+  }
 
   const startRecording = async () => {
     playButtonSound()
@@ -3116,6 +3273,14 @@ function Dashboard({
           </div>
         </div>
 
+        {/* Referral Popup Modal */}
+        <ReferralPopupModal
+          isOpen={showReferralPopup && !isReferralApplied}
+          onClose={() => setShowReferralPopup(false)}
+          onApply={(code) => applyDiscountCode(code, true)}
+          errorMsg={popupErrorMsg}
+        />
+
         {/* Error notification if any */}
         {errorMsg && (
           <p
@@ -3126,178 +3291,198 @@ function Dashboard({
           </p>
         )}
 
-        {/* 7. Save & Generate Link */}
+        {/* 7. Redesigned Premium Pricing Card */}
         <div
+          className="relative overflow-hidden rounded-3xl p-6 sm:p-7 mb-5 text-white"
           style={{
-            borderRadius: "24px",
-            padding: "28px 22px",
-            marginBottom: "16px",
-            background: "linear-gradient(135deg, #1a0035 0%, #2e0055 100%)",
-            boxShadow: "0 12px 50px rgba(200,67,138,0.25)",
+            background: "linear-gradient(135deg, #1a0035 0%, #2e0055 50%, #15002a 100%)",
+            border: "1px solid rgba(255, 192, 203, 0.3)",
+            boxShadow: "0 16px 60px rgba(200,67,138,0.3)",
           }}
         >
-          <div className="text-center text-white">
-            <div style={{ fontSize: "36px", marginBottom: "8px" }}>✨</div>
-            <div
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: "22px",
-                fontWeight: "700",
-                marginBottom: "5px",
-              }}
+          <div className="text-center">
+            <div className="text-4xl mb-2">🎁</div>
+            <h2
+              className="text-xl sm:text-2xl font-bold mb-2 leading-tight"
+              style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              Ready to surprise her?
-            </div>
-            <div
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: "13px",
-                opacity: 0.6,
-                marginBottom: "20px",
-              }}
+              Create the Most Emotional Gift She'll Never Forget ❤️
+            </h2>
+            <p
+              className="text-xs sm:text-sm text-pink-200/70 mb-6"
+              style={{ fontFamily: "'DM Sans', sans-serif" }}
             >
-              One-time setup to generate your exclusive dynamic link
-            </div>
+              Create a magical personalized experience she'll remember forever.
+            </p>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "baseline",
-                justifyContent: "center",
-                gap: "8px",
-                marginBottom: "22px",
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: "44px",
-                  fontWeight: "700",
-                  color: "#ffc8d6",
-                }}
-              >
-                ₹49
-              </span>
-              <span
-                style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: "12px",
-                  color: "rgba(255,200,220,0.5)",
-                }}
-              >
-                one-time
-              </span>
-            </div>
-
-            <div style={{ marginBottom: "24px", textAlign: "left" }}>
-              {[
-                "Personalized gift experience",
-                "Unlimited views for her",
-                "Forever shareable link",
-                "Premium animations included",
-              ].map((f, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    marginBottom: "8px",
-                  }}
+            {/* Price Display Area */}
+            <div className="my-5 flex flex-col items-center justify-center">
+              {isReferralApplied ? (
+                <motion.div
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  className="flex flex-col items-center gap-1"
                 >
-                  <span style={{ color: "#ffc8d6", fontSize: "14px" }}>✓</span>
-                  <span
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      fontSize: "13px",
-                      color: "rgba(255,210,228,0.78)",
-                    }}
+                  <div className="flex items-baseline justify-center gap-3">
+                    <span className="text-2xl line-through text-pink-300/50 font-serif font-bold">
+                      ₹99
+                    </span>
+                    <span
+                      className="text-5xl sm:text-6xl font-bold text-pink-100 drop-shadow-md"
+                      style={{ fontFamily: "'Playfair Display', serif" }}
+                    >
+                      ₹49
+                    </span>
+                    <span className="text-xs text-pink-200/60 font-sans">one-time</span>
+                  </div>
+
+                  {/* Green Discount Badge */}
+                  <motion.div
+                    initial={{ y: 8, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="mt-2.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 flex items-center gap-1.5 shadow-lg"
                   >
-                    {f}
+                    <span>🎉</span> Referral Discount Applied • You Saved ₹50 ❤️
+                  </motion.div>
+                </motion.div>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span
+                      className="text-5xl sm:text-6xl font-bold text-pink-100 drop-shadow-md"
+                      style={{ fontFamily: "'Playfair Display', serif" }}
+                    >
+                      ₹99
+                    </span>
+                    <span className="text-xs text-pink-200/60 font-sans">one-time</span>
+                  </div>
+                  <p className="text-[11px] text-pink-300/70 mt-1.5 font-medium">
+                    💡 Use a referral code to unlock 50% OFF (Pay ₹49)
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Feature List */}
+            <div className="my-6 space-y-2.5 text-left max-w-xs mx-auto">
+              {[
+                "✔ Unlimited memories & photos",
+                "✔ Premium romantic animations",
+                "✔ Personalized love experience",
+                "✔ Forever shareable private link",
+                "✔ Mobile & Desktop compatible",
+                "✔ Instant link generation after payment",
+              ].map((f, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <span className="text-pink-300 text-sm font-bold">{f.slice(0, 1)}</span>
+                  <span
+                    className="text-xs sm:text-sm text-pink-100/85 font-medium"
+                    style={{ fontFamily: "'DM Sans', sans-serif" }}
+                  >
+                    {f.slice(2)}
                   </span>
                 </div>
               ))}
             </div>
 
+            {/* Trust Badge */}
+            <div className="my-4 inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold text-pink-200 bg-white/5 border border-white/10">
+              ❤️ One-Time Payment • No Subscription
+            </div>
+
+            {/* Pay Button / Generated Link */}
             {!link ? (
               <button
                 disabled={isSubmitting}
                 onClick={handleGenerateLink}
-                className="w-full cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full mt-3 cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed py-4 rounded-2xl text-base font-bold text-white shadow-xl"
                 style={{
-                  padding: "16px",
-                  borderRadius: "16px",
-                  background:
-                    "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
-                  boxShadow: "0 8px 32px rgba(232,120,154,0.5)",
-                  color: "white",
+                  background: isReferralApplied
+                    ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                    : "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
+                  boxShadow: isReferralApplied
+                    ? "0 8px 32px rgba(16,185,129,0.4)"
+                    : "0 8px 32px rgba(232,120,154,0.5)",
                   fontFamily: "'DM Sans', sans-serif",
-                  fontSize: "15px",
-                  fontWeight: "600",
-                  border: "none",
                 }}
               >
                 {isSubmitting
                   ? "Uploading & Saving... ❤️"
-                  : "Pay ₹49 & Generate Link ❤️"}
+                  : `Pay ₹${finalPrice} & Generate Link ❤️`}
               </button>
             ) : (
-              <div>
+              <div className="mt-4">
                 <div
                   onClick={() => copyToClipboard(link)}
-                  className="cursor-pointer transition-all duration-200 hover:bg-white/10"
-                  style={{
-                    borderRadius: "16px",
-                    padding: "16px",
-                    marginBottom: "12px",
-                    background: "rgba(255,255,255,0.07)",
-                    border: "1px solid rgba(255,255,255,0.13)",
-                  }}
+                  className="cursor-pointer transition-all duration-200 hover:bg-white/10 p-4 rounded-2xl bg-white/5 border border-white/15 text-center"
                 >
-                  <p
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      fontSize: "11px",
-                      color: "rgba(255,200,220,0.6)",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    Your exclusive surprise link (tap to copy):
-                  </p>
-                  <p
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      fontSize: "13px",
-                      color: "#ffc8d6",
-                      wordBreak: "break-all",
-                      fontWeight: "500",
-                    }}
-                  >
-                    {link}
-                  </p>
+                  <p className="text-xs text-pink-200/70 mb-1">Your Unique Surprise Link:</p>
+                  <p className="text-sm font-mono text-pink-300 font-bold break-all">{link}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => copyToClipboard(link)}
-                  className="w-full cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                  style={{
-                    padding: "13px",
-                    borderRadius: "14px",
-                    border: copied
-                      ? "1.5px solid #22c55e"
-                      : "1.5px solid rgba(255,200,220,0.28)",
-                    background: copied ? "rgba(34,197,94,0.15)" : "transparent",
-                    color: copied ? "#4ade80" : "#ffc8d6",
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                  }}
+                  className="w-full mt-3 py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-600 font-bold text-white text-sm cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                   {copied ? "✓ Copied to Clipboard!" : "📋 Copy Link"}
                 </button>
               </div>
             )}
           </div>
+        </div>
+
+        {/* 8. In-Page Coupon Section Below Card */}
+        <div
+          className="p-5 rounded-2xl text-center mb-8 shadow-sm"
+          style={{
+            background: "rgba(255, 255, 255, 0.75)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(200,67,138,0.25)",
+          }}
+        >
+          {isReferralApplied ? (
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300">
+                <span>🎉</span> Referral Code Applied: <span className="font-mono">{appliedReferralCode}</span>
+              </div>
+              <p className="text-xs font-bold text-pink-700">50% OFF Activated ❤️ (You Save ₹50)</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-[#7a0f50]">
+                🎁 Have a Referral Code?
+              </p>
+              <div className="flex gap-2 max-w-xs mx-auto">
+                <input
+                  type="text"
+                  value={referralCodeInput}
+                  onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
+                  placeholder="Enter Code (e.g. LOVE50)"
+                  className="flex-1 px-3.5 py-2.5 rounded-xl text-xs font-mono font-bold tracking-widest text-[#7a0f50] outline-none uppercase placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-pink-900/40"
+                  style={{
+                    background: "rgba(255,255,255,0.9)",
+                    border: referralErrorMsg ? "1.5px solid #ef4444" : "1.5px solid rgba(200,67,138,0.3)",
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") applyDiscountCode(referralCodeInput)
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => applyDiscountCode(referralCodeInput)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-pink-600 hover:bg-pink-700 transition-colors cursor-pointer shadow-md"
+                >
+                  Apply
+                </button>
+              </div>
+              {referralErrorMsg && (
+                <p className="text-xs text-red-500 font-semibold">
+                  ⚠️ {referralErrorMsg}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Preview */}
