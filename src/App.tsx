@@ -475,15 +475,15 @@ function S1({
           }}
         >
           {girlfriendName
-            ? `${girlfriendName}, someone who loves you has prepared something special...`
-            : "Someone who loves you has prepared something special..."}
+            ? `My dearest ${girlfriendName}, I've created something special just for you...`
+            : "My love, I've created something special just for you..."}
         </h1>
 
         <p
           className="text-pink-200 text-base mb-10 opacity-75"
           style={{ fontFamily: "'DM Sans', sans-serif" }}
         >
-          A surprise is waiting just for you.
+          I put all my love into this surprise for you.
         </p>
 
         <Btn onClick={onNext}>Unlock ❤️</Btn>
@@ -495,20 +495,22 @@ function S1({
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          Made with love.
+          Made with all my love.
         </p>
       </div>
 
-      <button
-        onClick={onDash}
-        className="absolute bottom-6 right-5 text-xs cursor-pointer transition-all duration-200 hover:opacity-60"
-        style={{
-          color: "rgba(255,180,200,0.22)",
-          fontFamily: "'DM Sans', sans-serif",
-        }}
-      >
-        Create ↗
-      </button>
+      {!girlfriendName && (
+        <button
+          onClick={onDash}
+          className="absolute bottom-6 right-5 text-xs cursor-pointer transition-all duration-200 hover:opacity-60"
+          style={{
+            color: "rgba(255,180,200,0.22)",
+            fontFamily: "'DM Sans', sans-serif",
+          }}
+        >
+          Create ↗
+        </button>
+      )}
     </div>
   )
 }
@@ -523,10 +525,10 @@ function S2({ onNext }: { onNext: () => void }) {
   onNextRef.current = onNext
 
   const steps = [
-    "Finding your surprise",
-    "Verifying relationship",
-    "Unlocking memories",
-    "Preparing something special",
+    "Opening my heart for you",
+    "Gathering our sweetest memories",
+    "Preparing my love letter",
+    "Unlocking your surprise...",
   ]
 
   useEffect(() => {
@@ -665,7 +667,7 @@ function S3({ onNext }: { onNext: () => void }) {
             className="text-2xl font-bold text-white mb-4 leading-snug"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
-            Only the real girlfriend can unlock this secret.
+            Only you can unlock my heart.
           </h2>
           <p
             className="text-sm mb-8"
@@ -674,7 +676,7 @@ function S3({ onNext }: { onNext: () => void }) {
               fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            This surprise was made just for you, with love. Are you ready?
+            I created this surprise just for you, with all my love. Are you ready?
           </p>
 
           <div
@@ -1038,7 +1040,7 @@ function S4({
             className="text-2xl font-bold text-white mb-1 text-center"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
-            Prove your love ❤️
+            Answer Our Special Questions ❤️
           </h2>
           <p
             className="text-xs text-center mb-8"
@@ -1047,7 +1049,7 @@ function S4({
               fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            Answer to unlock your surprise
+            Answer these secret questions to unlock my heart
           </p>
 
           <div className="space-y-5">
@@ -1224,7 +1226,7 @@ function S5({ onNext }: { onNext: () => void }) {
             textShadow: "0 0 40px rgba(255,180,200,0.6)",
           }}
         >
-          Your gift is ready to open...
+          My gift for you is ready to open...
         </h2>
 
         <p
@@ -1234,7 +1236,7 @@ function S5({ onNext }: { onNext: () => void }) {
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          Something magical awaits you
+          Open it to see what I made for you ❤️
         </p>
 
         <Btn onClick={onNext}>Open Gift ❤️</Btn>
@@ -1280,7 +1282,7 @@ function S6({
             textShadow: "0 0 44px rgba(255,180,200,0.7)",
           }}
         >
-          One last step...
+          Just one last step, my love...
         </h2>
         <p
           className="text-base mb-10"
@@ -1289,7 +1291,7 @@ function S6({
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          Your complete surprise is about to be revealed
+          My complete surprise for you is about to unfold
         </p>
 
         <Btn onClick={onNext}>Reveal Everything ❤️</Btn>
@@ -1490,7 +1492,7 @@ function SpotifyPlayer({
               className="text-xs font-bold uppercase tracking-wider text-pink-300 truncate"
               style={{ fontFamily: "'DM Sans', sans-serif" }}
             >
-              🎵 Her Special Song (Full Track)
+              🎵 Your Special Song (Full Track)
             </span>
             <button
               onClick={toggleMute}
@@ -1905,7 +1907,7 @@ function LoveLetter({ letter }: { letter?: string }) {
             className="text-white text-sm font-semibold"
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
-            A Letter From His Heart
+            My Letter From The Heart
           </span>
         </div>
         <div
@@ -1993,7 +1995,7 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          A message from his heart ❤️
+          My voice note straight from my heart ❤️
         </p>
 
         <div className="flex justify-center mb-5">
@@ -2011,7 +2013,7 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
             {/* Cassette Header Label */}
             <div className="flex justify-between items-center px-1">
               <span className="text-[9px] font-bold uppercase tracking-wider text-pink-300 font-mono">
-                📼 HIS VOICE NOTE
+                📼 MY VOICE NOTE FOR YOU
               </span>
               <span className="text-[10px] text-pink-200 font-medium">{play ? "🔊 PLAYING" : "▶ PLAY"}</span>
             </div>
@@ -2154,7 +2156,7 @@ function S7({
               fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            Made with endless love, just for you.
+            I love you more than words can say, forever and always ❤️
           </p>
 
           <div className="flex flex-col gap-4">
