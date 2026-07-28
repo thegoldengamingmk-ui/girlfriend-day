@@ -2606,16 +2606,27 @@ function HamburgerMenu({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-10 h-10 rounded-full flex items-center justify-center text-lg text-white cursor-pointer transition-all duration-300 hover:scale-105 shadow-lg select-none"
+        className="w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl select-none"
         style={{
-          background: "rgba(255,255,255,0.15)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          border: "1px solid rgba(255,255,255,0.2)",
+          background: "linear-gradient(135deg, rgba(26, 0, 53, 0.95), rgba(60, 10, 50, 0.95))",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          border: "1.5px solid rgba(255, 180, 210, 0.45)",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.5), 0 0 15px rgba(232,120,154,0.35)",
         }}
-        title="Menu"
+        aria-label="Toggle Menu"
       >
-        {isOpen ? "✕" : "☰"}
+        {isOpen ? (
+          /* SVG Close Icon */
+          <svg className="w-5 h-5 text-pink-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          /* SVG Crisp 3-Lines Icon */
+          <svg className="w-5 h-5 text-pink-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        )}
       </button>
 
       <AnimatePresence>
@@ -2626,17 +2637,18 @@ function HamburgerMenu({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/50 z-[-1]"
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[-1]"
             />
             <motion.div
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute top-12 left-0 w-52 p-3 rounded-2xl shadow-2xl space-y-1.5 z-10 overflow-hidden"
+              className="absolute top-14 left-0 w-56 p-3 rounded-2xl shadow-2xl space-y-1.5 z-10 overflow-hidden"
               style={{
-                background: "linear-gradient(135deg, rgba(25, 5, 45, 0.96), rgba(65, 12, 55, 0.96))",
+                background: "linear-gradient(135deg, rgba(25, 5, 45, 0.98), rgba(65, 12, 55, 0.98))",
                 backdropFilter: "blur(24px)",
-                border: "1px solid rgba(255, 192, 203, 0.3)",
+                border: "1.5px solid rgba(255, 192, 203, 0.35)",
+                boxShadow: "0 15px 40px rgba(0,0,0,0.7)",
               }}
             >
               <button
@@ -2646,9 +2658,9 @@ function HamburgerMenu({
                   playButtonSound()
                   onOpenReferrals()
                 }}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-2.5 transition-colors cursor-pointer"
+                className="w-full px-3.5 py-3 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-3 transition-colors cursor-pointer"
               >
-                <span>🎁</span> My Referrals
+                <span className="text-base">🎁</span> My Referrals
               </button>
 
               <button
@@ -2658,9 +2670,9 @@ function HamburgerMenu({
                   playButtonSound()
                   onOpenDashboard()
                 }}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-2.5 transition-colors cursor-pointer"
+                className="w-full px-3.5 py-3 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-3 transition-colors cursor-pointer"
               >
-                <span>💖</span> Create Surprise
+                <span className="text-base">💖</span> Create Surprise
               </button>
 
               <button
@@ -2670,9 +2682,9 @@ function HamburgerMenu({
                   playButtonSound()
                   onPreview()
                 }}
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-2.5 transition-colors cursor-pointer"
+                className="w-full px-3.5 py-3 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-3 transition-colors cursor-pointer"
               >
-                <span>👀</span> Preview Flow
+                <span className="text-base">👀</span> Preview Flow
               </button>
             </motion.div>
           </>
