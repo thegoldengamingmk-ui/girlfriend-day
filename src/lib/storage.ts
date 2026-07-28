@@ -59,3 +59,34 @@ export async function uploadVoiceNote(file: File): Promise<string> {
 
   return publicUrlData.publicUrl
 }
+
+/**
+ * Upload a custom MP3/audio music file to Supabase Storage 'voice-notes' bucket.
+ * Returns the public URL of the uploaded music file.
+ */
+export async function uploadMusicTrack(file: File): Promise<string> {
+  if (!file) throw new Error('No music file provided')
+
+  const ext = file.name.split('.').pop() || 'mp3'
+  const fileName = `music_${Date.now()}_${Math.random().toString(36).slice(2, 9)}.${ext}`
+  const filePath = `music/${fileName}`
+
+  const { error } = await supabase.storage
+    .from('voice-notes')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true,
+    })
+
+  if (error) {
+    console.error('Error uploading music track to Supabase Storage:', error)
+    throw new Error(`Music upload failed: ${error.message}`)
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from('voice-notes')
+    .getPublicUrl(filePath)
+
+  return publicUrlData.publicUrl
+}
+

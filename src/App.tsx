@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { uploadPhoto, uploadVoiceNote } from "./lib/storage"
+import { uploadPhoto, uploadVoiceNote, uploadMusicTrack } from "./lib/storage"
 import {
   createSurprise,
   getSurpriseBySlug,
@@ -259,14 +259,33 @@ function RomanticBGMPlayer() {
       }
     }
 
+    const handlePauseBGM = () => {
+      const currentAudio = audioRef.current
+      if (currentAudio && !currentAudio.paused) {
+        currentAudio.pause()
+        setIsPlaying(false)
+      }
+    }
+
+    const handleResumeBGM = () => {
+      const currentAudio = audioRef.current
+      if (currentAudio && !userMutedRef.current) {
+        currentAudio.play().then(() => setIsPlaying(true)).catch(() => {})
+      }
+    }
+
     const events = ["pointerdown", "touchstart", "click", "keydown", "scroll", "mousemove"]
     events.forEach((evt) =>
       window.addEventListener(evt, handleGesture, { passive: true }),
     )
+    window.addEventListener("pause-bgm", handlePauseBGM)
+    window.addEventListener("resume-bgm", handleResumeBGM)
 
     return () => {
       audio.pause()
       events.forEach((evt) => window.removeEventListener(evt, handleGesture))
+      window.removeEventListener("pause-bgm", handlePauseBGM)
+      window.removeEventListener("resume-bgm", handleResumeBGM)
     }
   }, [])
 
@@ -1310,28 +1329,191 @@ function extractSpotifyTrackId(input: string): string {
   return "4cOdK2wGLETKBW3PvgPWqT"
 }
 
+function isAudioUrl(url?: string): boolean {
+  if (!url) return false
+  if (url.startsWith("blob:") || url.startsWith("data:audio")) return true
+  if (url.match(/\.(mp3|m4a|wav|aac|ogg)(\?.*)?$/i)) return true
+  if (url.includes("voice-notes") || url.includes("/music/")) return true
+  if ((url.startsWith("http://") || url.startsWith("https://")) && !url.includes("spotify.com")) return true
+  return false
+}
+
 function SpotifyPlayer({
   trackId = "4cOdK2wGLETKBW3PvgPWqT",
 }: {
   trackId?: string
 }) {
-  const activeId = extractSpotifyTrackId(trackId)
+  const isDirectAudio = isAudioUrl(trackId)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [isMuted, setIsMuted] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    if (!isDirectAudio || !trackId) return
+    const audio = new Audio(trackId)
+    audioRef.current = audio
+
+    const onTime = () => setCurrentTime(audio.currentTime)
+    const onMeta = () => setDuration(audio.duration || 0)
+    const onEnded = () => {
+      setIsPlaying(false)
+      window.dispatchEvent(new Event("resume-bgm"))
+    }
+
+    audio.addEventListener("timeupdate", onTime)
+    audio.addEventListener("loadedmetadata", onMeta)
+    audio.addEventListener("ended", onEnded)
+
+    return () => {
+      audio.pause()
+      audio.removeEventListener("timeupdate", onTime)
+      audio.removeEventListener("loadedmetadata", onMeta)
+      audio.removeEventListener("ended", onEnded)
+      window.dispatchEvent(new Event("resume-bgm"))
+    }
+  }, [trackId, isDirectAudio])
+
+  const togglePlay = () => {
+    playButtonSound()
+    const audio = audioRef.current
+    if (!audio) return
+
+    if (isPlaying) {
+      audio.pause()
+      setIsPlaying(false)
+      window.dispatchEvent(new Event("resume-bgm"))
+    } else {
+      window.dispatchEvent(new Event("pause-bgm"))
+      audio
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch((err) => console.error("Audio playback error:", err))
+    }
+  }
+
+  const toggleMute = () => {
+    playButtonSound()
+    const audio = audioRef.current
+    if (!audio) return
+    audio.muted = !isMuted
+    setIsMuted(!isMuted)
+  }
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value)
+    const audio = audioRef.current
+    if (audio) {
+      audio.currentTime = val
+      setCurrentTime(val)
+    }
+  }
+
+  const formatTime = (secs: number) => {
+    if (isNaN(secs) || secs <= 0) return "0:00"
+    const m = Math.floor(secs / 60)
+    const s = Math.floor(secs % 60)
+    return `${m}:${s < 10 ? "0" : ""}${s}`
+  }
+
+  if (!isDirectAudio) {
+    const activeId = extractSpotifyTrackId(trackId)
+    return (
+      <div className="mb-6 rounded-2xl overflow-hidden shadow-2xl transition-all duration-300">
+        <iframe
+          src={`https://open.spotify.com/embed/track/${activeId}?utm_source=generator&theme=0`}
+          width="100%"
+          height="152"
+          frameBorder="0"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+          className="w-full rounded-2xl"
+          style={{
+            borderRadius: "16px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
+            border: "1px solid rgba(255,255,255,0.18)",
+          }}
+        />
+      </div>
+    )
+  }
+
   return (
-    <div className="mb-6 rounded-2xl overflow-hidden shadow-2xl transition-all duration-300">
-      <iframe
-        src={`https://open.spotify.com/embed/track/${activeId}?utm_source=generator&theme=0`}
-        width="100%"
-        height="152"
-        frameBorder="0"
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        loading="lazy"
-        className="w-full rounded-2xl"
-        style={{
-          borderRadius: "16px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
-          border: "1px solid rgba(255,255,255,0.18)",
-        }}
-      />
+    <div
+      className="mb-6 p-4 rounded-2xl shadow-2xl relative overflow-hidden transition-all duration-300"
+      style={{
+        background: "linear-gradient(135deg, rgba(30,10,40,0.95), rgba(75,15,60,0.95))",
+        backdropFilter: "blur(12px)",
+        border: "1px solid rgba(255,182,193,0.35)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+      }}
+    >
+      <div className="flex items-center gap-3.5">
+        {/* Spinning Vinyl Record Disc */}
+        <div
+          className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform shrink-0 ${
+            isPlaying ? "animate-spin" : ""
+          }`}
+          style={{
+            background: "radial-gradient(circle, #ff69b4 0%, #8b008b 60%, #1a0020 100%)",
+            border: "2px solid rgba(255,255,255,0.4)",
+            animationDuration: "4s",
+          }}
+        >
+          <div className="w-5 h-5 rounded-full bg-white/20 border border-white/40 flex items-center justify-center">
+            <div className="w-2 h-2 rounded-full bg-white" />
+          </div>
+        </div>
+
+        {/* Title and Controls */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <span
+              className="text-xs font-bold uppercase tracking-wider text-pink-300 truncate"
+              style={{ fontFamily: "'DM Sans', sans-serif" }}
+            >
+              🎵 Her Special Song (Full Track)
+            </span>
+            <button
+              onClick={toggleMute}
+              className="text-xs text-white/70 hover:text-white transition-colors cursor-pointer"
+              title={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? "🔇" : "🔊"}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3 mt-1.5">
+            <button
+              onClick={togglePlay}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 shadow-md shrink-0 cursor-pointer text-base"
+              style={{
+                background: "linear-gradient(135deg, #ff4081, #c2185b)",
+                color: "#ffffff",
+                boxShadow: "0 0 15px rgba(255,64,129,0.5)",
+              }}
+            >
+              {isPlaying ? "⏸" : "▶"}
+            </button>
+
+            <div className="flex-1 min-w-0">
+              <input
+                type="range"
+                min="0"
+                max={duration || 100}
+                value={currentTime}
+                onChange={handleSeek}
+                className="w-full accent-pink-500 cursor-pointer h-1.5 rounded-lg bg-white/20"
+              />
+              <div className="flex justify-between text-[10px] text-white/70 mt-1 font-mono">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -1843,6 +2025,8 @@ function Dashboard({
   }
 
   const [spotifyQ, setSpotifyQ] = useState("")
+  const [musicFile, setMusicFile] = useState<File | null>(null)
+  const musicFileInputRef = useRef<HTMLInputElement>(null)
   const [secretQuestions, setSecretQuestions] = useState([
     { question: "When did we first meet?", answer: "" },
     { question: "What nickname do I call you?", answer: "" },
@@ -1886,13 +2070,19 @@ function Dashboard({
         uploadedPhotoUrls.push(...photos.filter((p) => p.startsWith("http")))
       }
 
-      // 2. Upload Voice Note to Supabase Storage if provided
+      // 2. Upload MP3 Music Track if provided
+      let musicPublicUrl = ""
+      if (musicFile) {
+        musicPublicUrl = await uploadMusicTrack(musicFile)
+      }
+
+      // 3. Upload Voice Note to Supabase Storage if provided
       let voiceNotePublicUrl = ""
       if (voiceNoteFile) {
         voiceNotePublicUrl = await uploadVoiceNote(voiceNoteFile)
       }
 
-      // 3. Prepare Questions & Answers
+      // 4. Prepare Questions & Answers
       const questionRecords = secretQuestions
         .filter((q) => q.question.trim() && q.answer.trim())
         .map((q) => ({
@@ -1900,8 +2090,9 @@ function Dashboard({
           answer: q.answer.trim(),
         }))
 
-      // 4. Save Surprise to Supabase Database
+      // 5. Save Surprise to Supabase Database
       const finalSpotifyUrl =
+        musicPublicUrl ||
         spotifyQ.trim() ||
         `https://open.spotify.com/track/${spotifyTrackId}`
 
@@ -2395,7 +2586,7 @@ function Dashboard({
                 ref={nativeMicInputRef}
                 type="file"
                 accept="audio/*"
-                capture="microphone"
+                capture="user"
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files?.[0]) {
@@ -2408,32 +2599,83 @@ function Dashboard({
           )}
         </div>
 
-        {/* 5. Spotify Link */}
+        {/* 5. Her Special Song (MP3 Upload & Link Option) */}
         <div style={card}>
           <div style={secTitle}>🎵 Her Special Song</div>
           <div style={secSub}>
-            Paste ANY Spotify song link or select a romantic favorite
+            Upload an MP3 song for FULL playback, or paste a song/Spotify link!
           </div>
 
           <div className="space-y-3">
+            {/* MP3 File Upload Area */}
+            <div
+              className="p-4 rounded-xl border-2 border-dashed text-center transition-all cursor-pointer hover:border-pink-500"
+              style={{
+                borderColor: musicFile ? "#c9438a" : "rgba(200,67,138,0.35)",
+                background: musicFile ? "rgba(255,240,246,0.85)" : "rgba(255,255,255,0.6)",
+              }}
+              onClick={() => musicFileInputRef.current?.click()}
+            >
+              <input
+                ref={musicFileInputRef}
+                type="file"
+                accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    playButtonSound()
+                    setMusicFile(file)
+                    const blobUrl = URL.createObjectURL(file)
+                    setSpotifyQ(blobUrl)
+                    setSpotifyTrackId(blobUrl)
+                  }
+                }}
+              />
+              <div className="text-2xl mb-1">🎧</div>
+              <div className="text-xs font-bold text-[#7a0f50]">
+                {musicFile ? `Uploaded: ${musicFile.name}` : "Upload MP3 Song File (Full Playback)"}
+              </div>
+              <div className="text-[10px] text-gray-500 mt-1">
+                {musicFile ? "Click to change audio file" : "Supports .mp3, .m4a, .wav (Plays 100% of full song)"}
+              </div>
+            </div>
+
+            {/* Direct Audio URL or Spotify Fallback Link */}
             <div>
-              <label style={lbl}>Spotify Song Link</label>
+              <label style={lbl}>Or Paste Song Audio URL / Spotify Link</label>
               <input
                 style={inp}
-                value={spotifyQ}
+                value={musicFile ? musicFile.name : spotifyQ}
+                disabled={!!musicFile}
                 onChange={(e) => {
                   playTypeSound()
                   const val = e.target.value
                   setSpotifyQ(val)
-                  const extracted = extractSpotifyTrackId(val)
-                  if (extracted) setSpotifyTrackId(extracted)
+                  setSpotifyTrackId(val)
                 }}
-                placeholder="https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
+                placeholder="https://.../song.mp3 or Spotify Track Link"
                 onFocus={focusInp}
                 onBlur={blurInp}
               />
+              {musicFile && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    playButtonSound()
+                    setMusicFile(null)
+                    setSpotifyQ("")
+                    setSpotifyTrackId("4cOdK2wGLETKBW3PvgPWqT")
+                  }}
+                  className="mt-1 text-[11px] text-pink-600 underline font-medium cursor-pointer"
+                >
+                  Remove uploaded file & use link
+                </button>
+              )}
             </div>
 
+            {/* Live Player Preview */}
             <div className="mt-3">
               <p
                 style={{
@@ -2444,78 +2686,68 @@ function Dashboard({
                   marginBottom: "6px",
                 }}
               >
-                Live Spotify Preview:
+                Live Player Preview:
               </p>
-              <div
-                className="rounded-2xl overflow-hidden shadow-sm"
-                style={{ border: "1px solid rgba(200,67,138,0.2)" }}
-              >
-                <iframe
-                  src={`https://open.spotify.com/embed/track/${extractSpotifyTrackId(spotifyQ || spotifyTrackId)}?utm_source=generator&theme=0`}
-                  width="100%"
-                  height="152"
-                  frameBorder="0"
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  loading="lazy"
-                  className="w-full rounded-2xl"
-                />
-              </div>
+              <SpotifyPlayer trackId={spotifyQ || spotifyTrackId} />
             </div>
 
-            <div>
-              <p
-                style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: "11px",
-                  color: "#7a0f50",
-                  fontWeight: "600",
-                  marginTop: "10px",
-                  marginBottom: "6px",
-                }}
-              >
-                Or Select Romantic Favorites:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  {
-                    title: "Perfect - Ed Sheeran",
-                    id: "4cOdK2wGLETKBW3PvgPWqT",
-                  },
-                  {
-                    title: "All of Me - John Legend",
-                    id: "3U4isOIWM3VvDubwSI3y7a",
-                  },
-                  { title: "A Thousand Years", id: "6RUKwULelqY2FmRUt5K3wE" },
-                  { title: "Die With A Smile", id: "2plbrEY59IikOBgBGLjaoe" },
-                ].map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => {
-                      playButtonSound()
-                      setSpotifyTrackId(s.id)
-                      setSpotifyQ(`https://open.spotify.com/track/${s.id}`)
-                    }}
-                    className="px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all duration-200"
-                    style={{
-                      background:
-                        extractSpotifyTrackId(spotifyQ || spotifyTrackId) ===
-                        s.id
-                          ? "#c9438a"
-                          : "rgba(255,240,246,0.9)",
-                      color:
-                        extractSpotifyTrackId(spotifyQ || spotifyTrackId) ===
-                        s.id
-                          ? "#ffffff"
-                          : "#7a0f50",
-                      border: "1px solid rgba(200,67,138,0.2)",
-                    }}
-                  >
-                    🎵 {s.title}
-                  </button>
-                ))}
+            {!musicFile && (
+              <div>
+                <p
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: "11px",
+                    color: "#7a0f50",
+                    fontWeight: "600",
+                    marginTop: "10px",
+                    marginBottom: "6px",
+                  }}
+                >
+                  Or Select Romantic Favorites:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    {
+                      title: "Perfect - Ed Sheeran",
+                      id: "4cOdK2wGLETKBW3PvgPWqT",
+                    },
+                    {
+                      title: "All of Me - John Legend",
+                      id: "3U4isOIWM3VvDubwSI3y7a",
+                    },
+                    { title: "A Thousand Years", id: "6RUKwULelqY2FmRUt5K3wE" },
+                    { title: "Die With A Smile", id: "2plbrEY59IikOBgBGLjaoe" },
+                  ].map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => {
+                        playButtonSound()
+                        setMusicFile(null)
+                        setSpotifyTrackId(s.id)
+                        setSpotifyQ(`https://open.spotify.com/track/${s.id}`)
+                      }}
+                      className="px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all duration-200"
+                      style={{
+                        background:
+                          extractSpotifyTrackId(spotifyQ || spotifyTrackId) ===
+                            s.id && !musicFile
+                            ? "#c9438a"
+                            : "rgba(255,240,246,0.9)",
+                        color:
+                          extractSpotifyTrackId(spotifyQ || spotifyTrackId) ===
+                            s.id && !musicFile
+                            ? "#ffffff"
+                            : "#7a0f50",
+                        border: "1px solid rgba(200,67,138,0.2)",
+                      }}
+                    >
+                      🎵 {s.title}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -2934,7 +3166,7 @@ export default function App() {
           if (data) {
             setSurpriseData(data)
             if (data.surprise.spotify_url) {
-              setSpotifyTrackId(extractSpotifyTrackId(data.surprise.spotify_url))
+              setSpotifyTrackId(data.surprise.spotify_url)
             }
           }
         })
