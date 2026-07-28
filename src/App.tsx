@@ -2141,9 +2141,6 @@ function S7({
             <Btn onClick={onReplay} full>
               🔄 Replay Surprise
             </Btn>
-            <Btn onClick={onDash} full outline>
-              Create One For Your Girlfriend ❤️
-            </Btn>
           </div>
         </div>
       </div>
