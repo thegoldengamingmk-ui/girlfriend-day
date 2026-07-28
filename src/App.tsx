@@ -16,9 +16,12 @@ import {
   getOrCreateReferralProfile,
   type UserReferralProfile,
 } from "./lib/referralService"
+import { AdminLoginModal } from "./components/AdminLoginModal"
+import { AdminDashboard } from "./components/AdminDashboard"
+import { getActiveAdminSession, type AdminUser } from "./lib/adminAuthService"
 import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
 
-type Screen = 1 | 2 | 3 | 4 | 5 | 6 | 7 | "dashboard"
+type Screen = 1 | 2 | 3 | 4 | 5 | 6 | 7 | "dashboard" | "admin-login" | "admin-dashboard"
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 
@@ -2604,10 +2607,12 @@ function HamburgerMenu({
   onOpenReferrals,
   onOpenDashboard,
   onPreview,
+  onOpenAdmin,
 }: {
   onOpenReferrals: () => void
   onOpenDashboard: () => void
   onPreview: () => void
+  onOpenAdmin: () => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -2695,6 +2700,18 @@ function HamburgerMenu({
                 className="w-full px-3.5 py-3 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-3 transition-colors cursor-pointer"
               >
                 <span className="text-base">👀</span> Preview Flow
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false)
+                  playButtonSound()
+                  onOpenAdmin()
+                }}
+                className="w-full px-3.5 py-3 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-3 transition-colors cursor-pointer border-t border-white/10"
+              >
+                <span className="text-base">🛡️</span> Admin Portal
               </button>
             </motion.div>
           </>
@@ -4756,10 +4773,20 @@ export default function App() {
     }
   }
 
+  // Admin State
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(() => getActiveAdminSession())
+  const [showAdminLoginModal, setShowAdminLoginModal] = useState(false)
+
   const [screen, setScreen] = useState<Screen>(() => {
     if (typeof window !== "undefined") {
       const search = window.location.search
       const path = window.location.pathname
+      if (path.includes("admin-login") || path.includes("admin") || search.includes("admin=true")) {
+        const session = getActiveAdminSession()
+        if (session) return "admin-dashboard"
+        return "admin-login"
+      }
+
       const hasSurpriseParam =
         search.includes("s=") || search.includes("surprise=") || path.includes("/s/")
       if (hasSurpriseParam) return 1
@@ -4775,9 +4802,21 @@ export default function App() {
 
     const searchParams = new URLSearchParams(window.location.search)
     let slug = searchParams.get("s") || searchParams.get("surprise") || ""
+    const path = window.location.pathname
 
-    if (!slug && window.location.pathname.includes("/s/")) {
-      slug = window.location.pathname.split("/s/")[1]?.split("?")[0] || ""
+    if (path.includes("admin-login") || path.includes("admin") || searchParams.get("admin") === "true") {
+      const session = getActiveAdminSession()
+      if (session) {
+        setAdminUser(session)
+        setScreen("admin-dashboard")
+      } else {
+        setShowAdminLoginModal(true)
+      }
+      return
+    }
+
+    if (!slug && path.includes("/s/")) {
+      slug = path.split("/s/")[1]?.split("?")[0] || ""
     }
 
     if (slug) {
@@ -4820,12 +4859,40 @@ export default function App() {
   const letterText = surpriseData?.surprise.letter || undefined
   const voiceNoteUrl = surpriseData?.surprise.voice_note_url || undefined
 
+  if (screen === "admin-dashboard" && adminUser) {
+    return (
+      <AdminDashboard
+        admin={adminUser}
+        onLogout={() => {
+          setAdminUser(null)
+          go("dashboard")
+        }}
+      />
+    )
+  }
+
   return (
     <div>
       <HamburgerMenu
         onOpenReferrals={handleOpenReferralsMenu}
         onOpenDashboard={() => go("dashboard")}
         onPreview={() => go(1)}
+        onOpenAdmin={() => {
+          if (adminUser) {
+            go("admin-dashboard")
+          } else {
+            setShowAdminLoginModal(true)
+          }
+        }}
+      />
+
+      <AdminLoginModal
+        isOpen={showAdminLoginModal}
+        onClose={() => setShowAdminLoginModal(false)}
+        onLoginSuccess={(admin) => {
+          setAdminUser(admin)
+          go("admin-dashboard")
+        }}
       />
 
       <ReferralsLockedModal
