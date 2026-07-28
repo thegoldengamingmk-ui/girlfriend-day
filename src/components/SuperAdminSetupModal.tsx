@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  checkSuperAdminExists,
+  isSetupRoutePermanentlyLocked,
   createInitialSuperAdmin,
   type AdminUser,
 } from '../lib/adminAuthService'
@@ -15,7 +15,7 @@ export function SuperAdminSetupModal({
   onClose: () => void
   onSetupSuccess: (admin: AdminUser) => void
 }) {
-  const isAlreadyConfigured = checkSuperAdminExists()
+  const isLocked = isSetupRoutePermanentlyLocked()
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -28,6 +28,11 @@ export function SuperAdminSetupModal({
 
   const handleSetup = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isLocked) {
+      setErrorMsg('403 Forbidden: Initial Super Admin Setup is Permanently Disabled.')
+      return
+    }
+
     setIsLoading(true)
     setErrorMsg('')
 
@@ -69,38 +74,41 @@ export function SuperAdminSetupModal({
           style={{
             background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98))',
             backdropFilter: 'blur(24px)',
-            border: '1.5px solid rgba(232, 120, 154, 0.4)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.85), 0 0 40px rgba(232,120,154,0.2)',
+            border: isLocked ? '1.5px solid rgba(244, 63, 94, 0.5)' : '1.5px solid rgba(232, 120, 154, 0.4)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.85), 0 0 40px rgba(244,63,94,0.2)',
           }}
         >
           {/* Header */}
           <div className="text-center mb-6">
-            <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40 flex items-center justify-center text-3xl shadow-lg">
-              👑
+            <div className={`w-16 h-16 mx-auto mb-3 rounded-2xl ${isLocked ? 'bg-rose-500/20 border border-rose-500/40 text-rose-400' : 'bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40 text-pink-300'} flex items-center justify-center text-3xl shadow-lg`}>
+              {isLocked ? '⛔' : '👑'}
             </div>
             <h2
               className="text-2xl font-bold text-white mb-1"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              Super Admin Initial Setup
+              {isLocked ? '403 Forbidden: Setup Disabled' : 'Super Admin Initial Setup'}
             </h2>
             <p className="text-xs text-slate-400">
-              Create the master website owner account • Route `/setup-super-admin`
+              Route `/setup-super-admin` • Security Protocol Active
             </p>
           </div>
 
-          {isAlreadyConfigured ? (
-            <div className="text-center p-6 bg-slate-900/80 rounded-2xl border border-slate-800 space-y-4">
+          {isLocked ? (
+            <div className="text-center p-6 bg-slate-900/90 rounded-2xl border border-rose-500/30 space-y-4">
               <div className="text-4xl">🔒</div>
-              <h3 className="text-lg font-bold text-rose-300 font-serif">Super Admin Already Configured</h3>
-              <p className="text-xs text-slate-400">
-                A master <strong className="text-pink-300">SUPER_ADMIN</strong> account is already registered in the system. For security reasons, this setup page has been locked.
+              <h3 className="text-base font-bold text-rose-400 font-serif">Initial Setup Permanently Locked</h3>
+              <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                A master <strong className="text-pink-300">SUPER_ADMIN</strong> account has already been initialized and configured. For system security against unauthorized account creation, this endpoint is <strong className="text-rose-400">permanently disabled</strong>.
               </p>
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 font-mono text-left">
+                To re-enable setup, perform a secure database reset or execute admin seed reset from server environment.
+              </div>
               <button
                 onClick={onClose}
-                className="w-full py-3 rounded-xl text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 cursor-pointer"
+                className="w-full py-3 rounded-xl text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
               >
-                Close & Go to Login 🔐
+                Return to Admin Login 🔐
               </button>
             </div>
           ) : (

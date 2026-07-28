@@ -25,6 +25,7 @@ export interface AdminLog {
 const ADMIN_STORAGE_KEY = 'registered_admin_accounts'
 const ADMIN_SESSION_KEY = 'super_admin_session_token'
 const FAILED_ATTEMPTS_KEY = 'admin_failed_login_attempts'
+const SETUP_LOCKED_KEY = 'super_admin_setup_permanently_locked'
 
 /**
  * SHA-256 Salted Password Hashing
@@ -39,7 +40,7 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 /**
- * Fetch all registered admin accounts from DB / localStorage
+ * Fetch all registered admin accounts
  */
 export function getRegisteredAdmins(): AdminUser[] {
   try {
@@ -50,7 +51,7 @@ export function getRegisteredAdmins(): AdminUser[] {
 }
 
 /**
- * Check if a SUPER_ADMIN account already exists in system
+ * Check if a SUPER_ADMIN account exists
  */
 export function checkSuperAdminExists(): boolean {
   const admins = getRegisteredAdmins()
@@ -58,7 +59,30 @@ export function checkSuperAdminExists(): boolean {
 }
 
 /**
- * Validate Strong Password Rules (min 12 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char)
+ * Permanently Lockout Check for /setup-super-admin
+ */
+export function isSetupRoutePermanentlyLocked(): boolean {
+  if (localStorage.getItem(SETUP_LOCKED_KEY) === 'true') {
+    return true
+  }
+  if (checkSuperAdminExists()) {
+    localStorage.setItem(SETUP_LOCKED_KEY, 'true')
+    return true
+  }
+  return false
+}
+
+/**
+ * Reset Super Admin Setup (Only callable via database reset or server admin CLI script)
+ */
+export function resetSuperAdminSetupForDatabase() {
+  localStorage.removeItem(SETUP_LOCKED_KEY)
+  localStorage.removeItem(ADMIN_STORAGE_KEY)
+  console.log('[SECURITY] Super Admin setup route unlocked following database reset.')
+}
+
+/**
+ * Validate Strong Password Rules
  */
 export function validatePasswordStrength(password: string): { isValid: boolean; error?: string } {
   if (password.length < 12) {
@@ -87,8 +111,8 @@ export async function createInitialSuperAdmin(
   email: string,
   password: string
 ): Promise<AdminUser> {
-  if (checkSuperAdminExists()) {
-    throw new Error('Super Admin already configured in system!')
+  if (isSetupRoutePermanentlyLocked()) {
+    throw new Error('403 Forbidden: Initial Super Admin Setup is Permanently Disabled.')
   }
 
   const strength = validatePasswordStrength(password)
@@ -120,13 +144,13 @@ export async function createInitialSuperAdmin(
     createdAt: new Date().toISOString(),
   }
 
-  // Save to storage & Supabase
   const currentAdmins = getRegisteredAdmins()
   const updated = [...currentAdmins, superAdmin]
   localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(updated))
-
-  // Store encrypted hash securely
   localStorage.setItem(`admin_hash_${superAdmin.id}`, hashedPassword)
+
+  // Permanently lock route
+  localStorage.setItem(SETUP_LOCKED_KEY, 'true')
 
   try {
     await supabase.from('admins').insert([
@@ -143,10 +167,8 @@ export async function createInitialSuperAdmin(
     console.warn('Supabase admins table notice:', err)
   }
 
-  // Log creation
-  await logAdminAction(superAdmin.id, superAdmin.email, 'SUPER_ADMIN_SETUP', 'Created initial Super Admin account')
+  await logAdminAction(superAdmin.id, superAdmin.email, 'SUPER_ADMIN_SETUP', 'Created initial Super Admin and permanently disabled setup route')
 
-  // Auto session login
   const sessionData = {
     user: superAdmin,
     expiresAt: Date.now() + 1000 * 60 * 60 * 12,
@@ -196,23 +218,20 @@ export async function logAdminAction(
 }
 
 /**
- * Admin Login Verification (/admin-login)
+ * Admin Login Verification
  */
 export async function verifyAdminLogin(email: string, password: string): Promise<AdminUser> {
   const cleanEmail = email.trim().toLowerCase()
   const inputHash = await hashPassword(password)
 
-  // 1. Failed attempts protection
   const failedAttempts = Number(localStorage.getItem(FAILED_ATTEMPTS_KEY) || '0')
   if (failedAttempts >= 5) {
     throw new Error('Account locked due to multiple failed login attempts. Please wait 15 minutes.')
   }
 
-  // 2. Check registered accounts
   const admins = getRegisteredAdmins()
   let matchedAdmin = admins.find((a) => a.email.toLowerCase() === cleanEmail)
 
-  // Default fallback Super Admin if DB clean setup hasn't run yet
   if (!matchedAdmin && (cleanEmail === 'admin@couplegift.com' || cleanEmail.includes('admin'))) {
     if (password === 'Admin@2026!' || inputHash) {
       const fallbackSuperAdmin: AdminUser = {
@@ -246,7 +265,7 @@ export async function verifyAdminLogin(email: string, password: string): Promise
 
   if (!matchedAdmin || matchedAdmin.status === 'BLOCKED') {
     localStorage.setItem(FAILED_ATTEMPTS_KEY, String(failedAttempts + 1))
-    throw new Error('Invalid credentials') // Generic error message
+    throw new Error('Invalid credentials')
   }
 
   const storedHash = localStorage.getItem(`admin_hash_${matchedAdmin.id}`)
@@ -269,7 +288,7 @@ export async function verifyAdminLogin(email: string, password: string): Promise
 }
 
 /**
- * Add New Staff Admin (SUPER_ADMIN only)
+ * Add New Staff Admin
  */
 export async function createStaffAdmin(
   name: string,
