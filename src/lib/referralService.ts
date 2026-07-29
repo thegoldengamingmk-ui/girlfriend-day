@@ -125,7 +125,7 @@ export function isSelfReferral(userEmail: string, referrerCode: string, userProf
  * All screens (User Dashboard, Admin Panel, Super Admin) read from user_profiles table.
  */
 export async function getOrCreateReferralProfile(
-  userId: string,
+  firebaseUid: string,
   email: string,
   displayName?: string,
   photoUrl?: string
@@ -134,12 +134,28 @@ export async function getOrCreateReferralProfile(
   const cleanName = displayName || cleanEmail.split('@')[0]
   const nowIso = new Date().toISOString()
 
-  console.log('[Single Source of Truth] Authenticating user:', cleanEmail)
+  console.log('[Single Source of Truth] Authenticating user by Firebase UID:', firebaseUid, 'Email:', cleanEmail)
 
+  // Persistent registry map helper to guarantee 100% code stability across refreshes
+  const getRegistryMap = (): Record<string, any> => {
+    try {
+      return JSON.parse(localStorage.getItem('persistent_user_registry_map') || '{}')
+    } catch {
+      return {}
+    }
+  }
+
+  const saveRegistryMap = (map: Record<string, any>) => {
+    try {
+      localStorage.setItem('persistent_user_registry_map', JSON.stringify(map))
+    } catch {}
+  }
+
+  const registry = getRegistryMap()
   let profileRecord: any = null
 
+  // 1. Search database by email first
   try {
-    // 1. Check if user profile already exists in Supabase user_profiles
     const { data: existingList } = await supabase
       .from('user_profiles')
       .select('*')
@@ -147,56 +163,88 @@ export async function getOrCreateReferralProfile(
 
     if (existingList && existingList.length > 0) {
       profileRecord = existingList[0]
-      console.log('[Single Source of Truth] Existing DB User Loaded:', profileRecord.email, 'Code:', profileRecord.referral_code)
+      console.log('[Single Source of Truth] Existing DB User Found:', profileRecord.email, 'Code:', profileRecord.referral_code)
+    }
+  } catch (err) {
+    console.warn('[Single Source of Truth] DB Query error:', err)
+  }
 
-      // Update last_login timestamp, name, and avatar once without changing referral_code
-      const updates: any = { last_login: nowIso }
-      if (cleanName && profileRecord.full_name !== cleanName) updates.full_name = cleanName
-      if (photoUrl && profileRecord.profile_image !== photoUrl) updates.profile_image = photoUrl
+  // 2. Check local persistent registry fallback if DB query returned nothing
+  const registryKey = firebaseUid || cleanEmail
+  const existingRegistryUser = registry[registryKey] || registry[cleanEmail]
 
+  if (profileRecord) {
+    // Existing DB User: Update last_login, name, avatar ONLY. NEVER change referral_code.
+    const updates: any = { last_login: nowIso }
+    if (cleanName && profileRecord.full_name !== cleanName) updates.full_name = cleanName
+    if (photoUrl && profileRecord.profile_image !== photoUrl) updates.profile_image = photoUrl
+
+    try {
       await supabase.from('user_profiles').update(updates).eq('id', profileRecord.id)
-      profileRecord.last_login = nowIso
-      if (updates.full_name) profileRecord.full_name = updates.full_name
-      if (updates.profile_image) profileRecord.profile_image = updates.profile_image
-    } else {
-      // 2. Generate referral code ONLY ONCE for brand-new user creation
-      const newReferralCode = generateUserReferralCode()
-      console.log('[Single Source of Truth] New User - Generated Referral Code:', newReferralCode)
+    } catch {}
 
-      const newProfileData = {
-        full_name: cleanName,
-        email: cleanEmail,
-        profile_image: photoUrl || null,
-        account_status: 'ACTIVE',
-        subscription_status: 'PREMIUM',
-        referral_code: newReferralCode,
-        last_login: nowIso,
-        last_login_ip: '127.0.0.1',
-      }
+    profileRecord.last_login = nowIso
+  } else if (existingRegistryUser) {
+    // Existing Registry User (DB disconnected or fallback): Preserve exact referral code!
+    console.log('[Single Source of Truth] Loaded Existing Registry User:', existingRegistryUser.email, 'Code:', existingRegistryUser.referralCode)
+    profileRecord = {
+      id: existingRegistryUser.id,
+      full_name: cleanName,
+      email: cleanEmail,
+      profile_image: photoUrl || existingRegistryUser.photoUrl || null,
+      referral_code: existingRegistryUser.referralCode,
+      created_at: existingRegistryUser.createdAt,
+      last_login: nowIso,
+    }
+  } else {
+    // Brand-new user: Generate referral code ONCE
+    const brandNewCode = generateUserReferralCode()
+    console.log('[Single Source of Truth] Brand-New User - Generating Initial Referral Code:', brandNewCode)
 
-      const { data: insertedList, error: insertErr } = await supabase
+    const newProfileData = {
+      full_name: cleanName,
+      email: cleanEmail,
+      profile_image: photoUrl || null,
+      account_status: 'ACTIVE',
+      subscription_status: 'PREMIUM',
+      referral_code: brandNewCode,
+      last_login: nowIso,
+      last_login_ip: '127.0.0.1',
+    }
+
+    try {
+      const { data: insertedList } = await supabase
         .from('user_profiles')
         .insert([newProfileData])
         .select()
 
-      if (!insertErr && insertedList && insertedList.length > 0) {
+      if (insertedList && insertedList.length > 0) {
         profileRecord = insertedList[0]
-        console.log('[Single Source of Truth] New Database User Inserted:', profileRecord.id)
-      } else {
-        console.warn('[Single Source of Truth] Insert warning:', insertErr)
+        console.log('[Single Source of Truth] Inserted New User Record:', profileRecord.id)
+      }
+    } catch (err) {
+      console.warn('[Single Source of Truth] DB Insert notice:', err)
+    }
+
+    if (!profileRecord) {
+      profileRecord = {
+        id: `usr_${Date.now()}`,
+        full_name: cleanName,
+        email: cleanEmail,
+        profile_image: photoUrl || null,
+        referral_code: brandNewCode,
+        created_at: nowIso,
+        last_login: nowIso,
       }
     }
-  } catch (err) {
-    console.warn('[Single Source of Truth] DB access notice:', err)
   }
 
-  // Guaranteed fallback object if DB connection fails
-  const canonicalId = profileRecord?.id || userId
-  const canonicalCode = profileRecord?.referral_code || generateUserReferralCode()
-  const canonicalCreatedAt = profileRecord?.created_at ? new Date(profileRecord.created_at).toLocaleDateString() : new Date().toLocaleDateString()
-  const canonicalLastLogin = profileRecord?.last_login ? new Date(profileRecord.last_login).toLocaleString() : new Date().toLocaleString()
+  const canonicalId = profileRecord.id
+  const canonicalCode = profileRecord.referral_code
+  const canonicalCreatedAt = profileRecord.created_at ? new Date(profileRecord.created_at).toLocaleDateString() : new Date().toLocaleDateString()
+  const canonicalLastLogin = profileRecord.last_login ? new Date(profileRecord.last_login).toLocaleString() : new Date().toLocaleString()
 
-  // 3. Aggregate referral statistics from referrals table
+  // 3. Fetch referral statistics
   let totalReferrals = 0
   let successfulReferrals = 0
   let pendingReferrals = 0
@@ -223,7 +271,7 @@ export async function getOrCreateReferralProfile(
     }
   } catch {}
 
-  // 4. Aggregate withdrawal records from withdrawals table
+  // 4. Fetch withdrawal statistics
   let totalWithdrawnOrPending = 0
   let pendingWithdrawal = 0
   const withdrawHistory: any[] = []
@@ -262,11 +310,11 @@ export async function getOrCreateReferralProfile(
 
   const canonicalUserObj: UserReferralProfile = {
     id: canonicalId,
-    firebaseUid: userId,
-    name: profileRecord?.full_name || cleanName,
-    email: profileRecord?.email || cleanEmail,
-    photoUrl: profileRecord?.profile_image || photoUrl || undefined,
-    phone: profileRecord?.phone || '',
+    firebaseUid,
+    name: profileRecord.full_name || cleanName,
+    email: cleanEmail,
+    photoUrl: profileRecord.profile_image || photoUrl || undefined,
+    phone: profileRecord.phone || '',
     referralCode: canonicalCode,
     referralLink: generateReferralLink(canonicalCode),
     walletBalance,
@@ -281,7 +329,11 @@ export async function getOrCreateReferralProfile(
     withdrawHistory,
   }
 
-  // Update synchronized cache layer
+  // 5. Store in persistent registry map & cache layer to ensure zero mismatch across refreshes
+  registry[registryKey] = canonicalUserObj
+  registry[cleanEmail] = canonicalUserObj
+  saveRegistryMap(registry)
+
   try {
     const cached = JSON.parse(localStorage.getItem('live_users_cache') || '[]')
     const idx = cached.findIndex((c: any) => c.email && c.email.toLowerCase() === cleanEmail)
@@ -293,6 +345,6 @@ export async function getOrCreateReferralProfile(
     localStorage.setItem('live_users_cache', JSON.stringify(cached))
   } catch {}
 
-  console.log('[Single Source of Truth] Returning Canonical User:', canonicalUserObj.email, 'Code:', canonicalUserObj.referralCode, 'LastLogin:', canonicalUserObj.lastLogin)
+  console.log('[Single Source of Truth] Canonical Profile Loaded:', canonicalUserObj.email, 'Code:', canonicalUserObj.referralCode)
   return canonicalUserObj
 }

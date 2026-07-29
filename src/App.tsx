@@ -21,7 +21,7 @@ import { AdminDashboard } from "./components/AdminDashboard"
 import { SuperAdminSetupModal } from "./components/SuperAdminSetupModal"
 import { AuthModal } from "./components/auth/AuthModal"
 import { ReferralDashboardModal } from "./components/auth/ReferralDashboardModal"
-import { getCurrentSession, signOutUser } from "./lib/authService"
+import { getCurrentSession, signOutUser, subscribeToAuthChanges } from "./lib/authService"
 import { getActiveAdminSession, type AdminUser } from "./lib/adminAuthService"
 import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
 
@@ -3938,19 +3938,14 @@ export default function App() {
   const [pendingSaveSurpriseFn, setPendingSaveSurpriseFn] = useState<(() => Promise<void>) | null>(null)
   const [generatedLink, setGeneratedLink] = useState("")
 
-  // Restore 30-day active session on mount
+  // Restore persistent Firebase Auth session across browser refreshes & restarts
   useEffect(() => {
-    async function initActiveSession() {
-      try {
-        const sessionData = await getCurrentSession()
-        if (sessionData && sessionData.profile) {
-          setUserProfile(sessionData.profile)
-        }
-      } catch (err) {
-        console.warn('Session init warning:', err)
+    const unsubscribe = subscribeToAuthChanges((profile) => {
+      if (profile) {
+        setUserProfile(profile)
       }
-    }
-    initActiveSession()
+    })
+    return () => unsubscribe()
   }, [])
 
   const handleOpenReferralsMenu = () => {

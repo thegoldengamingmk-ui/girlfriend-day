@@ -1,7 +1,7 @@
 /**
  * Firebase Authentication Service (Google Sign-In Only)
  * Manages Google Sign-In authentication, automated profile synchronization,
- * referral code generation, and persistent 30-day session management.
+ * referral code generation, and persistent session management across browser refreshes.
  */
 
 import {
@@ -42,11 +42,7 @@ export function formatAuthError(error: any): string {
 
 /**
  * Google Sign-In Authentication Flow
- * 1. Opens Google popup for account selection
- * 2. Authenticates with Firebase Auth
- * 3. Creates/fetches profile record in database (user_profiles)
- * 4. Generates unique referral code & link on first login
- * 5. Returns synchronized UserReferralProfile
+ * Opens Google popup, authenticates with Firebase, syncs/creates canonical DB user, and returns UserReferralProfile.
  */
 export async function signInWithGoogle(): Promise<UserReferralProfile> {
   try {
@@ -76,7 +72,30 @@ export async function signInWithGoogle(): Promise<UserReferralProfile> {
 }
 
 /**
- * Restore persistent Firebase user session on page load
+ * Live session change listener to restore session across browser refreshes & restarts
+ */
+export function subscribeToAuthChanges(callback: (profile: UserReferralProfile | null) => void) {
+  return onAuthStateChanged(firebaseAuth, async (user: FirebaseUser | null) => {
+    if (!user || !user.email) {
+      callback(null)
+      return
+    }
+
+    try {
+      const email = user.email.trim().toLowerCase()
+      const name = user.displayName || email.split('@')[0]
+      const photoUrl = user.photoURL || undefined
+      const profile = await getOrCreateReferralProfile(user.uid, email, name, photoUrl)
+      callback(profile)
+    } catch (err) {
+      console.warn('Error syncing restored Firebase session profile:', err)
+      callback(null)
+    }
+  })
+}
+
+/**
+ * One-time promise getter for active Firebase user session
  */
 export async function getCurrentAuthUser(): Promise<UserReferralProfile | null> {
   return new Promise((resolve) => {
@@ -106,6 +125,8 @@ export async function getCurrentAuthUser(): Promise<UserReferralProfile | null> 
  */
 export async function signOutFirebase(): Promise<void> {
   try {
+    // Clear session storage caches
+    localStorage.removeItem('live_users_cache')
     await signOut(firebaseAuth)
   } catch (err) {
     console.warn('Firebase SignOut Error:', err)

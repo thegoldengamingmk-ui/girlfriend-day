@@ -1,5 +1,10 @@
 import { initializeApp, getApps, getApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider } from 'firebase/auth'
+import {
+  getAuth,
+  GoogleAuthProvider,
+  setPersistence,
+  browserLocalPersistence,
+} from 'firebase/auth'
 
 // Environment variable helper with user's exact production Firebase config fallbacks
 const getEnvVar = (key: string): string => {
@@ -54,6 +59,10 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 
 // Firebase Auth & Google Auth Provider
 export const firebaseAuth = getAuth(app)
+setPersistence(firebaseAuth, browserLocalPersistence).catch((err) => {
+  console.warn('[Firebase Auth] Persistence configuration notice:', err)
+})
+
 export const googleProvider = new GoogleAuthProvider()
 googleProvider.setCustomParameters({
   prompt: 'select_account',
