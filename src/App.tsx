@@ -2930,7 +2930,7 @@ function Dashboard({
       amount: finalPrice,
       description: `Romantic Gift Website Customization (${gfName} & ${bfName})`,
       userEmail: userProfile?.email || '',
-      userName: userProfile?.displayName || bfName,
+      userName: userProfile?.name || bfName,
       onSuccess: async (paymentRes) => {
         console.log('[Razorpay Verified Payment]:', paymentRes)
         onRequestCreateAccount(async () => {
@@ -2970,20 +2970,16 @@ function Dashboard({
               "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
 
             const result = await createSurprise({
-              title: `${gfName} & ${bfName}'s Love Story`,
               girlfriend_name: gfName.trim(),
               boyfriend_name: bfName.trim(),
-              sender_name: bfName.trim(),
-              recipient_name: gfName.trim(),
               photos: uploadedPhotoUrls,
-              letter: letter.trim() || undefined,
-              music_url: finalSpotifyUrl,
+              letter: letter.trim() || "",
               spotify_url: finalSpotifyUrl,
               voice_note_url: voiceNotePublicUrl || undefined,
               questions: questionRecords,
             })
 
-            const fullShareLink = `${window.location.origin}/s/${result.slug}`
+            const fullShareLink = `${window.location.origin}/s/${result}`
             setLink(fullShareLink)
             setIsSubmitting(false)
           } catch (err: any) {

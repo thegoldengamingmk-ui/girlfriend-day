@@ -64,7 +64,7 @@ export interface UserReferralProfile {
   transactions: WalletTransaction[]
 }
 
-export function generateUserReferralCode(): string {
+export async function generateUserReferralCode(): Promise<string> {
   return generateUniqueReferralCode()
 }
 
