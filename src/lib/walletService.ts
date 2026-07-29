@@ -121,11 +121,16 @@ export async function executeWalletTransaction(params: {
       }
     }
 
-    const balanceBefore = Number(walletRecord.available_balance || 0)
-    const isDebit = ['Admin Debit', 'Withdrawal Request', 'Premium Purchase'].includes(type)
-    const balanceAfter = isDebit ? balanceBefore - numAmount : balanceBefore + numAmount
+    // Withdrawal Request balance is managed directly by withdrawalService (available -> pending)
+    // so it must NOT be counted as a debit here to avoid double-deduction
+    const isDebit = ['Admin Debit', 'Premium Purchase', 'Withdrawal Approved'].includes(type)
+    // For Withdrawal Request and Withdrawal Rejected, wallet balance is managed by withdrawalService
+    const walletManagedExternally = type === 'Withdrawal Request' || type === 'Withdrawal Rejected'
+    const balanceAfter = walletManagedExternally
+      ? balanceBefore
+      : isDebit ? balanceBefore - numAmount : balanceBefore + numAmount
 
-    if (isDebit && balanceAfter < 0 && type !== 'Admin Debit') {
+    if (isDebit && !walletManagedExternally && balanceAfter < 0 && type !== 'Admin Debit') {
       console.warn(`[Transaction Rejected] Insufficient wallet balance. Current: ₹${balanceBefore}, Requested: ₹${numAmount}`)
       return {
         success: false,
@@ -160,29 +165,32 @@ export async function executeWalletTransaction(params: {
 
     console.log(`[Transaction Created] ID: ${txnId} | Before: ₹${balanceBefore} | After: ₹${balanceAfter}`)
 
-    // 3. Update wallet balance
-    const updatedTotalEarned = !isDebit ? Number(walletRecord.total_earned || 0) + numAmount : Number(walletRecord.total_earned || 0)
-    const updatedTotalWithdrawn = type === 'Withdrawal Approved' ? Number(walletRecord.total_withdrawn || 0) + numAmount : Number(walletRecord.total_withdrawn || 0)
+    // 3. Update wallet balance (skip for types managed externally by withdrawalService)
+    if (!walletManagedExternally) {
+      const updatedTotalEarned = !isDebit ? Number(walletRecord.total_earned || 0) + numAmount : Number(walletRecord.total_earned || 0)
+      const updatedTotalWithdrawn = type === 'Withdrawal Approved' ? Number(walletRecord.total_withdrawn || 0) + numAmount : Number(walletRecord.total_withdrawn || 0)
 
-    const { error: walletUpdateErr } = await supabase
-      .from('wallets')
-      .update({
-        available_balance: balanceAfter,
-        total_earned: updatedTotalEarned,
-        total_withdrawn: updatedTotalWithdrawn,
-        updated_at: nowIso,
-      })
-      .eq('user_id', userId)
+      const { error: walletUpdateErr } = await supabase
+        .from('wallets')
+        .update({
+          available_balance: balanceAfter,
+          total_earned: updatedTotalEarned,
+          total_withdrawn: updatedTotalWithdrawn,
+          updated_at: nowIso,
+        })
+        .eq('user_id', userId)
 
-    if (walletUpdateErr) {
-      console.error('[Wallet Update Failed] Reverting transaction status:', walletUpdateErr)
-      // Rollback transaction status to Failed
-      await supabase.from('transactions').update({ status: 'Failed' }).eq('transaction_id', txnId)
-      console.log('[Rollback Executed] Marked transaction as Failed due to wallet update failure.')
-      return { success: false, transactionId: txnId, balanceAfter: balanceBefore, message: 'Wallet update failed.' }
+      if (walletUpdateErr) {
+        console.error('[Wallet Update Failed] Reverting transaction status:', walletUpdateErr)
+        // Rollback transaction status to Failed
+        await supabase.from('transactions').update({ status: 'Failed' }).eq('transaction_id', txnId)
+        console.log('[Rollback Executed] Marked transaction as Failed due to wallet update failure.')
+        return { success: false, transactionId: txnId, balanceAfter: balanceBefore, message: 'Wallet update failed.' }
+      }
+
+      console.log(`[Wallet Updated] Balance updated to ₹${balanceAfter} for user: ${userId}`)
     }
 
-    console.log(`[Wallet Updated] Balance updated to ₹${balanceAfter} for user: ${userId}`)
     return {
       success: true,
       transactionId: txnId,

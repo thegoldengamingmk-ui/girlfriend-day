@@ -19,12 +19,23 @@ CREATE TABLE IF NOT EXISTS public.users (
   email_verified BOOLEAN DEFAULT TRUE,
   referral_code TEXT UNIQUE NOT NULL,
   referral_link TEXT NOT NULL,
+  referred_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
   role TEXT DEFAULT 'user',
   status TEXT DEFAULT 'active',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   last_login TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Add referred_by column if missing (idempotent)
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'referred_by'
+  ) THEN
+    ALTER TABLE public.users ADD COLUMN referred_by UUID REFERENCES public.users(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 -- Backward compatibility view / fallback table mapping
 CREATE TABLE IF NOT EXISTS public.user_profiles (
@@ -165,8 +176,37 @@ CREATE INDEX IF NOT EXISTS idx_payments_user_id ON public.payments(user_id);
 CREATE INDEX IF NOT EXISTS idx_payments_payment_id ON public.payments(payment_id);
 CREATE INDEX IF NOT EXISTS idx_payments_razorpay_payment_id ON public.payments(razorpay_payment_id);
 CREATE INDEX IF NOT EXISTS idx_payments_status ON public.payments(status);
+CREATE INDEX IF NOT EXISTS idx_user_login_history_user_id ON public.user_login_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_referred_user_id ON public.referrals(referred_user_id);
 
--- 10. Row Level Security (RLS) Policies
+-- 9. Admin Accounts Table (for Admin Panel authentication)
+CREATE TABLE IF NOT EXISTS public.admins (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT DEFAULT 'ADMIN',
+  status TEXT DEFAULT 'ACTIVE',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 10. Admin Action Audit Logs Table
+CREATE TABLE IF NOT EXISTS public.admin_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_id TEXT NOT NULL,
+  admin_email TEXT NOT NULL,
+  action TEXT NOT NULL,
+  description TEXT,
+  ip_address TEXT DEFAULT '127.0.0.1',
+  device_info TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_logs_admin_id ON public.admin_logs(admin_id);
+CREATE INDEX IF NOT EXISTS idx_admin_logs_created_at ON public.admin_logs(created_at);
+
+-- 11. Row Level Security (RLS) Policies
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.referral_stats ENABLE ROW LEVEL SECURITY;
@@ -175,13 +215,20 @@ ALTER TABLE public.withdrawals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_login_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_logs ENABLE ROW LEVEL SECURITY;
 
 -- Idempotent RLS Policies for Application Integration
 DO $$
 DECLARE
   tbl TEXT;
 BEGIN
-  FOR tbl IN SELECT unnest(ARRAY['users', 'user_profiles', 'referral_stats', 'wallets', 'withdrawals', 'user_login_history', 'transactions', 'payments', 'referrals']) LOOP
+  FOR tbl IN SELECT unnest(ARRAY[
+    'users', 'user_profiles', 'referral_stats', 'wallets',
+    'withdrawals', 'user_login_history', 'transactions', 'payments',
+    'referrals', 'admins', 'admin_logs'
+  ]) LOOP
     EXECUTE format('DROP POLICY IF EXISTS "Allow public select on %I" ON public.%I', tbl, tbl);
     EXECUTE format('DROP POLICY IF EXISTS "Allow public insert on %I" ON public.%I', tbl, tbl);
     EXECUTE format('DROP POLICY IF EXISTS "Allow public update on %I" ON public.%I', tbl, tbl);

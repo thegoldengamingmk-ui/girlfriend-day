@@ -276,6 +276,7 @@ export async function getUserLoginHistory(userId: string): Promise<UserLoginReco
       .select('*')
       .eq('user_id', userId)
       .order('login_time', { ascending: false })
+      .limit(50)
 
     if (!error && dbHistory && dbHistory.length > 0) {
       return dbHistory.map((h) => ({
@@ -288,15 +289,7 @@ export async function getUserLoginHistory(userId: string): Promise<UserLoginReco
     }
   } catch {}
 
-  return [
-    {
-      id: 'lh_1',
-      loginTime: new Date().toLocaleString(),
-      ipAddress: '127.0.0.1',
-      device: 'Mobile/Desktop',
-      browser: 'Chrome/Safari',
-    },
-  ]
+  return []
 }
 
 /**
@@ -315,21 +308,26 @@ export async function toggleUserStatus(userId: string, currentStatus: string) {
  */
 export async function updateWithdrawalStatus(
   id: string,
-  newStatus: 'APPROVED' | 'REJECTED' | 'PAID',
+  newStatus: 'APPROVED' | 'REJECTED' | 'PAID' | 'COMPLETED',
   adminNotes?: string,
   paymentRefId?: string
 ) {
+  const nowIso = new Date().toISOString()
   try {
     await supabase
       .from('withdrawals')
       .update({
         status: newStatus,
         admin_notes: adminNotes,
-        payment_ref_id: paymentRefId,
-        processed_at: new Date().toISOString(),
+        transaction_id: paymentRefId || null,
+        reviewed_at: nowIso,
+        completed_at: newStatus === 'COMPLETED' || newStatus === 'PAID' ? nowIso : null,
+        updated_at: nowIso,
       })
       .eq('id', id)
-  } catch {}
+  } catch (err) {
+    console.warn('[updateWithdrawalStatus warning]:', err)
+  }
 }
 
 /**

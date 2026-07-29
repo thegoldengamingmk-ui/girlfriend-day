@@ -1,5 +1,3 @@
-'use server'
-
 import { createSurprise, getSurpriseBySlug, verifyQuestions } from './surpriseService'
 import type { CreateSurpriseInput } from '../types/database'
 

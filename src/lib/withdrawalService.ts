@@ -122,7 +122,7 @@ export async function createWithdrawalRequest(params: CreateWithdrawalParams): P
       }
     }
 
-    // 4. Move Available Balance -> Pending Balance
+    // 4. Move Available Balance -> Pending Balance (reserve funds)
     const nowIso = new Date().toISOString()
     const wdId = generateWithdrawalId()
     const newAvailable = availableBalance - numAmount
@@ -142,16 +142,25 @@ export async function createWithdrawalRequest(params: CreateWithdrawalParams): P
       return { success: false, message: 'Failed to reserve withdrawal balance.' }
     }
 
-    // 5. Create Pending Transaction Ledger Entry
-    const txnRes = await executeWalletTransaction({
-      userId,
-      type: 'Withdrawal Request',
-      amount: numAmount,
-      referenceType: 'withdrawal',
-      referenceId: wdId,
-      description: `Withdrawal Request submitted (${paymentMethod}: ${upiId})`,
-      status: 'Pending',
-    })
+    // 5. Create Pending Transaction Ledger Entry (audit only, does NOT change wallet again)
+    const txnId = `TXN-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+    await supabase.from('transactions').insert([
+      {
+        transaction_id: txnId,
+        user_id: userId,
+        transaction_type: 'Withdrawal Request',
+        reference_type: 'withdrawal',
+        reference_id: wdId,
+        amount: numAmount,
+        currency: 'INR',
+        balance_before: availableBalance,
+        balance_after: newAvailable,
+        status: 'Pending',
+        description: `Withdrawal Request submitted (${paymentMethod}: ${upiId})`,
+        created_at: nowIso,
+        updated_at: nowIso,
+      },
+    ])
 
     // 6. Insert Withdrawal Record
     const withdrawalPayload = {
@@ -165,7 +174,7 @@ export async function createWithdrawalRequest(params: CreateWithdrawalParams): P
       upi_id: upiId,
       status: 'PENDING',
       requested_at: nowIso,
-      transaction_id: txnRes.transactionId || null,
+      transaction_id: txnId,
       created_at: nowIso,
       updated_at: nowIso,
     }

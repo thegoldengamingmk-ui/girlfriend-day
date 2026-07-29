@@ -247,7 +247,7 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
               profile_image: profilePhoto || null,
               referral_code: newReferralCode,
               account_status: 'ACTIVE',
-              subscription_status: 'PREMIUM',
+              subscription_status: 'FREE',
               last_login: nowIso,
             },
           ])
@@ -478,7 +478,7 @@ export async function runStartupIntegrityCheck(user: CanonicalUser) {
           profile_image: user.profilePhoto || null,
           referral_code: user.referralCode,
           account_status: 'ACTIVE',
-          subscription_status: 'PREMIUM',
+          subscription_status: 'FREE',
           last_login: new Date().toISOString(),
         },
       ])
