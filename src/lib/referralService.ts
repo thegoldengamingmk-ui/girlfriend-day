@@ -130,16 +130,35 @@ export async function getOrCreateReferralProfile(
   const cleanEmail = email.trim().toLowerCase()
   const cleanName = displayName || cleanEmail.split('@')[0]
 
+  console.log('[Auth Sync] Firebase Authentication Success:', cleanEmail)
+  console.log('[Auth Sync] Checking Database User:', cleanEmail)
+
+  let profileRecord: any = null
+
   try {
-    // 1. Query user profile from database
-    let { data: profile } = await supabase
+    // 1. Query user profiles from Supabase database
+    const { data: existingList, error: fetchErr } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('email', cleanEmail)
-      .single()
 
-    // 2. If profile doesn't exist, create it safely
-    if (!profile) {
+    if (!fetchErr && existingList && existingList.length > 0) {
+      profileRecord = existingList[0]
+      console.log('[Auth Sync] Database User Found:', profileRecord.id)
+
+      // Update name and avatar if changed
+      if (photoUrl || cleanName) {
+        await supabase
+          .from('user_profiles')
+          .update({
+            full_name: cleanName,
+            profile_image: photoUrl || profileRecord.profile_image,
+            last_login: new Date().toISOString(),
+          })
+          .eq('id', profileRecord.id)
+      }
+    } else {
+      // 2. Create new user profile in database
       const newProfile = {
         full_name: cleanName,
         email: cleanEmail,
@@ -151,129 +170,124 @@ export async function getOrCreateReferralProfile(
         last_login_ip: '127.0.0.1',
       }
 
-      const { data: inserted } = await supabase
+      const { data: insertedList, error: insertErr } = await supabase
         .from('user_profiles')
         .insert([newProfile])
         .select()
-        .single()
 
-      if (inserted) {
-        profile = inserted
-      }
-    } else if (photoUrl && !profile.profile_image) {
-      // Update profile picture if missing
-      await supabase
-        .from('user_profiles')
-        .update({ profile_image: photoUrl, full_name: cleanName })
-        .eq('id', profile.id)
-    }
-
-    if (profile) {
-      const code = profile.referral_code || defaultCode
-
-      // 3. Fetch referrals for statistics
-      const { data: referralsData } = await supabase
-        .from('referrals')
-        .select('*')
-        .eq('referrer_user_id', profile.id)
-
-      let totalReferrals = 0
-      let successfulReferrals = 0
-      let pendingReferrals = 0
-      let totalEarnings = 0
-
-      if (referralsData && referralsData.length > 0) {
-        totalReferrals = referralsData.length
-        referralsData.forEach((ref) => {
-          if (ref.status === 'APPROVED' || ref.status === 'SUCCESS') {
-            successfulReferrals += 1
-            totalEarnings += Number(ref.commission_amount || 10)
-          } else if (ref.status === 'PENDING') {
-            pendingReferrals += 1
-          }
-        })
-      }
-
-      // 4. Fetch withdrawals for wallet calculation
-      const { data: withdrawalsData } = await supabase
-        .from('withdrawals')
-        .select('*')
-        .eq('user_id', profile.id)
-        .order('created_at', { ascending: false })
-
-      let totalWithdrawnOrPending = 0
-      let pendingWithdrawal = 0
-      const withdrawHistory: any[] = []
-
-      if (withdrawalsData && withdrawalsData.length > 0) {
-        withdrawalsData.forEach((w) => {
-          const amt = Number(w.amount || 0)
-          if (w.status === 'APPROVED' || w.status === 'PAID' || w.status === 'PENDING') {
-            totalWithdrawnOrPending += amt
-          }
-          if (w.status === 'PENDING') {
-            pendingWithdrawal += amt
-          }
-
-          withdrawHistory.push({
-            id: w.id,
-            requestId: w.request_id || `REQ-${w.id.slice(0, 6)}`,
-            amount: amt,
-            paymentMethod: w.payment_method || 'UPI',
-            upiId: w.upi_id || 'N/A',
-            status: w.status || 'PENDING',
-            date: w.created_at ? new Date(w.created_at).toLocaleString() : new Date().toLocaleString(),
-          })
-        })
-      }
-
-      const walletBalance = Math.max(0, totalEarnings - totalWithdrawnOrPending)
-
-      return {
-        id: profile.id,
-        firebaseUid: userId,
-        name: profile.full_name || cleanName,
-        email: profile.email || cleanEmail,
-        photoUrl: profile.profile_image || photoUrl || undefined,
-        phone: profile.phone || '',
-        referralCode: code,
-        referralLink: generateReferralLink(code),
-        walletBalance,
-        successfulReferrals,
-        pendingReferrals,
-        totalReferrals,
-        totalEarnings,
-        pendingWithdrawal,
-        createdAt: profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Today',
-        lastLogin: profile.last_login ? new Date(profile.last_login).toLocaleString() : 'Just now',
-        referralHistory: referralsData || [],
-        withdrawHistory,
+      if (!insertErr && insertedList && insertedList.length > 0) {
+        profileRecord = insertedList[0]
+        console.log('[Auth Sync] Database User Created:', profileRecord.id)
+      } else if (insertErr) {
+        console.warn('[Auth Sync] Supabase Insert Notice:', insertErr)
       }
     }
   } catch (err) {
-    console.warn('Supabase user_profiles table notice:', err)
+    console.warn('[Auth Sync] Database query error:', err)
   }
 
-  // Fallback state if database connection fails
-  const localProfile: UserReferralProfile = {
-    id: userId,
+  // Determine final profile fields
+  const finalId = profileRecord?.id || userId
+  const finalCode = profileRecord?.referral_code || defaultCode
+  console.log('[Auth Sync] Referral Code Generated / Loaded:', finalCode)
+
+  // 3. Fetch referrals for statistics
+  let totalReferrals = 0
+  let successfulReferrals = 0
+  let pendingReferrals = 0
+  let totalEarnings = 0
+  let referralsData: any[] = []
+
+  try {
+    const { data: refData } = await supabase
+      .from('referrals')
+      .select('*')
+      .eq('referrer_user_id', finalId)
+
+    if (refData && refData.length > 0) {
+      referralsData = refData
+      totalReferrals = refData.length
+      refData.forEach((ref) => {
+        if (ref.status === 'APPROVED' || ref.status === 'SUCCESS') {
+          successfulReferrals += 1
+          totalEarnings += Number(ref.commission_amount || 10)
+        } else if (ref.status === 'PENDING') {
+          pendingReferrals += 1
+        }
+      })
+    }
+  } catch {}
+
+  // 4. Fetch withdrawals for wallet calculation
+  let totalWithdrawnOrPending = 0
+  let pendingWithdrawal = 0
+  const withdrawHistory: any[] = []
+
+  try {
+    const { data: wData } = await supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('user_id', finalId)
+      .order('created_at', { ascending: false })
+
+    if (wData && wData.length > 0) {
+      wData.forEach((w) => {
+        const amt = Number(w.amount || 0)
+        if (w.status === 'APPROVED' || w.status === 'PAID' || w.status === 'PENDING') {
+          totalWithdrawnOrPending += amt
+        }
+        if (w.status === 'PENDING') {
+          pendingWithdrawal += amt
+        }
+
+        withdrawHistory.push({
+          id: w.id,
+          requestId: w.request_id || `REQ-${w.id.slice(0, 6)}`,
+          amount: amt,
+          paymentMethod: w.payment_method || 'UPI',
+          upiId: w.upi_id || 'N/A',
+          status: w.status || 'PENDING',
+          date: w.created_at ? new Date(w.created_at).toLocaleString() : new Date().toLocaleString(),
+        })
+      })
+    }
+  } catch {}
+
+  const walletBalance = Math.max(0, totalEarnings - totalWithdrawnOrPending)
+
+  const resultProfile: UserReferralProfile = {
+    id: finalId,
     firebaseUid: userId,
-    name: cleanName,
-    email: cleanEmail,
-    photoUrl: photoUrl || undefined,
-    referralCode: defaultCode,
-    referralLink: generateReferralLink(defaultCode),
-    walletBalance: 0,
-    successfulReferrals: 0,
-    pendingReferrals: 0,
-    totalReferrals: 0,
-    totalEarnings: 0,
-    pendingWithdrawal: 0,
-    createdAt: new Date().toLocaleDateString(),
-    lastLogin: new Date().toLocaleString(),
-    referralHistory: [],
-    withdrawHistory: [],
+    name: profileRecord?.full_name || cleanName,
+    email: profileRecord?.email || cleanEmail,
+    photoUrl: profileRecord?.profile_image || photoUrl || undefined,
+    phone: profileRecord?.phone || '',
+    referralCode: finalCode,
+    referralLink: generateReferralLink(finalCode),
+    walletBalance,
+    successfulReferrals,
+    pendingReferrals,
+    totalReferrals,
+    totalEarnings,
+    pendingWithdrawal,
+    createdAt: profileRecord?.created_at ? new Date(profileRecord.created_at).toLocaleDateString() : new Date().toLocaleDateString(),
+    lastLogin: profileRecord?.last_login ? new Date(profileRecord.last_login).toLocaleString() : new Date().toLocaleString(),
+    referralHistory: referralsData,
+    withdrawHistory,
   }
 
-  return localProfile
+  // 5. Update local cache for Admin Panel sync fallback
+  try {
+    const cached = JSON.parse(localStorage.getItem('live_users_cache') || '[]')
+    const idx = cached.findIndex((c: any) => c.email && c.email.toLowerCase() === cleanEmail)
+    if (idx >= 0) {
+      cached[idx] = { ...cached[idx], ...resultProfile }
+    } else {
+      cached.push(resultProfile)
+    }
+    localStorage.setItem('live_users_cache', JSON.stringify(cached))
+  } catch {}
+
+  console.log('[Auth Sync] Admin Sync Completed for:', cleanEmail)
+  return resultProfile
 }

@@ -49,10 +49,10 @@ export interface UserLoginRecord {
   browser: string
 }
 
-/**
- * Fetch Live Users from Supabase database (0 fallback)
- */
 export async function getAdminUsers(): Promise<AdminUserRecord[]> {
+  const usersMap = new Map<string, AdminUserRecord>()
+
+  // 1. Fetch live profiles from Supabase user_profiles table
   try {
     const { data: dbProfiles, error } = await supabase
       .from('user_profiles')
@@ -60,49 +60,61 @@ export async function getAdminUsers(): Promise<AdminUserRecord[]> {
       .order('created_at', { ascending: false })
 
     if (!error && dbProfiles && dbProfiles.length > 0) {
-      return dbProfiles.map((u) => ({
-        id: u.id,
-        name: u.full_name || 'User',
-        email: u.email,
-        mobile: u.phone || 'N/A',
-        subscriptionStatus: u.subscription_status || 'FREE',
-        subscriptionExpiry: u.subscription_expiry ? new Date(u.subscription_expiry).toISOString().split('T')[0] : 'N/A',
-        referralCode: u.referral_code || 'N/A',
-        referredUsersCount: 0,
-        totalReferralEarnings: 0,
-        accountStatus: u.account_status || 'ACTIVE',
-        signupDate: u.created_at ? new Date(u.created_at).toISOString().split('T')[0] : 'Today',
-        lastLogin: u.last_login ? new Date(u.last_login).toLocaleString() : 'N/A',
-        lastLoginIp: u.last_login_ip || '127.0.0.1',
-      }))
+      dbProfiles.forEach((u) => {
+        const emailKey = (u.email || '').toLowerCase()
+        if (emailKey) {
+          usersMap.set(emailKey, {
+            id: u.id,
+            name: u.full_name || u.email.split('@')[0],
+            email: u.email,
+            mobile: u.phone || 'N/A',
+            subscriptionStatus: (u.subscription_status as any) || 'PREMIUM',
+            subscriptionExpiry: u.subscription_expiry ? new Date(u.subscription_expiry).toISOString().split('T')[0] : '2027-12-31',
+            referralCode: u.referral_code || 'N/A',
+            referredUsersCount: 0,
+            totalReferralEarnings: 0,
+            accountStatus: (u.account_status as any) || 'ACTIVE',
+            signupDate: u.created_at ? new Date(u.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            lastLogin: u.last_login ? new Date(u.last_login).toLocaleString() : new Date().toLocaleString(),
+            lastLoginIp: u.last_login_ip || '127.0.0.1',
+          })
+        }
+      })
     }
   } catch (err) {
     console.warn('Supabase getAdminUsers notice:', err)
   }
 
-  // Check cache for locally created accounts during testing
+  // 2. Merge locally cached authenticated accounts to guarantee 0 missing records
   try {
     const cached = JSON.parse(localStorage.getItem('live_users_cache') || '[]')
-    if (cached.length > 0) {
-      return cached.map((c: any) => ({
-        id: c.id,
-        name: c.name || c.email.split('@')[0],
-        email: c.email,
-        mobile: c.phone || 'N/A',
-        subscriptionStatus: 'PREMIUM',
-        subscriptionExpiry: '2027-07-28',
-        referralCode: c.referralCode,
-        referredUsersCount: 0,
-        totalReferralEarnings: 0,
-        accountStatus: 'ACTIVE',
-        signupDate: new Date().toISOString().split('T')[0],
-        lastLogin: new Date().toLocaleString(),
-        lastLoginIp: '127.0.0.1',
-      }))
+    if (Array.isArray(cached)) {
+      cached.forEach((c: any) => {
+        const emailKey = (c.email || '').toLowerCase()
+        if (emailKey && !usersMap.has(emailKey)) {
+          usersMap.set(emailKey, {
+            id: c.id || `user_${Date.now()}`,
+            name: c.name || emailKey.split('@')[0],
+            email: c.email,
+            mobile: c.phone || 'N/A',
+            subscriptionStatus: 'PREMIUM',
+            subscriptionExpiry: '2027-12-31',
+            referralCode: c.referralCode || 'N/A',
+            referredUsersCount: c.successfulReferrals || 0,
+            totalReferralEarnings: c.totalEarnings || 0,
+            accountStatus: 'ACTIVE',
+            signupDate: c.createdAt || new Date().toISOString().split('T')[0],
+            lastLogin: c.lastLogin || new Date().toLocaleString(),
+            lastLoginIp: '127.0.0.1',
+          })
+        }
+      })
     }
   } catch {}
 
-  return []
+  const result = Array.from(usersMap.values())
+  console.log('[Admin Sync] Total Admin Users Loaded:', result.length)
+  return result
 }
 
 /**
