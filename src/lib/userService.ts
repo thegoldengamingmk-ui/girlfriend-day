@@ -418,9 +418,14 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
     withdrawals,
   }
 
-  // Backup in persistent registry
-  backupRegistry[firebaseUid] = canonicalUser
-  backupRegistry[cleanEmail] = canonicalUser
+  // Backup only essential fields to persistent registry (prevent over-storage)
+  const minimalBackup = {
+    id: canonicalUser.id,
+    referralCode: canonicalUser.referralCode,
+    createdAt: canonicalUser.createdAt,
+  }
+  backupRegistry[firebaseUid] = minimalBackup
+  backupRegistry[cleanEmail] = minimalBackup
   saveBackupRegistry(backupRegistry)
 
   // Run Startup Integrity Check
@@ -561,16 +566,8 @@ export async function validateAndApplyReferralCode(
     }
 
     if (!referrer) {
-      console.log('[Referral Debug] cleanCode:', cleanCode)
-      console.log('[Referral Debug] referredUser:', referredUser)
-      console.log('[Referral Debug] referrer:', referrer)
-      console.log('[Referral Rejected] Referral code not found in database:', cleanCode)
       return { success: false, message: 'Invalid Referral Code. Please check and try again.' }
     }
-
-    console.log('[Referral Debug] cleanCode:', cleanCode)
-    console.log('[Referral Debug] referredUser:', referredUser)
-    console.log('[Referral Debug] referrer:', referrer)
 
     // 4. Ensure owner account is active
     const ownerStatus = (referrer.status || referrer.account_status || 'active').toLowerCase()

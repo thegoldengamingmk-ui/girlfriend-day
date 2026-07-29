@@ -124,9 +124,14 @@ export async function executeWalletTransaction(params: {
     // Withdrawal Request balance is managed directly by withdrawalService (available -> pending)
     // so it must NOT be counted as a debit here to avoid double-deduction
     const balanceBefore = Number(walletRecord.available_balance || 0)
-    const isDebit = ['Admin Debit', 'Premium Purchase', 'Withdrawal Approved'].includes(type)
-    // For Withdrawal Request and Withdrawal Rejected, wallet balance is managed by withdrawalService
-    const walletManagedExternally = type === 'Withdrawal Request' || type === 'Withdrawal Rejected'
+    const isDebit = ['Admin Debit', 'Premium Purchase'].includes(type)
+    // Withdrawal Request: available→pending is managed by withdrawalService
+    // Withdrawal Rejected: pending→available is managed by withdrawalService
+    // Withdrawal Approved: pending balance deduction is managed by withdrawalService (pending→totalWithdrawn)
+    const walletManagedExternally =
+      type === 'Withdrawal Request' ||
+      type === 'Withdrawal Rejected' ||
+      type === 'Withdrawal Approved'
     const balanceAfter = walletManagedExternally
       ? balanceBefore
       : isDebit ? balanceBefore - numAmount : balanceBefore + numAmount
@@ -169,7 +174,7 @@ export async function executeWalletTransaction(params: {
     // 3. Update wallet balance (skip for types managed externally by withdrawalService)
     if (!walletManagedExternally) {
       const updatedTotalEarned = !isDebit ? Number(walletRecord.total_earned || 0) + numAmount : Number(walletRecord.total_earned || 0)
-      const updatedTotalWithdrawn = type === 'Withdrawal Approved' ? Number(walletRecord.total_withdrawn || 0) + numAmount : Number(walletRecord.total_withdrawn || 0)
+      const updatedTotalWithdrawn = Number(walletRecord.total_withdrawn || 0)
 
       const { error: walletUpdateErr } = await supabase
         .from('wallets')

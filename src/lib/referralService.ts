@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getUserTransactions, WalletTransaction } from './walletService'
 import {
   signUpUser,
   signInUser,
@@ -29,18 +30,17 @@ export async function signInUserWithPassword(email: string, password: string) {
 }
 
 export async function sendPasswordResetOtp(email: string) {
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim())
-  if (error) throw error
-  return data
+  // Auth is handled via Google Sign-In (Firebase). Supabase email/password
+  // auth is not used. Password reset is not applicable for Google-only accounts.
+  throw new Error('Password reset is not available. Please sign in with Google.')
 }
 
 export async function updatePassword(newPassword: string) {
-  const { data, error } = await supabase.auth.updateUser({ password: newPassword })
-  if (error) throw error
-  return data
+  // Auth is handled via Google Sign-In (Firebase). Password updates
+  // are not supported for Google OAuth accounts.
+  throw new Error('Password update is not available. Please sign in with Google.')
 }
 
-import { getUserTransactions, WalletTransaction } from './walletService'
 
 export interface UserReferralProfile {
   id: string

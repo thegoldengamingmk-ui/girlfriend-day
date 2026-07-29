@@ -13,9 +13,9 @@ export const RAZORPAY_KEY_ID =
   (typeof import.meta !== 'undefined' && import.meta?.env?.VITE_RAZORPAY_KEY_ID) ||
   'rzp_test_TJKjtQ7I0YhFIi'
 
-export const RAZORPAY_KEY_SECRET =
-  (typeof import.meta !== 'undefined' && import.meta?.env?.VITE_RAZORPAY_KEY_SECRET) ||
-  'U7O7TR98DoOqK3J3bR0JHeDI'
+// NOTE: The Razorpay Key Secret must NEVER be exposed in client-side code.
+// Payment signature verification must be done server-side only.
+// This frontend only initiates the payment flow; Razorpay verifies on their servers.
 
 export interface RazorpayPaymentOptions {
   amount: number // In INR (e.g. 99 or 49)
@@ -56,16 +56,12 @@ export function loadRazorpayScript(): Promise<boolean> {
 
 /**
  * Verify Razorpay Payment Signature using Web Crypto API HMAC-SHA256
+ * NOTE: This is kept for reference only. In production, always verify
+ * server-side. Client-side verification cannot be secure without exposing the secret.
  */
 export async function computeHmacSha256(message: string, secret: string): Promise<string> {
   if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
-    // Fallback for node test environments
-    try {
-      const crypto = await import('crypto')
-      return crypto.createHmac('sha256', secret).update(message).digest('hex')
-    } catch {
-      return ''
-    }
+    return ''
   }
 
   const encoder = new TextEncoder()
@@ -103,17 +99,8 @@ export async function verifyAndProcessRazorpayPayment(params: {
 
   console.log('[Razorpay Verification Initiated] Payment ID:', razorpayPaymentId, 'Order ID:', razorpayOrderId)
 
-  // 1. Signature Verification (If Signature Provided)
-  if (razorpayOrderId && razorpaySignature && RAZORPAY_KEY_SECRET) {
-    const expectedMessage = `${razorpayOrderId}|${razorpayPaymentId}`
-    const calculatedSignature = await computeHmacSha256(expectedMessage, RAZORPAY_KEY_SECRET)
-
-    if (calculatedSignature && calculatedSignature !== razorpaySignature) {
-      console.error('[Razorpay Signature Mismatch] Payment Signature Verification Failed!')
-      return { success: false, message: 'Invalid payment signature verification.' }
-    }
-    console.log('[Razorpay Signature Verified] HMAC-SHA256 Signature Match Success!')
-  }
+  // NOTE: Signature verification must happen server-side with the secret key.
+  // Client-side verification is intentionally skipped to avoid exposing the secret.
 
   try {
     // 2. Idempotency Check (Ignore Duplicate Payment Events)

@@ -188,7 +188,7 @@ export async function logAdminAction(
   description: string
 ) {
   const logItem: AdminLog = {
-    id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+    id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
     adminId,
     adminEmail,
     action,

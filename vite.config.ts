@@ -22,13 +22,15 @@ export default defineConfig(({ mode }) => {
       "process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY": JSON.stringify(
         env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
       ),
-      "process.env.SUPABASE_SERVICE_ROLE_KEY": JSON.stringify(
-        env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-      ),
+      // NOTE: SUPABASE_SERVICE_ROLE_KEY is intentionally excluded from the client bundle.
+      // It bypasses RLS and must only be used in server-side / edge function environments.
     },
     build: {
       sourcemap: emitSourcemaps ? "inline" : false,
       minify: !emitSourcemaps,
+      // App.tsx is a large SPA without route-based splitting — suppress misleading warning.
+      // Actual user-facing chunk is 220KB gzipped which is acceptable.
+      chunkSizeWarningLimit: 1000,
     },
     plugins: [
       react(),

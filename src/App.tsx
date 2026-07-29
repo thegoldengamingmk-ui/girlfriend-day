@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react"
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { uploadPhoto, uploadVoiceNote, uploadMusicTrack } from "./lib/storage"
 import {
@@ -17,15 +17,21 @@ import {
   type UserReferralProfile,
 } from "./lib/referralService"
 import { AdminLoginModal } from "./components/AdminLoginModal"
-import { AdminDashboard } from "./components/AdminDashboard"
 import { SuperAdminSetupModal } from "./components/SuperAdminSetupModal"
 import { AuthModal } from "./components/auth/AuthModal"
-import { ReferralDashboardModal } from "./components/auth/ReferralDashboardModal"
 import { getCurrentSession, signOutUser, subscribeToAuthChanges } from "./lib/authService"
 import { validateAndApplyReferralCode } from "./lib/userService"
 import { launchRazorpayCheckout } from "./lib/razorpayService"
 import { getActiveAdminSession, type AdminUser } from "./lib/adminAuthService"
 import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
+
+// Lazy-loaded heavy components (code splitting for faster initial load)
+const AdminDashboard = lazy(() =>
+  import("./components/AdminDashboard").then((m) => ({ default: m.AdminDashboard }))
+)
+const ReferralDashboardModal = lazy(() =>
+  import("./components/auth/ReferralDashboardModal").then((m) => ({ default: m.ReferralDashboardModal }))
+)
 
 type Screen = 1 | 2 | 3 | 4 | 5 | 6 | 7 | "dashboard" | "admin-login" | "admin-dashboard" | "setup-super-admin"
 
@@ -4136,13 +4142,19 @@ export default function App() {
 
   if (screen === "admin-dashboard" && adminUser) {
     return (
-      <AdminDashboard
-        admin={adminUser}
-        onLogout={() => {
-          setAdminUser(null)
-          go("dashboard")
-        }}
-      />
+      <Suspense fallback={
+        <div className="fixed inset-0 flex items-center justify-center" style={{ background: "#0d0020" }}>
+          <div className="text-pink-300 text-lg animate-pulse">Loading Admin Panel...</div>
+        </div>
+      }>
+        <AdminDashboard
+          admin={adminUser}
+          onLogout={() => {
+            setAdminUser(null)
+            go("dashboard")
+          }}
+        />
+      </Suspense>
     )
   }
 
@@ -4199,12 +4211,14 @@ export default function App() {
         onSuccess={handleAuthSuccess}
       />
 
-      <ReferralDashboardModal
-        isOpen={showReferralModal}
-        userProfile={userProfile}
-        onClose={() => setShowReferralModal(false)}
-        onLogout={handleLogout}
-      />
+      <Suspense fallback={null}>
+        <ReferralDashboardModal
+          isOpen={showReferralModal}
+          userProfile={userProfile}
+          onClose={() => setShowReferralModal(false)}
+          onLogout={handleLogout}
+        />
+      </Suspense>
 
       {isFemaleUserExperience && <RomanticBGMPlayer />}
 
