@@ -551,9 +551,16 @@ export async function validateAndApplyReferralCode(
     }
 
     if (!referrer) {
+      console.log('[Referral Debug] cleanCode:', cleanCode)
+      console.log('[Referral Debug] referredUser:', referredUser)
+      console.log('[Referral Debug] referrer:', referrer)
       console.log('[Referral Rejected] Referral code not found in database:', cleanCode)
       return { success: false, message: 'Invalid Referral Code. Please check and try again.' }
     }
+
+    console.log('[Referral Debug] cleanCode:', cleanCode)
+    console.log('[Referral Debug] referredUser:', referredUser)
+    console.log('[Referral Debug] referrer:', referrer)
 
     // 4. Ensure owner account is active
     const ownerStatus = (referrer.status || referrer.account_status || 'active').toLowerCase()

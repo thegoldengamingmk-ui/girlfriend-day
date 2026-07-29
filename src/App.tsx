@@ -2694,6 +2694,7 @@ function Dashboard({
   onRequestCreateAccount,
   link,
   setLink,
+  userProfile,
 }: {
   onBack: () => void
   spotifyTrackId: string
@@ -2701,6 +2702,7 @@ function Dashboard({
   onRequestCreateAccount: (saveSurpriseFn: () => Promise<void>) => void
   link: string
   setLink: (link: string) => void
+  userProfile?: UserReferralProfile | null
 }) {
   const [gfName, setGfName] = useState("")
   const [bfName, setBfName] = useState("")
@@ -2744,11 +2746,20 @@ function Dashboard({
       return false
     }
 
+    const referredUserId = userProfile?.id || ''
+    const referredUserEmail = userProfile?.email || ''
+
+    console.log('[Referral Execution Arguments]:', {
+      referredUserId,
+      referredUserEmail,
+      enteredCode: trimmed,
+    })
+
     try {
       // Validate directly against Supabase Database
       const res = await validateAndApplyReferralCode(
-        userProfile?.id || 'guest',
-        userProfile?.email || '',
+        referredUserId,
+        referredUserEmail,
         trimmed
       )
       console.log('[Referral Database Query Result]:', res)
@@ -4242,6 +4253,7 @@ export default function App() {
           onRequestCreateAccount={handleRequestCreateAccount}
           link={generatedLink}
           setLink={setGeneratedLink}
+          userProfile={userProfile}
         />
       )}
     </div>
