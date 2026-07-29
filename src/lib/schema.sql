@@ -301,9 +301,25 @@ CREATE TABLE IF NOT EXISTS public.admins (
   password_hash TEXT NOT NULL DEFAULT '',
   role TEXT DEFAULT 'ADMIN',
   status TEXT DEFAULT 'ACTIVE',
+  permissions TEXT DEFAULT '[]',         -- JSON array of permission strings
+  failed_attempts INT DEFAULT 0,         -- Brute-force counter (cross-device)
+  locked_until TIMESTAMPTZ,              -- Auto-lockout expiry timestamp
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Idempotent column additions for admins table
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='admins' AND column_name='permissions') THEN
+    ALTER TABLE public.admins ADD COLUMN permissions TEXT DEFAULT '[]';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='admins' AND column_name='failed_attempts') THEN
+    ALTER TABLE public.admins ADD COLUMN failed_attempts INT DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='admins' AND column_name='locked_until') THEN
+    ALTER TABLE public.admins ADD COLUMN locked_until TIMESTAMPTZ;
+  END IF;
+END $$;
 
 -- ====================================================================
 -- 11. ADMIN ACTION AUDIT LOGS TABLE
