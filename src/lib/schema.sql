@@ -1,6 +1,6 @@
 -- ====================================================================
 -- SUPABASE COMPLETE IDEMPOTENT DATABASE MIGRATION SCHEMA
--- Single Source of Truth for Users, Referral Stats, Wallets, Withdrawals, and Transactions
+-- Single Source of Truth for Users, Referral Stats, Wallets, Withdrawals, Transactions, and Payments
 -- ====================================================================
 
 -- Enable UUID extension if not enabled
@@ -131,7 +131,23 @@ CREATE TABLE IF NOT EXISTS public.transactions (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 8. Performance Indexes
+-- 8. Razorpay Payments Ledger Table (Verified Payments)
+CREATE TABLE IF NOT EXISTS public.payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  payment_id TEXT UNIQUE NOT NULL,
+  user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  razorpay_order_id TEXT,
+  razorpay_payment_id TEXT UNIQUE,
+  razorpay_signature TEXT,
+  amount NUMERIC NOT NULL,
+  currency TEXT DEFAULT 'INR',
+  status TEXT DEFAULT 'Captured',
+  payment_method TEXT DEFAULT 'CARD/UPI',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9. Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_users_firebase_uid ON public.users(firebase_uid);
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
 CREATE INDEX IF NOT EXISTS idx_users_referral_code ON public.users(referral_code);
@@ -144,13 +160,18 @@ CREATE INDEX IF NOT EXISTS idx_withdrawals_status ON public.withdrawals(status);
 CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON public.transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_transaction_id ON public.transactions(transaction_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_type ON public.transactions(transaction_type);
+CREATE INDEX IF NOT EXISTS idx_payments_user_id ON public.payments(user_id);
+CREATE INDEX IF NOT EXISTS idx_payments_payment_id ON public.payments(payment_id);
+CREATE INDEX IF NOT EXISTS idx_payments_razorpay_payment_id ON public.payments(razorpay_payment_id);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON public.payments(status);
 
--- 9. Row Level Security (RLS) Policies
+-- 10. Row Level Security (RLS) Policies
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.referral_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.withdrawals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read/write access for application integration
 DO $$
@@ -165,23 +186,13 @@ BEGIN
     CREATE POLICY "Allow public update on users" ON public.users FOR UPDATE USING (true);
   END IF;
 
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public select on withdrawals') THEN
-    CREATE POLICY "Allow public select on withdrawals" ON public.withdrawals FOR SELECT USING (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public select on payments') THEN
+    CREATE POLICY "Allow public select on payments" ON public.payments FOR SELECT USING (true);
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public insert on withdrawals') THEN
-    CREATE POLICY "Allow public insert on withdrawals" ON public.withdrawals FOR INSERT WITH CHECK (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public insert on payments') THEN
+    CREATE POLICY "Allow public insert on payments" ON public.payments FOR INSERT WITH CHECK (true);
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public update on withdrawals') THEN
-    CREATE POLICY "Allow public update on withdrawals" ON public.withdrawals FOR UPDATE USING (true);
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public select on transactions') THEN
-    CREATE POLICY "Allow public select on transactions" ON public.transactions FOR SELECT USING (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public insert on transactions') THEN
-    CREATE POLICY "Allow public insert on transactions" ON public.transactions FOR INSERT WITH CHECK (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public update on transactions') THEN
-    CREATE POLICY "Allow public update on transactions" ON public.transactions FOR UPDATE USING (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public update on payments') THEN
+    CREATE POLICY "Allow public update on payments" ON public.payments FOR UPDATE USING (true);
   END IF;
 END $$;
