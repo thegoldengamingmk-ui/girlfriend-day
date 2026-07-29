@@ -52,30 +52,50 @@ export interface UserLoginRecord {
 export async function getAdminUsers(): Promise<AdminUserRecord[]> {
   const usersMap = new Map<string, AdminUserRecord>()
 
-  // 1. Fetch live profiles from Supabase user_profiles table
   try {
-    const { data: dbProfiles, error } = await supabase
+    // 1. Fetch live profiles directly from Supabase user_profiles table (Single Source of Truth)
+    const { data: dbProfiles } = await supabase
       .from('user_profiles')
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (!error && dbProfiles && dbProfiles.length > 0) {
+    // 2. Aggregate live referral stats for each user
+    const { data: allReferrals } = await supabase.from('referrals').select('*')
+    const refStatsMap = new Map<string, { count: number; earnings: number }>()
+
+    if (allReferrals && allReferrals.length > 0) {
+      allReferrals.forEach((ref) => {
+        const key = ref.referrer_user_id
+        if (key) {
+          const prev = refStatsMap.get(key) || { count: 0, earnings: 0 }
+          const isApproved = ref.status === 'APPROVED' || ref.status === 'SUCCESS'
+          refStatsMap.set(key, {
+            count: prev.count + (isApproved ? 1 : 0),
+            earnings: prev.earnings + (isApproved ? Number(ref.commission_amount || 10) : 0),
+          })
+        }
+      })
+    }
+
+    if (dbProfiles && dbProfiles.length > 0) {
       dbProfiles.forEach((u) => {
         const emailKey = (u.email || '').toLowerCase()
         if (emailKey) {
+          const stats = refStatsMap.get(u.id) || { count: 0, earnings: 0 }
+
           usersMap.set(emailKey, {
             id: u.id,
-            name: u.full_name || u.email.split('@')[0],
+            name: u.full_name || emailKey.split('@')[0],
             email: u.email,
             mobile: u.phone || 'N/A',
             subscriptionStatus: (u.subscription_status as any) || 'PREMIUM',
             subscriptionExpiry: u.subscription_expiry ? new Date(u.subscription_expiry).toISOString().split('T')[0] : '2027-12-31',
-            referralCode: u.referral_code || 'N/A',
-            referredUsersCount: 0,
-            totalReferralEarnings: 0,
+            referralCode: u.referral_code, // Single Source of Truth DB Field
+            referredUsersCount: stats.count,
+            totalReferralEarnings: stats.earnings,
             accountStatus: (u.account_status as any) || 'ACTIVE',
             signupDate: u.created_at ? new Date(u.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-            lastLogin: u.last_login ? new Date(u.last_login).toLocaleString() : new Date().toLocaleString(),
+            lastLogin: u.last_login ? new Date(u.last_login).toLocaleString() : new Date().toLocaleString(), // Single Source of Truth DB Field
             lastLoginIp: u.last_login_ip || '127.0.0.1',
           })
         }
@@ -85,7 +105,7 @@ export async function getAdminUsers(): Promise<AdminUserRecord[]> {
     console.warn('Supabase getAdminUsers notice:', err)
   }
 
-  // 2. Merge locally cached authenticated accounts to guarantee 0 missing records
+  // 3. Merge cached profiles (if any) matching exact canonical DB fields
   try {
     const cached = JSON.parse(localStorage.getItem('live_users_cache') || '[]')
     if (Array.isArray(cached)) {
@@ -99,7 +119,7 @@ export async function getAdminUsers(): Promise<AdminUserRecord[]> {
             mobile: c.phone || 'N/A',
             subscriptionStatus: 'PREMIUM',
             subscriptionExpiry: '2027-12-31',
-            referralCode: c.referralCode || 'N/A',
+            referralCode: c.referralCode,
             referredUsersCount: c.successfulReferrals || 0,
             totalReferralEarnings: c.totalEarnings || 0,
             accountStatus: 'ACTIVE',
@@ -113,7 +133,7 @@ export async function getAdminUsers(): Promise<AdminUserRecord[]> {
   } catch {}
 
   const result = Array.from(usersMap.values())
-  console.log('[Admin Sync] Total Admin Users Loaded:', result.length)
+  console.log('[Single Source of Truth Admin Sync] Total Admin Users Loaded:', result.length)
   return result
 }
 

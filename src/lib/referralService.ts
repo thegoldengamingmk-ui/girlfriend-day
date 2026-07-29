@@ -57,6 +57,7 @@ export interface UserReferralProfile {
 
 /**
  * Generate unique personal referral code (e.g. GF-LOVE-8921)
+ * Called ONLY ONCE when a brand-new user record is inserted into the database.
  */
 export function generateUserReferralCode(): string {
   const digits = Math.floor(1000 + Math.random() * 9000)
@@ -72,7 +73,7 @@ export function generateReferralLink(referralCode: string): string {
 }
 
 /**
- * Record user login history in Supabase user_login_history table
+ * Record user login history and update canonical last_login in user_profiles
  */
 export async function recordUserLoginHistory(userId: string, email: string) {
   const deviceInfo = typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown Device'
@@ -84,21 +85,23 @@ export async function recordUserLoginHistory(userId: string, email: string) {
     ? 'Firefox'
     : 'Mobile Browser'
 
+  const nowIso = new Date().toISOString()
+
   try {
-    // 1. Update last_login in user_profiles
+    // 1. Update single source of truth last_login in user_profiles
     await supabase
       .from('user_profiles')
       .update({
-        last_login: new Date().toISOString(),
+        last_login: nowIso,
         last_login_ip: '127.0.0.1',
       })
-      .eq('email', email)
+      .eq('email', email.trim().toLowerCase())
 
-    // 2. Insert into user_login_history table
+    // 2. Record login attempt history
     await supabase.from('user_login_history').insert([
       {
         user_id: userId.includes('-') ? userId : undefined,
-        email,
+        email: email.trim().toLowerCase(),
         ip_address: '127.0.0.1',
         device: 'Desktop/Mobile',
         browser,
@@ -118,7 +121,8 @@ export function isSelfReferral(userEmail: string, referrerCode: string, userProf
 }
 
 /**
- * Fetch or create referral profile in Supabase database with full synchronized statistics
+ * Single Source of Truth Profile Fetcher & Creator
+ * All screens (User Dashboard, Admin Panel, Super Admin) read from user_profiles table.
  */
 export async function getOrCreateReferralProfile(
   userId: string,
@@ -126,72 +130,73 @@ export async function getOrCreateReferralProfile(
   displayName?: string,
   photoUrl?: string
 ): Promise<UserReferralProfile> {
-  const defaultCode = generateUserReferralCode()
   const cleanEmail = email.trim().toLowerCase()
   const cleanName = displayName || cleanEmail.split('@')[0]
+  const nowIso = new Date().toISOString()
 
-  console.log('[Auth Sync] Firebase Authentication Success:', cleanEmail)
-  console.log('[Auth Sync] Checking Database User:', cleanEmail)
+  console.log('[Single Source of Truth] Authenticating user:', cleanEmail)
 
   let profileRecord: any = null
 
   try {
-    // 1. Query user profiles from Supabase database
-    const { data: existingList, error: fetchErr } = await supabase
+    // 1. Check if user profile already exists in Supabase user_profiles
+    const { data: existingList } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('email', cleanEmail)
 
-    if (!fetchErr && existingList && existingList.length > 0) {
+    if (existingList && existingList.length > 0) {
       profileRecord = existingList[0]
-      console.log('[Auth Sync] Database User Found:', profileRecord.id)
+      console.log('[Single Source of Truth] Existing DB User Loaded:', profileRecord.email, 'Code:', profileRecord.referral_code)
 
-      // Update name and avatar if changed
-      if (photoUrl || cleanName) {
-        await supabase
-          .from('user_profiles')
-          .update({
-            full_name: cleanName,
-            profile_image: photoUrl || profileRecord.profile_image,
-            last_login: new Date().toISOString(),
-          })
-          .eq('id', profileRecord.id)
-      }
+      // Update last_login timestamp, name, and avatar once without changing referral_code
+      const updates: any = { last_login: nowIso }
+      if (cleanName && profileRecord.full_name !== cleanName) updates.full_name = cleanName
+      if (photoUrl && profileRecord.profile_image !== photoUrl) updates.profile_image = photoUrl
+
+      await supabase.from('user_profiles').update(updates).eq('id', profileRecord.id)
+      profileRecord.last_login = nowIso
+      if (updates.full_name) profileRecord.full_name = updates.full_name
+      if (updates.profile_image) profileRecord.profile_image = updates.profile_image
     } else {
-      // 2. Create new user profile in database
-      const newProfile = {
+      // 2. Generate referral code ONLY ONCE for brand-new user creation
+      const newReferralCode = generateUserReferralCode()
+      console.log('[Single Source of Truth] New User - Generated Referral Code:', newReferralCode)
+
+      const newProfileData = {
         full_name: cleanName,
         email: cleanEmail,
         profile_image: photoUrl || null,
         account_status: 'ACTIVE',
         subscription_status: 'PREMIUM',
-        referral_code: defaultCode,
-        last_login: new Date().toISOString(),
+        referral_code: newReferralCode,
+        last_login: nowIso,
         last_login_ip: '127.0.0.1',
       }
 
       const { data: insertedList, error: insertErr } = await supabase
         .from('user_profiles')
-        .insert([newProfile])
+        .insert([newProfileData])
         .select()
 
       if (!insertErr && insertedList && insertedList.length > 0) {
         profileRecord = insertedList[0]
-        console.log('[Auth Sync] Database User Created:', profileRecord.id)
-      } else if (insertErr) {
-        console.warn('[Auth Sync] Supabase Insert Notice:', insertErr)
+        console.log('[Single Source of Truth] New Database User Inserted:', profileRecord.id)
+      } else {
+        console.warn('[Single Source of Truth] Insert warning:', insertErr)
       }
     }
   } catch (err) {
-    console.warn('[Auth Sync] Database query error:', err)
+    console.warn('[Single Source of Truth] DB access notice:', err)
   }
 
-  // Determine final profile fields
-  const finalId = profileRecord?.id || userId
-  const finalCode = profileRecord?.referral_code || defaultCode
-  console.log('[Auth Sync] Referral Code Generated / Loaded:', finalCode)
+  // Guaranteed fallback object if DB connection fails
+  const canonicalId = profileRecord?.id || userId
+  const canonicalCode = profileRecord?.referral_code || generateUserReferralCode()
+  const canonicalCreatedAt = profileRecord?.created_at ? new Date(profileRecord.created_at).toLocaleDateString() : new Date().toLocaleDateString()
+  const canonicalLastLogin = profileRecord?.last_login ? new Date(profileRecord.last_login).toLocaleString() : new Date().toLocaleString()
 
-  // 3. Fetch referrals for statistics
+  // 3. Aggregate referral statistics from referrals table
   let totalReferrals = 0
   let successfulReferrals = 0
   let pendingReferrals = 0
@@ -202,7 +207,7 @@ export async function getOrCreateReferralProfile(
     const { data: refData } = await supabase
       .from('referrals')
       .select('*')
-      .eq('referrer_user_id', finalId)
+      .eq('referrer_user_id', canonicalId)
 
     if (refData && refData.length > 0) {
       referralsData = refData
@@ -218,7 +223,7 @@ export async function getOrCreateReferralProfile(
     }
   } catch {}
 
-  // 4. Fetch withdrawals for wallet calculation
+  // 4. Aggregate withdrawal records from withdrawals table
   let totalWithdrawnOrPending = 0
   let pendingWithdrawal = 0
   const withdrawHistory: any[] = []
@@ -227,7 +232,7 @@ export async function getOrCreateReferralProfile(
     const { data: wData } = await supabase
       .from('withdrawals')
       .select('*')
-      .eq('user_id', finalId)
+      .eq('user_id', canonicalId)
       .order('created_at', { ascending: false })
 
     if (wData && wData.length > 0) {
@@ -255,39 +260,39 @@ export async function getOrCreateReferralProfile(
 
   const walletBalance = Math.max(0, totalEarnings - totalWithdrawnOrPending)
 
-  const resultProfile: UserReferralProfile = {
-    id: finalId,
+  const canonicalUserObj: UserReferralProfile = {
+    id: canonicalId,
     firebaseUid: userId,
     name: profileRecord?.full_name || cleanName,
     email: profileRecord?.email || cleanEmail,
     photoUrl: profileRecord?.profile_image || photoUrl || undefined,
     phone: profileRecord?.phone || '',
-    referralCode: finalCode,
-    referralLink: generateReferralLink(finalCode),
+    referralCode: canonicalCode,
+    referralLink: generateReferralLink(canonicalCode),
     walletBalance,
     successfulReferrals,
     pendingReferrals,
     totalReferrals,
     totalEarnings,
     pendingWithdrawal,
-    createdAt: profileRecord?.created_at ? new Date(profileRecord.created_at).toLocaleDateString() : new Date().toLocaleDateString(),
-    lastLogin: profileRecord?.last_login ? new Date(profileRecord.last_login).toLocaleString() : new Date().toLocaleString(),
+    createdAt: canonicalCreatedAt,
+    lastLogin: canonicalLastLogin,
     referralHistory: referralsData,
     withdrawHistory,
   }
 
-  // 5. Update local cache for Admin Panel sync fallback
+  // Update synchronized cache layer
   try {
     const cached = JSON.parse(localStorage.getItem('live_users_cache') || '[]')
     const idx = cached.findIndex((c: any) => c.email && c.email.toLowerCase() === cleanEmail)
     if (idx >= 0) {
-      cached[idx] = { ...cached[idx], ...resultProfile }
+      cached[idx] = canonicalUserObj
     } else {
-      cached.push(resultProfile)
+      cached.push(canonicalUserObj)
     }
     localStorage.setItem('live_users_cache', JSON.stringify(cached))
   } catch {}
 
-  console.log('[Auth Sync] Admin Sync Completed for:', cleanEmail)
-  return resultProfile
+  console.log('[Single Source of Truth] Returning Canonical User:', canonicalUserObj.email, 'Code:', canonicalUserObj.referralCode, 'LastLogin:', canonicalUserObj.lastLogin)
+  return canonicalUserObj
 }
