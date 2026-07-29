@@ -546,7 +546,16 @@ export async function validateAndApplyReferralCode(
         .eq('referral_code', cleanCode)
 
       if (profileList && profileList.length > 0) {
-        referrer = profileList[0]
+        const prof = profileList[0]
+        const { data: matchedUsers } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', (prof.email || '').trim().toLowerCase())
+        if (matchedUsers && matchedUsers.length > 0) {
+          referrer = matchedUsers[0]
+        } else {
+          referrer = prof
+        }
       }
     }
 
@@ -575,12 +584,27 @@ export async function validateAndApplyReferralCode(
     const currentUserFirebaseUid = referredUser?.firebase_uid || ''
 
     if (
-      referrerEmail === referredUserEmail.trim().toLowerCase() ||
-      referrer.id === referredUserId ||
-      (referrerFirebaseUid && referrerFirebaseUid === currentUserFirebaseUid)
+      (referredUserEmail && referrerEmail === referredUserEmail.trim().toLowerCase()) ||
+      (referredUserId && referrer.id === referredUserId) ||
+      (currentUserFirebaseUid && referrerFirebaseUid && referrerFirebaseUid === currentUserFirebaseUid)
     ) {
       console.log('[Self Referral Prevented] User attempted to use own referral code:', cleanCode)
       return { success: false, message: 'Self-referral is not allowed. You cannot use your own referral code.' }
+    }
+
+    // Resolve true referrer UUID primary key
+    const trueReferrerUserId = referrer.user_id || referrer.id
+
+    // Check if referredUserId is a valid UUID (guest user check)
+    const isValidUuid = referredUserId && referredUserId.length > 20 && referredUserId !== 'guest' && !referredUserId.startsWith('usr_')
+
+    if (!isValidUuid) {
+      console.log('[Guest Referral Validated] Code is valid for guest checkout! Deferring database insertion until sign-up.')
+      return {
+        success: true,
+        message: `Referral code valid! 50% OFF applied. Referred by ${referrer.display_name || referrer.full_name || 'a friend'}.`,
+        referrerName: referrer.display_name || referrer.full_name || 'a friend',
+      }
     }
 
     // 6. Execute atomic creation of referral relationship & stats credit
@@ -589,8 +613,8 @@ export async function validateAndApplyReferralCode(
 
     const { error: insertRefErr } = await supabase.from('referrals').insert([
       {
-        referrer_id: referrer.id,
-        referrer_user_id: referrer.id,
+        referrer_id: trueReferrerUserId,
+        referrer_user_id: trueReferrerUserId,
         referred_user_id: referredUserId,
         referral_code_used: cleanCode,
         commission_amount: commission,
@@ -604,10 +628,10 @@ export async function validateAndApplyReferralCode(
       return { success: false, message: 'Failed to create referral record.' }
     }
 
-    console.log('[Referral Accepted] Created referral relationship between referrer:', referrer.id, 'and referred:', referredUserId)
+    console.log('[Referral Accepted] Created referral relationship between referrer:', trueReferrerUserId, 'and referred:', referredUserId)
 
     // Update referred_by in users table
-    await supabase.from('users').update({ referred_by: referrer.id }).eq('id', referredUserId)
+    await supabase.from('users').update({ referred_by: trueReferrerUserId }).eq('id', referredUserId)
 
     // 7. Update referral_stats
     const { data: statsData } = await supabase.from('referral_stats').select('*').eq('user_id', referrer.id)
