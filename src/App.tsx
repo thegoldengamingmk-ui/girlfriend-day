@@ -92,15 +92,15 @@ const DARK_BG: React.CSSProperties = {
 
 // ── SHARED ATOMS ───────────────────────────────────────────────────────────
 
-function FloatingHearts({ n = 20 }: { n?: number }) {
+function FloatingHearts({ n = 12 }: { n?: number }) {
   const items = useRef(
     Array.from({ length: n }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
-      sz: Math.random() * 18 + 9,
-      delay: Math.random() * 14,
-      dur: Math.random() * 9 + 7,
-      op: Math.random() * 0.38 + 0.08,
+      sz: Math.random() * 16 + 8,
+      delay: Math.random() * 12,
+      dur: Math.random() * 8 + 6,
+      op: Math.random() * 0.3 + 0.08,
     })),
   ).current
 
@@ -109,7 +109,7 @@ function FloatingHearts({ n = 20 }: { n?: number }) {
       {items.map((h) => (
         <div
           key={h.id}
-          className="absolute animate-float-heart select-none"
+          className="absolute animate-float-heart select-none will-change-transform"
           style={{
             left: `${h.left}%`,
             bottom: "-30px",
@@ -126,15 +126,15 @@ function FloatingHearts({ n = 20 }: { n?: number }) {
   )
 }
 
-function Sparkles({ n = 24 }: { n?: number }) {
+function Sparkles({ n = 14 }: { n?: number }) {
   const items = useRef(
     Array.from({ length: n }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
       top: Math.random() * 100,
-      sz: Math.random() * 5 + 2,
-      delay: Math.random() * 5,
-      dur: Math.random() * 2 + 1.4,
+      sz: Math.random() * 4 + 2,
+      delay: Math.random() * 4,
+      dur: Math.random() * 2 + 1.2,
     })),
   ).current
 
@@ -143,14 +143,14 @@ function Sparkles({ n = 24 }: { n?: number }) {
       {items.map((s) => (
         <div
           key={s.id}
-          className="absolute rounded-full animate-sparkle"
+          className="absolute rounded-full animate-sparkle will-change-transform"
           style={{
             left: `${s.left}%`,
             top: `${s.top}%`,
             width: `${s.sz}px`,
             height: `${s.sz}px`,
             background:
-              "radial-gradient(circle, rgba(255,255,255,0.96) 0%, rgba(255,200,220,0.65) 55%, transparent 100%)",
+              "radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,200,220,0.6) 55%, transparent 100%)",
             animationDelay: `${s.delay}s`,
             animationDuration: `${s.dur}s`,
           }}
