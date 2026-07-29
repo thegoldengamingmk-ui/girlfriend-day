@@ -1,8 +1,32 @@
 -- ====================================================================
--- SUPABASE COMPLETE SUPER ADMIN & USER DATABASE SCHEMA
+-- SUPABASE COMPLETE IDEMPOTENT DATABASE MIGRATION SCHEMA
+-- Single Source of Truth for Users, Referral Stats, Wallets, and Withdrawals
 -- ====================================================================
 
--- 1. Users Table (User Profiles)
+-- Enable UUID extension if not enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 1. Primary Users Table
+CREATE TABLE IF NOT EXISTS public.users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  firebase_uid TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  display_name TEXT,
+  first_name TEXT,
+  last_name TEXT,
+  profile_photo TEXT,
+  provider TEXT DEFAULT 'google',
+  email_verified BOOLEAN DEFAULT TRUE,
+  referral_code TEXT UNIQUE NOT NULL,
+  referral_link TEXT NOT NULL,
+  role TEXT DEFAULT 'user',
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  last_login TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Backward compatibility view / fallback table mapping
 CREATE TABLE IF NOT EXISTS public.user_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   full_name TEXT NOT NULL,
@@ -10,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
   phone TEXT,
   profile_image TEXT,
   account_status TEXT DEFAULT 'ACTIVE',
-  subscription_status TEXT DEFAULT 'FREE',
+  subscription_status TEXT DEFAULT 'PREMIUM',
   subscription_expiry TIMESTAMPTZ,
   referral_code TEXT UNIQUE NOT NULL,
   referred_by TEXT,
@@ -20,10 +44,59 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. User Login History
+-- 2. Referral Statistics Table
+CREATE TABLE IF NOT EXISTS public.referral_stats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE UNIQUE,
+  total_referrals INT DEFAULT 0,
+  successful_referrals INT DEFAULT 0,
+  pending_referrals INT DEFAULT 0,
+  referral_earnings NUMERIC DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. Wallets Table
+CREATE TABLE IF NOT EXISTS public.wallets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE UNIQUE,
+  available_balance NUMERIC DEFAULT 0,
+  pending_balance NUMERIC DEFAULT 0,
+  total_earned NUMERIC DEFAULT 0,
+  total_withdrawn NUMERIC DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. Referrals Activity Table
+CREATE TABLE IF NOT EXISTS public.referrals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  referrer_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  referrer_user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  referred_user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  referral_code_used TEXT NOT NULL,
+  commission_amount NUMERIC DEFAULT 10,
+  status TEXT DEFAULT 'APPROVED',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. Withdrawals Requests Table
+CREATE TABLE IF NOT EXISTS public.withdrawals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  request_id TEXT,
+  amount NUMERIC NOT NULL,
+  payment_method TEXT DEFAULT 'UPI',
+  upi_id TEXT,
+  status TEXT DEFAULT 'PENDING',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. User Login History Table
 CREATE TABLE IF NOT EXISTS public.user_login_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   login_time TIMESTAMPTZ DEFAULT NOW(),
   ip_address TEXT,
@@ -31,89 +104,31 @@ CREATE TABLE IF NOT EXISTS public.user_login_history (
   browser TEXT
 );
 
--- 3. Payments Table
-CREATE TABLE IF NOT EXISTS public.payments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
-  user_name TEXT,
-  user_email TEXT,
-  transaction_id TEXT UNIQUE NOT NULL,
-  amount NUMERIC(10, 2) NOT NULL,
-  payment_gateway TEXT DEFAULT 'Razorpay',
-  payment_status TEXT DEFAULT 'SUCCESS', -- SUCCESS, FAILED, PENDING, REFUNDED
-  plan_name TEXT DEFAULT 'Premium Plan',
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- 7. Performance Indexes
+CREATE INDEX IF NOT EXISTS idx_users_firebase_uid ON public.users(firebase_uid);
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_referral_code ON public.users(referral_code);
+CREATE INDEX IF NOT EXISTS idx_referral_stats_user_id ON public.referral_stats(user_id);
+CREATE INDEX IF NOT EXISTS idx_wallets_user_id ON public.wallets(user_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer_id ON public.referrals(referrer_id);
+CREATE INDEX IF NOT EXISTS idx_withdrawals_user_id ON public.withdrawals(user_id);
 
--- 4. Subscriptions Table
-CREATE TABLE IF NOT EXISTS public.subscriptions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
-  plan_name TEXT DEFAULT 'Premium Plan',
-  price NUMERIC(10, 2) DEFAULT 49.00,
-  status TEXT DEFAULT 'ACTIVE',
-  start_date TIMESTAMPTZ DEFAULT NOW(),
-  expiry_date TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '1 year'),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- 8. Row Level Security (RLS) Policies
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.referral_stats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.wallets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.withdrawals ENABLE ROW LEVEL SECURITY;
 
--- 5. Referrals Table
-CREATE TABLE IF NOT EXISTS public.referrals (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  referrer_user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
-  referred_user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
-  referral_code TEXT NOT NULL,
-  commission_amount NUMERIC(10, 2) DEFAULT 10.00,
-  status TEXT DEFAULT 'APPROVED', -- PENDING, APPROVED, REJECTED
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 6. Withdrawals Table
-CREATE TABLE IF NOT EXISTS public.withdrawals (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  request_id TEXT UNIQUE NOT NULL,
-  user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
-  user_name TEXT,
-  user_email TEXT,
-  amount NUMERIC(10, 2) NOT NULL,
-  payment_method TEXT DEFAULT 'UPI',
-  upi_id TEXT NOT NULL,
-  status TEXT DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED, PAID
-  admin_notes TEXT,
-  payment_ref_id TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  processed_at TIMESTAMPTZ
-);
-
--- 7. Admins Table
-CREATE TABLE IF NOT EXISTS public.admins (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  role TEXT DEFAULT 'ADMIN', -- SUPER_ADMIN, ADMIN
-  status TEXT DEFAULT 'ACTIVE',
-  permissions JSONB DEFAULT '[]'::jsonb,
-  last_login TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 8. Admin Audit Logs Table
-CREATE TABLE IF NOT EXISTS public.admin_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_id TEXT NOT NULL,
-  admin_email TEXT NOT NULL,
-  action TEXT NOT NULL,
-  description TEXT,
-  ip_address TEXT,
-  device_info TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Enable Supabase Realtime for instant updates
-ALTER PUBLICATION supabase_realtime ADD TABLE public.user_profiles;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.payments;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.withdrawals;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.referrals;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_logs;
+-- Allow public read/write access for application integration
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public select on users') THEN
+    CREATE POLICY "Allow public select on users" ON public.users FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public insert on users') THEN
+    CREATE POLICY "Allow public insert on users" ON public.users FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public update on users') THEN
+    CREATE POLICY "Allow public update on users" ON public.users FOR UPDATE USING (true);
+  END IF;
+END $$;

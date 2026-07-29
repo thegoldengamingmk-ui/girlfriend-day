@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 
 export interface AdminUserRecord {
   id: string
+  firebaseUid?: string
   name: string
   email: string
   mobile: string
@@ -49,54 +50,96 @@ export interface UserLoginRecord {
   browser: string
 }
 
+/**
+ * Single Source of Truth Admin Users Query
+ * Reads primary users table and joins referral_stats & wallets in Supabase database.
+ */
 export async function getAdminUsers(): Promise<AdminUserRecord[]> {
   const usersMap = new Map<string, AdminUserRecord>()
 
   try {
-    // 1. Fetch live profiles directly from Supabase user_profiles table (Single Source of Truth)
-    const { data: dbProfiles } = await supabase
+    // 1. Query primary users table
+    const { data: primaryUsers } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    // 2. Query legacy/compatibility user_profiles table
+    const { data: profileUsers } = await supabase
       .from('user_profiles')
       .select('*')
       .order('created_at', { ascending: false })
 
-    // 2. Aggregate live referral stats for each user
-    const { data: allReferrals } = await supabase.from('referrals').select('*')
+    // 3. Query referral_stats table
+    const { data: refStatsList } = await supabase.from('referral_stats').select('*')
     const refStatsMap = new Map<string, { count: number; earnings: number }>()
 
-    if (allReferrals && allReferrals.length > 0) {
-      allReferrals.forEach((ref) => {
-        const key = ref.referrer_user_id
-        if (key) {
-          const prev = refStatsMap.get(key) || { count: 0, earnings: 0 }
-          const isApproved = ref.status === 'APPROVED' || ref.status === 'SUCCESS'
-          refStatsMap.set(key, {
-            count: prev.count + (isApproved ? 1 : 0),
-            earnings: prev.earnings + (isApproved ? Number(ref.commission_amount || 10) : 0),
+    if (refStatsList && refStatsList.length > 0) {
+      refStatsList.forEach((s) => {
+        refStatsMap.set(s.user_id, {
+          count: Number(s.successful_referrals || 0),
+          earnings: Number(s.referral_earnings || 0),
+        })
+      })
+    }
+
+    // 4. Query wallets table
+    const { data: walletList } = await supabase.from('wallets').select('*')
+    const walletMap = new Map<string, number>()
+    if (walletList && walletList.length > 0) {
+      walletList.forEach((w) => {
+        walletMap.set(w.user_id, Number(w.total_earned || 0))
+      })
+    }
+
+    // Populate primary users
+    if (primaryUsers && primaryUsers.length > 0) {
+      primaryUsers.forEach((u) => {
+        const emailKey = (u.email || '').toLowerCase()
+        if (emailKey) {
+          const stats = refStatsMap.get(u.id) || { count: 0, earnings: 0 }
+          const walletEarned = walletMap.get(u.id) || stats.earnings
+
+          usersMap.set(emailKey, {
+            id: u.id,
+            firebaseUid: u.firebase_uid,
+            name: u.display_name || u.email.split('@')[0],
+            email: u.email,
+            mobile: 'N/A',
+            subscriptionStatus: 'PREMIUM',
+            subscriptionExpiry: '2027-12-31',
+            referralCode: u.referral_code, // Canonical DB Field
+            referredUsersCount: stats.count,
+            totalReferralEarnings: walletEarned,
+            accountStatus: (u.status as any) === 'blocked' ? 'BLOCKED' : 'ACTIVE',
+            signupDate: u.created_at ? new Date(u.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            lastLogin: u.last_login ? new Date(u.last_login).toLocaleString() : new Date().toLocaleString(), // Canonical DB Field
+            lastLoginIp: '127.0.0.1',
           })
         }
       })
     }
 
-    if (dbProfiles && dbProfiles.length > 0) {
-      dbProfiles.forEach((u) => {
+    // Populate user_profiles table records if not already in usersMap
+    if (profileUsers && profileUsers.length > 0) {
+      profileUsers.forEach((u) => {
         const emailKey = (u.email || '').toLowerCase()
-        if (emailKey) {
+        if (emailKey && !usersMap.has(emailKey)) {
           const stats = refStatsMap.get(u.id) || { count: 0, earnings: 0 }
-
           usersMap.set(emailKey, {
             id: u.id,
             name: u.full_name || emailKey.split('@')[0],
             email: u.email,
             mobile: u.phone || 'N/A',
-            subscriptionStatus: (u.subscription_status as any) || 'PREMIUM',
-            subscriptionExpiry: u.subscription_expiry ? new Date(u.subscription_expiry).toISOString().split('T')[0] : '2027-12-31',
-            referralCode: u.referral_code, // Single Source of Truth DB Field
+            subscriptionStatus: 'PREMIUM',
+            subscriptionExpiry: '2027-12-31',
+            referralCode: u.referral_code,
             referredUsersCount: stats.count,
             totalReferralEarnings: stats.earnings,
-            accountStatus: (u.account_status as any) || 'ACTIVE',
+            accountStatus: u.account_status === 'BLOCKED' ? 'BLOCKED' : 'ACTIVE',
             signupDate: u.created_at ? new Date(u.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-            lastLogin: u.last_login ? new Date(u.last_login).toLocaleString() : new Date().toLocaleString(), // Single Source of Truth DB Field
-            lastLoginIp: u.last_login_ip || '127.0.0.1',
+            lastLogin: u.last_login ? new Date(u.last_login).toLocaleString() : new Date().toLocaleString(),
+            lastLoginIp: '127.0.0.1',
           })
         }
       })
@@ -105,35 +148,34 @@ export async function getAdminUsers(): Promise<AdminUserRecord[]> {
     console.warn('Supabase getAdminUsers notice:', err)
   }
 
-  // 3. Merge cached profiles (if any) matching exact canonical DB fields
+  // Fallback check against local backup registry
   try {
-    const cached = JSON.parse(localStorage.getItem('live_users_cache') || '[]')
-    if (Array.isArray(cached)) {
-      cached.forEach((c: any) => {
-        const emailKey = (c.email || '').toLowerCase()
-        if (emailKey && !usersMap.has(emailKey)) {
-          usersMap.set(emailKey, {
-            id: c.id || `user_${Date.now()}`,
-            name: c.name || emailKey.split('@')[0],
-            email: c.email,
-            mobile: c.phone || 'N/A',
-            subscriptionStatus: 'PREMIUM',
-            subscriptionExpiry: '2027-12-31',
-            referralCode: c.referralCode,
-            referredUsersCount: c.successfulReferrals || 0,
-            totalReferralEarnings: c.totalEarnings || 0,
-            accountStatus: 'ACTIVE',
-            signupDate: c.createdAt || new Date().toISOString().split('T')[0],
-            lastLogin: c.lastLogin || new Date().toLocaleString(),
-            lastLoginIp: '127.0.0.1',
-          })
-        }
-      })
-    }
+    const backupRegistry = JSON.parse(localStorage.getItem('canonical_users_backup_registry') || '{}')
+    Object.values(backupRegistry).forEach((c: any) => {
+      const emailKey = (c.email || '').toLowerCase()
+      if (emailKey && !usersMap.has(emailKey)) {
+        usersMap.set(emailKey, {
+          id: c.id || `user_${Date.now()}`,
+          firebaseUid: c.firebaseUid,
+          name: c.displayName || c.name || emailKey.split('@')[0],
+          email: c.email,
+          mobile: 'N/A',
+          subscriptionStatus: 'PREMIUM',
+          subscriptionExpiry: '2027-12-31',
+          referralCode: c.referralCode,
+          referredUsersCount: c.referralStats?.successfulReferrals || 0,
+          totalReferralEarnings: c.wallet?.totalEarned || 0,
+          accountStatus: 'ACTIVE',
+          signupDate: c.createdAt || new Date().toISOString().split('T')[0],
+          lastLogin: c.lastLogin || new Date().toLocaleString(),
+          lastLoginIp: '127.0.0.1',
+        })
+      }
+    })
   } catch {}
 
   const result = Array.from(usersMap.values())
-  console.log('[Single Source of Truth Admin Sync] Total Admin Users Loaded:', result.length)
+  console.log('[Single Source Admin Query] Loaded Total Users:', result.length)
   return result
 }
 
@@ -180,7 +222,7 @@ export async function getAdminWithdrawals(): Promise<WithdrawalRecord[]> {
     if (!error && dbWithdrawals && dbWithdrawals.length > 0) {
       return dbWithdrawals.map((w) => ({
         id: w.id,
-        requestId: w.request_id,
+        requestId: w.request_id || `REQ-${w.id.slice(0, 6)}`,
         userName: w.user_name || 'User',
         email: w.user_email || 'n/a',
         amount: Number(w.amount),
@@ -237,6 +279,7 @@ export async function getUserLoginHistory(userId: string): Promise<UserLoginReco
 export async function toggleUserStatus(userId: string, currentStatus: string) {
   const newStatus = currentStatus === 'ACTIVE' ? 'BLOCKED' : 'ACTIVE'
   try {
+    await supabase.from('users').update({ status: newStatus.toLowerCase() }).eq('id', userId)
     await supabase.from('user_profiles').update({ account_status: newStatus }).eq('id', userId)
   } catch {}
 }
@@ -269,6 +312,7 @@ export async function updateWithdrawalStatus(
 export function subscribeToAdminRealtimeUpdates(onUpdate: () => void) {
   const channel = supabase
     .channel('admin_realtime_changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => onUpdate())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'user_profiles' }, () => onUpdate())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, () => onUpdate())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'withdrawals' }, () => onUpdate())
