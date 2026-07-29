@@ -1,6 +1,6 @@
 -- ====================================================================
 -- SUPABASE COMPLETE IDEMPOTENT DATABASE MIGRATION SCHEMA
--- Single Source of Truth for Users, Referral Stats, Wallets, and Withdrawals
+-- Single Source of Truth for Users, Referral Stats, Wallets, Withdrawals, and Transactions
 -- ====================================================================
 
 -- Enable UUID extension if not enabled
@@ -104,7 +104,25 @@ CREATE TABLE IF NOT EXISTS public.user_login_history (
   browser TEXT
 );
 
--- 7. Performance Indexes
+-- 7. Financial Transactions Ledger Table (Source of Truth for Wallet Balances)
+CREATE TABLE IF NOT EXISTS public.transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  transaction_id TEXT UNIQUE NOT NULL,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  transaction_type TEXT NOT NULL,
+  reference_type TEXT,
+  reference_id TEXT,
+  amount NUMERIC NOT NULL,
+  currency TEXT DEFAULT 'INR',
+  balance_before NUMERIC DEFAULT 0,
+  balance_after NUMERIC DEFAULT 0,
+  status TEXT DEFAULT 'Completed',
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 8. Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_users_firebase_uid ON public.users(firebase_uid);
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
 CREATE INDEX IF NOT EXISTS idx_users_referral_code ON public.users(referral_code);
@@ -112,12 +130,16 @@ CREATE INDEX IF NOT EXISTS idx_referral_stats_user_id ON public.referral_stats(u
 CREATE INDEX IF NOT EXISTS idx_wallets_user_id ON public.wallets(user_id);
 CREATE INDEX IF NOT EXISTS idx_referrals_referrer_id ON public.referrals(referrer_id);
 CREATE INDEX IF NOT EXISTS idx_withdrawals_user_id ON public.withdrawals(user_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON public.transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_transaction_id ON public.transactions(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_type ON public.transactions(transaction_type);
 
--- 8. Row Level Security (RLS) Policies
+-- 9. Row Level Security (RLS) Policies
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.referral_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.withdrawals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read/write access for application integration
 DO $$
@@ -130,5 +152,15 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public update on users') THEN
     CREATE POLICY "Allow public update on users" ON public.users FOR UPDATE USING (true);
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public select on transactions') THEN
+    CREATE POLICY "Allow public select on transactions" ON public.transactions FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public insert on transactions') THEN
+    CREATE POLICY "Allow public insert on transactions" ON public.transactions FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public update on transactions') THEN
+    CREATE POLICY "Allow public update on transactions" ON public.transactions FOR UPDATE USING (true);
   END IF;
 END $$;

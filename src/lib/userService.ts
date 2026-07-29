@@ -5,6 +5,7 @@
  */
 
 import { supabase } from './supabase'
+import { executeWalletTransaction } from './walletService'
 
 export interface CanonicalUser {
   id: string
@@ -659,29 +660,16 @@ export async function validateAndApplyReferralCode(
     }
     console.log('[Referral Stats Updated] Referrer stats incremented for:', referrer.id)
 
-    // 8. Update wallets
-    const { data: walletData } = await supabase.from('wallets').select('*').eq('user_id', referrer.id)
-    if (walletData && walletData.length > 0) {
-      const currentWallet = walletData[0]
-      await supabase
-        .from('wallets')
-        .update({
-          available_balance: Number(currentWallet.available_balance || 0) + commission,
-          total_earned: Number(currentWallet.total_earned || 0) + commission,
-          updated_at: nowIso,
-        })
-        .eq('user_id', referrer.id)
-    } else {
-      await supabase.from('wallets').insert([
-        {
-          user_id: referrer.id,
-          available_balance: commission,
-          pending_balance: 0,
-          total_earned: commission,
-          total_withdrawn: 0,
-        },
-      ])
-    }
+    // 8. Update wallets via financial transaction ledger executor
+    await executeWalletTransaction({
+      userId: trueReferrerUserId,
+      type: 'Referral Reward',
+      amount: commission,
+      referenceType: 'referral',
+      referenceId: cleanCode,
+      description: `Referral Reward for referring user (Code: ${cleanCode})`,
+      status: 'Completed',
+    })
 
     return {
       success: true,

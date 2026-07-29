@@ -40,6 +40,8 @@ export async function updatePassword(newPassword: string) {
   return data
 }
 
+import { getUserTransactions, WalletTransaction } from './walletService'
+
 export interface UserReferralProfile {
   id: string
   firebaseUid?: string
@@ -59,6 +61,7 @@ export interface UserReferralProfile {
   lastLogin: string
   referralHistory: any[]
   withdrawHistory: any[]
+  transactions: WalletTransaction[]
 }
 
 export function generateUserReferralCode(): string {
@@ -133,6 +136,8 @@ export async function getOrCreateReferralProfile(
     photoURL: photoUrl,
   })
 
+  const transactions = await getUserTransactions(canonical.id)
+
   return {
     id: canonical.id,
     firebaseUid: canonical.firebaseUid,
@@ -152,5 +157,6 @@ export async function getOrCreateReferralProfile(
     lastLogin: canonical.lastLogin,
     referralHistory: [],
     withdrawHistory: canonical.withdrawals,
+    transactions,
   }
 }

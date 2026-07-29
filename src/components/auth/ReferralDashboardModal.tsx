@@ -431,6 +431,60 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
             </button>
           </div>
 
+          {/* Wallet Financial Transaction Ledger Section */}
+          <div className="mb-6">
+            <h3 className="text-xs uppercase font-bold tracking-wider text-amber-300 mb-3 flex items-center gap-2">
+              <span>💳</span>
+              <span>Wallet Financial Transaction Ledger</span>
+            </h3>
+
+            {(!profile.transactions || profile.transactions.length === 0) ? (
+              <div className="text-center py-6 bg-white/5 rounded-2xl border border-white/5 text-xs text-pink-200/60">
+                No financial transactions recorded yet. Balance: ₹{profile.walletBalance}
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-2xl border border-amber-500/20 bg-white/5 max-h-56 overflow-y-auto">
+                <table className="w-full text-left text-xs text-pink-200">
+                  <thead className="bg-amber-500/10 text-[10px] uppercase tracking-wider text-amber-300 border-b border-amber-500/20 sticky top-0 backdrop-blur-md">
+                    <tr>
+                      <th className="p-3">Txn ID</th>
+                      <th className="p-3">Type</th>
+                      <th className="p-3">Amount</th>
+                      <th className="p-3">Running Balance</th>
+                      <th className="p-3">Status</th>
+                      <th className="p-3">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 font-mono">
+                    {profile.transactions.map((txn) => {
+                      const isDebit = ['Admin Debit', 'Withdrawal Request', 'Premium Purchase'].includes(txn.transactionType)
+                      return (
+                        <tr key={txn.id} className="hover:bg-white/5 transition-all text-[11px]">
+                          <td className="p-3 font-bold text-amber-200">{txn.transactionId}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${isDebit ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}`}>
+                              {txn.transactionType}
+                            </span>
+                          </td>
+                          <td className={`p-3 font-bold ${isDebit ? 'text-rose-400' : 'text-emerald-400'}`}>
+                            {isDebit ? '-' : '+'}₹{txn.amount}
+                          </td>
+                          <td className="p-3 font-bold text-white">₹{txn.balanceAfter}</td>
+                          <td className="p-3">
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                              {txn.status}
+                            </span>
+                          </td>
+                          <td className="p-3 text-[10px] text-pink-200/60">{txn.createdAt}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
           {/* Withdraw History Section */}
           <div>
             <h3 className="text-xs uppercase font-bold tracking-wider text-pink-300/90 mb-3 flex items-center gap-2">
