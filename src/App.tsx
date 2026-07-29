@@ -23,6 +23,7 @@ import { AuthModal } from "./components/auth/AuthModal"
 import { ReferralDashboardModal } from "./components/auth/ReferralDashboardModal"
 import { getCurrentSession, signOutUser, subscribeToAuthChanges } from "./lib/authService"
 import { validateAndApplyReferralCode } from "./lib/userService"
+import { launchRazorpayCheckout } from "./lib/razorpayService"
 import { getActiveAdminSession, type AdminUser } from "./lib/adminAuthService"
 import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
 
@@ -2924,71 +2925,78 @@ function Dashboard({
     }
     setErrorMsg("")
 
-    // Open PostPaymentAccountModal to verify email & password with OTP
-    onRequestCreateAccount(async () => {
-      setIsSubmitting(true)
-      try {
-        const uploadedPhotoUrls: string[] = []
-        for (const file of photoFiles) {
-          const publicUrl = await uploadPhoto(file)
-          uploadedPhotoUrls.push(publicUrl)
-        }
+    // Launch Razorpay Checkout Modal (Test Key: rzp_test_TJJpml3f29qMoT)
+    await launchRazorpayCheckout({
+      amount: finalPrice,
+      description: `Romantic Gift Website Customization (${gfName} & ${bfName})`,
+      userEmail: userProfile?.email || '',
+      userName: userProfile?.displayName || bfName,
+      onSuccess: async (paymentRes) => {
+        console.log('[Razorpay Verified Payment]:', paymentRes)
+        onRequestCreateAccount(async () => {
+          setIsSubmitting(true)
+          try {
+            const uploadedPhotoUrls: string[] = []
+            for (const file of photoFiles) {
+              const publicUrl = await uploadPhoto(file)
+              uploadedPhotoUrls.push(publicUrl)
+            }
 
-        if (uploadedPhotoUrls.length === 0 && photos.length > 0) {
-          uploadedPhotoUrls.push(...photos.filter((p) => p.startsWith("http")))
-        }
+            if (uploadedPhotoUrls.length === 0 && photos.length > 0) {
+              uploadedPhotoUrls.push(...photos.filter((p) => p.startsWith("http")))
+            }
 
-        let musicPublicUrl = ""
-        if (musicFile) {
-          musicPublicUrl = await uploadMusicTrack(musicFile)
-        }
+            let musicPublicUrl = ""
+            if (musicFile) {
+              musicPublicUrl = await uploadMusicTrack(musicFile)
+            }
 
-        let voiceNotePublicUrl = ""
-        if (voiceNoteFile) {
-          voiceNotePublicUrl = await uploadVoiceNote(voiceNoteFile)
-        }
+            let voiceNotePublicUrl = ""
+            if (voiceNoteFile) {
+              voiceNotePublicUrl = await uploadVoiceNote(voiceNoteFile)
+            }
 
-        const questionRecords = secretQuestions
-          .filter((q) => q.question.trim() && q.answer.trim())
-          .map((q) => ({
-            question: q.question.trim(),
-            answer: q.answer.trim(),
-          }))
+            const questionRecords = secretQuestions
+              .filter((q) => q.question.trim() && q.answer.trim())
+              .map((q) => ({
+                question: q.question.trim(),
+                answer: q.answer.trim(),
+              }))
 
-        const finalSpotifyUrl =
-          musicPublicUrl ||
-          spotifyQ.trim() ||
-          `https://open.spotify.com/track/${spotifyTrackId}`
+            const finalSpotifyUrl =
+              musicPublicUrl ||
+              spotifyQ.trim() ||
+              spotifyTrackId.trim() ||
+              "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
 
-        let slug = ""
-        try {
-          slug = await createSurprise({
-            boyfriend_name: bfName.trim(),
-            girlfriend_name: gfName.trim(),
-            letter: letter.trim(),
-            spotify_url: finalSpotifyUrl,
-            voice_note_url: voiceNotePublicUrl || undefined,
-            photos: uploadedPhotoUrls,
-            questions: questionRecords,
-          })
-        } catch (dbErr) {
-          console.warn("Supabase insert error (falling back to demo slug):", dbErr)
-          slug = Math.random().toString(36).substring(2, 10).toUpperCase()
-        }
+            const result = await createSurprise({
+              title: `${gfName} & ${bfName}'s Love Story`,
+              girlfriend_name: gfName.trim(),
+              boyfriend_name: bfName.trim(),
+              sender_name: bfName.trim(),
+              recipient_name: gfName.trim(),
+              photos: uploadedPhotoUrls,
+              letter: letter.trim() || undefined,
+              music_url: finalSpotifyUrl,
+              spotify_url: finalSpotifyUrl,
+              voice_note_url: voiceNotePublicUrl || undefined,
+              questions: questionRecords,
+            })
 
-        const host = window.location.origin.includes("localhost") || window.location.origin.includes("127.0.0.1")
-          ? "http://localhost:8443"
-          : window.location.origin
-        const generatedUrl = `${host}/?s=${slug}`
-        setLink(generatedUrl)
-      } catch (err) {
-        console.error("Error creating surprise:", err)
-        setErrorMsg(
-          err instanceof Error ? err.message : "Failed to generate surprise link",
-        )
-      } finally {
-        setIsSubmitting(false)
-      }
+            const fullShareLink = `${window.location.origin}/s/${result.slug}`
+            setLink(fullShareLink)
+            setIsSubmitting(false)
+          } catch (err: any) {
+            console.error("Failed to save surprise:", err)
+            setErrorMsg(err.message || "Failed to save surprise. Please try again.")
+            setIsSubmitting(false)
+          }
+        })
+      },
+      onFailure: (err) => {
+        console.warn('[Razorpay Payment Cancelled or Error]:', err)
+        setErrorMsg(err.message || 'Payment was cancelled. Please try again to unlock your website.')
+      },
     })
   }
 
