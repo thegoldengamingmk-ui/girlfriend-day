@@ -4065,6 +4065,19 @@ export default function App() {
 
   const [overlay, setOverlay] = useState(false)
 
+  // ── Session Restoration Listener ──────────────────────────────────────────
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthChanges((profile) => {
+      if (profile) {
+        console.log('[Auth Session Restored]: Successfully loaded Firebase Google Session for:', profile.email)
+        setUserProfile(profile)
+      } else {
+        console.log('[Auth Session Listener]: No active Google session found.')
+      }
+    })
+    return () => unsubscribe()
+  }, [])
+
   // Extract slug from URL on mount and fetch Supabase DB data
   useEffect(() => {
     if (typeof window === "undefined") return

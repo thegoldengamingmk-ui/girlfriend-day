@@ -184,23 +184,36 @@ export async function getAdminUsers(): Promise<AdminUserRecord[]> {
  */
 export async function getAdminTransactions(): Promise<PaymentTransaction[]> {
   try {
-    const { data: dbPayments, error } = await supabase
+    const { data: usersList } = await supabase.from('users').select('id, email, display_name')
+    const userMap = new Map<string, { email: string; name: string }>()
+    if (usersList && usersList.length > 0) {
+      usersList.forEach((u) => {
+        userMap.set(u.id, { email: u.email, name: u.display_name || u.email.split('@')[0] })
+      })
+    }
+
+    const { data: dbPayments, error: pErr } = await supabase
       .from('payments')
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (!error && dbPayments && dbPayments.length > 0) {
-      return dbPayments.map((p) => ({
-        id: p.id,
-        transactionId: p.transaction_id,
-        userName: p.user_name || 'User',
-        email: p.user_email || 'n/a',
-        amount: Number(p.amount),
-        gateway: p.payment_gateway || 'Razorpay',
-        status: p.payment_status || 'SUCCESS',
-        plan: p.plan_name || 'Premium Plan',
-        date: new Date(p.created_at).toLocaleString(),
-      }))
+    if (pErr) console.warn('[Admin Payments Query Warning]:', pErr)
+
+    if (dbPayments && dbPayments.length > 0) {
+      return dbPayments.map((p) => {
+        const uInfo = userMap.get(p.user_id) || { email: p.user_email || 'n/a', name: p.user_name || 'User' }
+        return {
+          id: p.id,
+          transactionId: p.razorpay_payment_id || p.payment_id || p.id,
+          userName: uInfo.name,
+          email: uInfo.email,
+          amount: Number(p.amount || 0),
+          gateway: p.payment_method || 'Razorpay',
+          status: (p.status || 'Captured').toUpperCase() === 'CAPTURED' ? 'SUCCESS' : 'FAILED',
+          plan: 'Premium Surprise Website',
+          date: p.created_at ? new Date(p.created_at).toLocaleString() : new Date().toLocaleString(),
+        }
+      })
     }
   } catch (err) {
     console.warn('Supabase getAdminTransactions notice:', err)
@@ -214,24 +227,37 @@ export async function getAdminTransactions(): Promise<PaymentTransaction[]> {
  */
 export async function getAdminWithdrawals(): Promise<WithdrawalRecord[]> {
   try {
-    const { data: dbWithdrawals, error } = await supabase
+    const { data: usersList } = await supabase.from('users').select('id, email, display_name')
+    const userMap = new Map<string, { email: string; name: string }>()
+    if (usersList && usersList.length > 0) {
+      usersList.forEach((u) => {
+        userMap.set(u.id, { email: u.email, name: u.display_name || u.email.split('@')[0] })
+      })
+    }
+
+    const { data: dbWithdrawals, error: wErr } = await supabase
       .from('withdrawals')
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (!error && dbWithdrawals && dbWithdrawals.length > 0) {
-      return dbWithdrawals.map((w) => ({
-        id: w.id,
-        requestId: w.request_id || `REQ-${w.id.slice(0, 6)}`,
-        userName: w.user_name || 'User',
-        email: w.user_email || 'n/a',
-        amount: Number(w.amount),
-        paymentDetails: `${w.payment_method || 'UPI'}: ${w.upi_id}`,
-        status: w.status || 'PENDING',
-        requestDate: new Date(w.created_at).toISOString().split('T')[0],
-        adminNotes: w.admin_notes,
-        paymentRefId: w.payment_ref_id,
-      }))
+    if (wErr) console.warn('[Admin Withdrawals Query Warning]:', wErr)
+
+    if (dbWithdrawals && dbWithdrawals.length > 0) {
+      return dbWithdrawals.map((w) => {
+        const uInfo = userMap.get(w.user_id) || { email: w.user_email || 'n/a', name: w.user_name || 'User' }
+        return {
+          id: w.id,
+          requestId: w.withdrawal_id || w.request_id || `WD-${w.id.slice(0, 6)}`,
+          userName: uInfo.name,
+          email: uInfo.email,
+          amount: Number(w.amount || 0),
+          paymentDetails: w.payment_details || `UPI: ${w.upi_id || 'N/A'}`,
+          status: (w.status || 'PENDING').toUpperCase() as any,
+          requestDate: w.created_at ? new Date(w.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          adminNotes: w.admin_notes || '',
+          paymentRefId: w.transaction_id || '',
+        }
+      })
     }
   } catch (err) {
     console.warn('Supabase getAdminWithdrawals notice:', err)
