@@ -151,6 +151,7 @@ CREATE TABLE IF NOT EXISTS public.payments (
 CREATE INDEX IF NOT EXISTS idx_users_firebase_uid ON public.users(firebase_uid);
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
 CREATE INDEX IF NOT EXISTS idx_users_referral_code ON public.users(referral_code);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON public.user_profiles(email);
 CREATE INDEX IF NOT EXISTS idx_referral_stats_user_id ON public.referral_stats(user_id);
 CREATE INDEX IF NOT EXISTS idx_wallets_user_id ON public.wallets(user_id);
 CREATE INDEX IF NOT EXISTS idx_referrals_referrer_id ON public.referrals(referrer_id);
@@ -167,32 +168,26 @@ CREATE INDEX IF NOT EXISTS idx_payments_status ON public.payments(status);
 
 -- 10. Row Level Security (RLS) Policies
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.referral_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.withdrawals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_login_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
--- Allow public read/write access for application integration
+-- Idempotent RLS Policies for Application Integration
 DO $$
+DECLARE
+  tbl TEXT;
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public select on users') THEN
-    CREATE POLICY "Allow public select on users" ON public.users FOR SELECT USING (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public insert on users') THEN
-    CREATE POLICY "Allow public insert on users" ON public.users FOR INSERT WITH CHECK (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public update on users') THEN
-    CREATE POLICY "Allow public update on users" ON public.users FOR UPDATE USING (true);
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public select on payments') THEN
-    CREATE POLICY "Allow public select on payments" ON public.payments FOR SELECT USING (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public insert on payments') THEN
-    CREATE POLICY "Allow public insert on payments" ON public.payments FOR INSERT WITH CHECK (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public update on payments') THEN
-    CREATE POLICY "Allow public update on payments" ON public.payments FOR UPDATE USING (true);
-  END IF;
+  FOR tbl IN SELECT unnest(ARRAY['users', 'user_profiles', 'referral_stats', 'wallets', 'withdrawals', 'user_login_history', 'transactions', 'payments', 'referrals']) LOOP
+    EXECUTE format('DROP POLICY IF EXISTS "Allow public select on %I" ON public.%I', tbl, tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "Allow public insert on %I" ON public.%I', tbl, tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "Allow public update on %I" ON public.%I', tbl, tbl);
+    
+    EXECUTE format('CREATE POLICY "Allow public select on %I" ON public.%I FOR SELECT USING (true)', tbl, tbl);
+    EXECUTE format('CREATE POLICY "Allow public insert on %I" ON public.%I FOR INSERT WITH CHECK (true)', tbl, tbl);
+    EXECUTE format('CREATE POLICY "Allow public update on %I" ON public.%I FOR UPDATE USING (true)', tbl, tbl);
+  END LOOP;
 END $$;

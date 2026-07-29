@@ -211,14 +211,13 @@ export async function launchRazorpayCheckout(options: RazorpayPaymentOptions): P
   const amountInPaise = Math.round(options.amount * 100)
   const dummyOrderId = `order_${Math.random().toString(36).substring(2, 12)}`
 
-  const razorpayConfig = {
+  const razorpayConfig: any = {
     key: RAZORPAY_KEY_ID,
     amount: amountInPaise,
     currency: 'INR',
     name: 'Cinematic Romantic Gift 💝',
     description: options.description || 'Personalized Romantic Surprise Package',
     image: 'https://cdn-icons-png.flaticon.com/512/3408/3408545.png',
-    order_id: dummyOrderId,
     prefill: {
       name: options.userName || 'Romantic Partner',
       email: options.userEmail || '',
