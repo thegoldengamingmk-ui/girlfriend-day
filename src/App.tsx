@@ -19,6 +19,9 @@ import {
 import { AdminLoginModal } from "./components/AdminLoginModal"
 import { AdminDashboard } from "./components/AdminDashboard"
 import { SuperAdminSetupModal } from "./components/SuperAdminSetupModal"
+import { AuthModal } from "./components/auth/AuthModal"
+import { ReferralDashboardModal } from "./components/auth/ReferralDashboardModal"
+import { getCurrentSession, signOutUser } from "./lib/authService"
 import { getActiveAdminSession, type AdminUser } from "./lib/adminAuthService"
 import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
 
@@ -2363,245 +2366,6 @@ function WithdrawModal({
   )
 }
 
-// ── REFERRAL DASHBOARD MODAL ───────────────────────────────────────────────
-
-function ReferralDashboardModal({
-  isOpen,
-  onClose,
-  walletBalance = 0,
-  successfulReferrals = 0,
-  totalEarnings = 0,
-  pendingWithdrawal = 0,
-  referralCode = "LOVE123",
-  referralHistory = [],
-  onRequestWithdraw,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  walletBalance?: number
-  successfulReferrals?: number
-  totalEarnings?: number
-  pendingWithdrawal?: number
-  referralCode?: string
-  referralHistory?: any[]
-  onRequestWithdraw: (details: { type: "upi" | "bank"; value: string }) => void
-}) {
-  const [copied, setCopied] = useState(false)
-  const [toastMsg, setToastMsg] = useState("")
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
-
-  if (!isOpen) return null
-
-  const handleCopyCode = async () => {
-    playButtonSound()
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(referralCode)
-      } else {
-        const textarea = document.createElement("textarea")
-        textarea.value = referralCode
-        document.body.appendChild(textarea)
-        textarea.select()
-        document.execCommand("copy")
-        document.body.removeChild(textarea)
-      }
-      setCopied(true)
-      setToastMsg("Referral Code Copied ❤️")
-      setTimeout(() => {
-        setCopied(false)
-        setToastMsg("")
-      }, 2500)
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  const isWithdrawEnabled = walletBalance >= 100
-
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[280] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/80 backdrop-blur-md"
-        />
-
-        {/* Modal Container */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.92, y: 25 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 25 }}
-          transition={{ type: "spring", stiffness: 280, damping: 24 }}
-          className="relative z-10 w-full max-w-lg p-5 sm:p-7 rounded-3xl text-white shadow-2xl my-auto overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, rgba(20, 5, 35, 0.98), rgba(55, 10, 48, 0.98))",
-            backdropFilter: "blur(28px)",
-            border: "1.5px solid rgba(255, 192, 203, 0.35)",
-            boxShadow: "0 20px 70px rgba(0,0,0,0.85), 0 0 50px rgba(255,105,180,0.25)",
-            maxHeight: "90vh",
-            overflowY: "auto",
-          }}
-        >
-          {/* Toast Notification */}
-          <AnimatePresence>
-            {toastMsg && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="fixed top-5 left-1/2 -translate-x-1/2 z-[350] px-4 py-2 rounded-full bg-emerald-500 text-white text-xs font-bold shadow-xl border border-emerald-300 flex items-center gap-1.5"
-              >
-                <span>✨</span> {toastMsg}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Close Button */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-sm font-bold text-pink-200 cursor-pointer transition-all"
-          >
-            ✕
-          </button>
-
-          {/* Header */}
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/30 text-2xl mb-2 shadow-inner">
-              🎁
-            </div>
-            <h2
-              className="text-2xl sm:text-3xl font-bold text-white mb-1"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              Earn Rewards ❤️
-            </h2>
-            <p className="text-xs sm:text-sm text-pink-200/75 max-w-sm mx-auto leading-relaxed">
-              Invite your friends and earn ₹10 every time someone successfully purchases using your referral code.
-            </p>
-          </div>
-
-          {/* Referral Code Card */}
-          <div className="p-5 rounded-2xl bg-white/5 border border-pink-400/30 text-center mb-6 shadow-md">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-pink-300/80 mb-2">
-              Your Referral Code
-            </p>
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <span className="text-2xl sm:text-3xl font-mono font-bold tracking-widest text-pink-100 bg-black/40 px-4 py-1.5 rounded-xl border border-white/10">
-                {referralCode}
-              </span>
-              <button
-                type="button"
-                onClick={handleCopyCode}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 shadow-md cursor-pointer transition-all hover:scale-105 active:scale-95"
-              >
-                {copied ? "✓ Copied" : "Copy Code"}
-              </button>
-            </div>
-            <p className="text-[11px] text-pink-200/70 font-sans leading-relaxed max-w-xs mx-auto">
-              Share this code with your friends. They get <strong className="text-emerald-300">50% OFF</strong>. You earn <strong className="text-emerald-300">₹10</strong> after every successful purchase.
-            </p>
-          </div>
-
-          {/* Wallet Statistics (4 Grid Cards) */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-center">
-              <p className="text-[10px] font-semibold uppercase text-pink-200/60 mb-1">Wallet Balance</p>
-              <p className="text-xl sm:text-2xl font-bold font-serif text-pink-100">₹{walletBalance}</p>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-center">
-              <p className="text-[10px] font-semibold uppercase text-pink-200/60 mb-1">Successful Referrals</p>
-              <p className="text-xl sm:text-2xl font-bold font-serif text-pink-100">{successfulReferrals}</p>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-center">
-              <p className="text-[10px] font-semibold uppercase text-pink-200/60 mb-1">Lifetime Earnings</p>
-              <p className="text-xl sm:text-2xl font-bold font-serif text-pink-100">₹{totalEarnings}</p>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-center">
-              <p className="text-[10px] font-semibold uppercase text-pink-200/60 mb-1">Pending Withdrawal</p>
-              <p className="text-xl sm:text-2xl font-bold font-serif text-pink-100">₹{pendingWithdrawal}</p>
-            </div>
-          </div>
-
-          {/* Withdrawal Section */}
-          <div className="p-5 rounded-2xl bg-white/5 border border-white/10 mb-6 text-center">
-            <div className="flex justify-between items-center text-xs mb-3 font-semibold">
-              <span className="text-pink-200/80">Available Balance: <strong className="text-white">₹{walletBalance}</strong></span>
-              <span className="text-pink-300/70">Min Withdrawal: <strong>₹100</strong></span>
-            </div>
-
-            <button
-              type="button"
-              disabled={!isWithdrawEnabled}
-              onClick={() => setShowWithdrawModal(true)}
-              className="w-full py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                background: isWithdrawEnabled
-                  ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
-                  : "rgba(255,255,255,0.08)",
-                color: isWithdrawEnabled ? "#ffffff" : "rgba(255,200,220,0.5)",
-                border: isWithdrawEnabled ? "none" : "1px solid rgba(255,255,255,0.1)",
-              }}
-            >
-              {isWithdrawEnabled ? "Withdraw Earnings 💸" : "Withdraw (Min ₹100 Required)"}
-            </button>
-
-            {!isWithdrawEnabled && (
-              <p className="text-[10px] text-pink-300/60 mt-2 font-medium">
-                Minimum ₹100 required to withdraw.
-              </p>
-            )}
-          </div>
-
-          {/* Referral History */}
-          <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
-            <h4 className="text-sm font-bold text-white mb-3 font-serif">
-              Referral History
-            </h4>
-
-            {referralHistory.length === 0 ? (
-              <div className="text-center py-6 px-3 rounded-xl bg-black/20 border border-white/5">
-                <div className="text-2xl mb-1">📜</div>
-                <p className="text-xs font-semibold text-pink-200 mb-1">No referrals yet.</p>
-                <p className="text-[10px] text-pink-200/60">
-                  Share your referral code with friends and start earning rewards.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {referralHistory.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-xs p-2.5 rounded-xl bg-white/5">
-                    <div>
-                      <p className="font-bold text-white">{item.friendName}</p>
-                      <p className="text-[10px] text-pink-200/60">{item.date}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-emerald-400">+₹{item.reward}</p>
-                      <p className="text-[10px] text-pink-300">{item.status}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </motion.div>
-
-        <WithdrawModal
-          isOpen={showWithdrawModal}
-          onClose={() => setShowWithdrawModal(false)}
-          onSubmit={(details) => {
-            setShowWithdrawModal(false)
-            onRequestWithdraw(details)
-          }}
-        />
-      </div>
-    </AnimatePresence>
-  )
-}
-
 // ── HAMBURGER MENU ─────────────────────────────────────────────────────────
 
 function HamburgerMenu({
@@ -2753,7 +2517,7 @@ function ReferralsLockedModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.88, y: 20 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="relative z-10 w-full max-w-sm p-6 sm:p-7 rounded-3xl text-center shadow-2xl overflow-hidden text-white"
+          className="relative z-10 w-full max-w-sm p-6 sm:p-7 rounded-center text-center shadow-2xl overflow-hidden text-white"
           style={{
             background: "linear-gradient(135deg, rgba(25, 5, 45, 0.98), rgba(65, 12, 55, 0.98))",
             backdropFilter: "blur(24px)",
@@ -2776,7 +2540,7 @@ function ReferralsLockedModal({
             className="text-xs sm:text-sm text-pink-200/80 mb-6 font-sans leading-relaxed"
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
-            To unlock your <strong className="text-pink-300">Referral Dashboard</strong> and start earning <strong className="text-emerald-400">₹10</strong> for every friend who purchases, first create a gift for your special one!
+            To unlock your <strong className="text-pink-300">Referral Dashboard</strong> and start earning <strong className="text-emerald-400">₹10</strong> for every friend who purchases, first create a gift or sign in!
           </p>
 
           <div className="space-y-3">
@@ -2804,557 +2568,6 @@ function ReferralsLockedModal({
               Already Have An Account? Sign In
             </button>
           </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  )
-}
-
-// ── POST PAYMENT ACCOUNT & OTP MODAL ──────────────────────────────────────
-
-function PostPaymentAccountModal({
-  isOpen,
-  onClose,
-  onSuccessVerified,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onSuccessVerified: (email: string, referralCode: string) => void
-}) {
-  const [step, setStep] = useState<"details" | "otp">("details")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [otpToken, setOtpToken] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState("")
-  const [resendTimer, setResendTimer] = useState(60)
-
-  useEffect(() => {
-    let timer: any
-    if (step === "otp" && resendTimer > 0) {
-      timer = setInterval(() => setResendTimer((t) => t - 1), 1000)
-    }
-    return () => clearInterval(timer)
-  }, [step, resendTimer])
-
-  if (!isOpen) return null
-
-  const handleRegisterAccount = async (e: React.FormEvent) => {
-    e.preventDefault()
-    playButtonSound()
-
-    if (!email.trim() || !email.includes("@")) {
-      setErrorMsg("Please enter a valid email address.")
-      return
-    }
-
-    if (password.length < 6) {
-      setErrorMsg("Password must be at least 6 characters long.")
-      return
-    }
-
-    setIsLoading(true)
-    setErrorMsg("")
-
-    try {
-      await signUpUserWithEmail(email.trim(), password)
-      await sendEmailOtp(email.trim())
-      setStep("otp")
-      setResendTimer(60)
-    } catch (err: any) {
-      try {
-        await sendEmailOtp(email.trim())
-        setStep("otp")
-        setResendTimer(60)
-      } catch (fallbackErr: any) {
-        setErrorMsg(err?.message || "Failed to send verification code. Try again.")
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    playButtonSound()
-
-    if (otpToken.trim().length < 6) {
-      setErrorMsg("Please enter the complete 6-digit verification code.")
-      return
-    }
-
-    setIsLoading(true)
-    setErrorMsg("")
-
-    try {
-      const verified = await verifyEmailOtpToken(email.trim(), otpToken.trim(), "email")
-      const userId = verified?.user?.id || `user_${Date.now()}`
-      const profile = await getOrCreateReferralProfile(userId, email.trim())
-
-      onSuccessVerified(email.trim(), profile.referralCode)
-    } catch (err: any) {
-      setErrorMsg(err?.message || "Invalid verification code. Please check your email.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[320] flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/85 backdrop-blur-md"
-        />
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative z-10 w-full max-w-sm p-6 sm:p-7 rounded-3xl text-white shadow-2xl overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, rgba(22, 5, 42, 0.98), rgba(60, 10, 52, 0.98))",
-            backdropFilter: "blur(24px)",
-            border: "1.5px solid rgba(255, 192, 203, 0.35)",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.85)",
-          }}
-        >
-          <div className="text-center mb-5">
-            <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40 flex items-center justify-center text-3xl shadow-lg">
-              {step === "details" ? "🔐" : "✉️"}
-            </div>
-            <h3
-              className="text-xl sm:text-2xl font-bold text-white mb-1"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              {step === "details" ? "Create Account & Unlock Link" : "Verify Email Code"}
-            </h3>
-            <p className="text-xs text-pink-200/75">
-              {step === "details"
-                ? "Set up your account to receive your girlfriend's surprise link & unlock referrals"
-                : `Enter the 6-digit verification code sent to ${email}`}
-            </p>
-          </div>
-
-          {step === "details" ? (
-            <form onSubmit={handleRegisterAccount} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
-                  Your Email Address
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full px-3.5 py-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-white outline-none placeholder:text-pink-200/40 focus:border-pink-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
-                  Set Unique Strong Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 characters (e.g. Love#2026)"
-                  className="w-full px-3.5 py-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-white outline-none placeholder:text-pink-200/40 focus:border-pink-400"
-                />
-              </div>
-
-              {errorMsg && (
-                <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
-                  ⚠️ {errorMsg}
-                </p>
-              )}
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 py-3.5 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 border border-white/10 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                >
-                  {isLoading ? "Sending OTP..." : "Send OTP ✉️"}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1 text-center">
-                  6-Digit OTP Code
-                </label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={otpToken}
-                  onChange={(e) => setOtpToken(e.target.value.replace(/\D/g, ""))}
-                  placeholder="123456"
-                  className="w-full px-4 py-3.5 rounded-2xl bg-white/10 border border-white/20 text-center font-mono font-bold tracking-widest text-lg text-white outline-none placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-pink-200/40 focus:border-pink-400"
-                />
-              </div>
-
-              {errorMsg && (
-                <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
-                  ⚠️ {errorMsg}
-                </p>
-              )}
-
-              <div className="text-center">
-                <button
-                  type="button"
-                  disabled={resendTimer > 0 || isLoading}
-                  onClick={() => sendEmailOtp(email.trim()).then(() => setResendTimer(60))}
-                  className="text-xs text-pink-300 underline font-medium hover:text-white disabled:opacity-50 cursor-pointer"
-                >
-                  {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : "Resend Verification Code"}
-                </button>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep("details")}
-                  className="flex-1 py-3.5 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 border border-white/10 cursor-pointer"
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                >
-                  {isLoading ? "Verifying..." : "Verify & Unlock Gift ❤️"}
-                </button>
-              </div>
-            </form>
-          )}
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  )
-}
-
-// ── AUTH LOGIN & FORGOT PASSWORD MODAL ────────────────────────────────────
-
-function AuthLoginModal({
-  isOpen,
-  onClose,
-  onSuccessLogin,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onSuccessLogin: (userProfile: UserReferralProfile) => void
-}) {
-  const [tab, setTab] = useState<"login" | "forgot">("login")
-  const [forgotStep, setForgotStep] = useState<"email" | "otp">("email")
-
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [otpToken, setOtpToken] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-
-  const [isLoading, setIsLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState("")
-  const [successMsg, setSuccessMsg] = useState("")
-
-  if (!isOpen) return null
-
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    playButtonSound()
-    setIsLoading(true)
-    setErrorMsg("")
-
-    try {
-      const res = await signInUserWithPassword(email.trim(), password)
-      const userId = res.user?.id || `user_${Date.now()}`
-      const profile = await getOrCreateReferralProfile(userId, email.trim())
-      onSuccessLogin(profile)
-      onClose()
-    } catch (err: any) {
-      setErrorMsg(err?.message || "Invalid email or password.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleSendResetOtp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    playButtonSound()
-    if (!email.trim() || !email.includes("@")) {
-      setErrorMsg("Please enter a valid email address.")
-      return
-    }
-
-    setIsLoading(true)
-    setErrorMsg("")
-
-    try {
-      await sendPasswordResetOtp(email.trim())
-      setForgotStep("otp")
-      setSuccessMsg("OTP verification code sent to your email!")
-    } catch (err: any) {
-      setErrorMsg(err?.message || "Failed to send password reset code.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleResetPasswordWithOtp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    playButtonSound()
-
-    if (otpToken.trim().length < 6) {
-      setErrorMsg("Please enter the complete 6-digit OTP code.")
-      return
-    }
-    if (newPassword.length < 6) {
-      setErrorMsg("New password must be at least 6 characters long.")
-      return
-    }
-
-    setIsLoading(true)
-    setErrorMsg("")
-
-    try {
-      await verifyEmailOtpToken(email.trim(), otpToken.trim(), "recovery")
-      await updatePassword(newPassword)
-      setSuccessMsg("Password changed successfully! Logging in...")
-      setTimeout(async () => {
-        const res = await signInUserWithPassword(email.trim(), newPassword)
-        const userId = res.user?.id || `user_${Date.now()}`
-        const profile = await getOrCreateReferralProfile(userId, email.trim())
-        onSuccessLogin(profile)
-        onClose()
-      }, 1500)
-    } catch (err: any) {
-      setErrorMsg(err?.message || "Invalid verification code or failed password reset.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[320] flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/85 backdrop-blur-md"
-        />
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative z-10 w-full max-w-sm p-6 sm:p-7 rounded-3xl text-white shadow-2xl overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, rgba(22, 5, 42, 0.98), rgba(60, 10, 52, 0.98))",
-            backdropFilter: "blur(24px)",
-            border: "1.5px solid rgba(255, 192, 203, 0.35)",
-          }}
-        >
-          <div className="text-center mb-5">
-            <div className="text-3xl mb-1">🔑</div>
-            <h3
-              className="text-xl sm:text-2xl font-bold text-white mb-1"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              {tab === "login" ? "Sign In to Account" : "Reset Password"}
-            </h3>
-            <p className="text-xs text-pink-200/75">
-              {tab === "login"
-                ? "Enter your email & password to access your Referrals Dashboard"
-                : "Reset your password securely via Email OTP verification"}
-            </p>
-          </div>
-
-          {tab === "login" ? (
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full px-3.5 py-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-white outline-none focus:border-pink-400"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-[11px] font-semibold uppercase text-pink-200/80">
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => { setTab("forgot"); setErrorMsg(""); setSuccessMsg("") }}
-                    className="text-[11px] text-pink-300 underline hover:text-white cursor-pointer"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full px-3.5 py-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-white outline-none focus:border-pink-400"
-                />
-              </div>
-
-              {errorMsg && (
-                <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
-                  ⚠️ {errorMsg}
-                </p>
-              )}
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 py-3.5 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 border border-white/10 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                >
-                  {isLoading ? "Signing In..." : "Sign In ❤️"}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div>
-              {forgotStep === "email" ? (
-                <form onSubmit={handleSendResetOtp} className="space-y-4">
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
-                      Enter Your Account Email
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      className="w-full px-3.5 py-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-white outline-none focus:border-pink-400"
-                    />
-                  </div>
-
-                  {errorMsg && (
-                    <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
-                      ⚠️ {errorMsg}
-                    </p>
-                  )}
-                  {successMsg && (
-                    <p className="text-xs text-emerald-400 text-center font-medium animate-fade-up">
-                      ✨ {successMsg}
-                    </p>
-                  )}
-
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setTab("login")}
-                      className="flex-1 py-3.5 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 border border-white/10 cursor-pointer"
-                    >
-                      Back
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                    >
-                      {isLoading ? "Sending..." : "Send Reset OTP ✉️"}
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <form onSubmit={handleResetPasswordWithOtp} className="space-y-4">
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1 text-center">
-                      6-Digit OTP Code
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={otpToken}
-                      onChange={(e) => setOtpToken(e.target.value.replace(/\D/g, ""))}
-                      placeholder="123456"
-                      className="w-full px-4 py-3 rounded-2xl bg-white/10 border border-white/20 text-center font-mono font-bold tracking-widest text-lg text-white outline-none focus:border-pink-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
-                      Set New Strong Password
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="New password (min 6 characters)"
-                      className="w-full px-3.5 py-3 rounded-2xl bg-white/10 border border-white/20 text-xs text-white outline-none focus:border-pink-400"
-                    />
-                  </div>
-
-                  {errorMsg && (
-                    <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
-                      ⚠️ {errorMsg}
-                    </p>
-                  )}
-                  {successMsg && (
-                    <p className="text-xs text-emerald-400 text-center font-medium animate-fade-up">
-                      ✨ {successMsg}
-                    </p>
-                  )}
-
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setForgotStep("email")}
-                      className="flex-1 py-3.5 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 border border-white/10 cursor-pointer"
-                    >
-                      Back
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                    >
-                      {isLoading ? "Updating..." : "Update Password ❤️"}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-          )}
         </motion.div>
       </div>
     </AnimatePresence>
@@ -4725,6 +3938,21 @@ export default function App() {
   const [pendingSaveSurpriseFn, setPendingSaveSurpriseFn] = useState<(() => Promise<void>) | null>(null)
   const [generatedLink, setGeneratedLink] = useState("")
 
+  // Restore 30-day active session on mount
+  useEffect(() => {
+    async function initActiveSession() {
+      try {
+        const sessionData = await getCurrentSession()
+        if (sessionData && sessionData.profile) {
+          setUserProfile(sessionData.profile)
+        }
+      } catch (err) {
+        console.warn('Session init warning:', err)
+      }
+    }
+    initActiveSession()
+  }, [])
+
   const handleOpenReferralsMenu = () => {
     if (userProfile) {
       setShowReferralModal(true)
@@ -4738,40 +3966,24 @@ export default function App() {
     setShowPostPaymentModal(true)
   }
 
-  const handleSuccessVerified = async (email: string, referralCode: string) => {
-    setShowPostPaymentModal(false)
-    const profile: UserReferralProfile = {
-      id: `user_${Date.now()}`,
-      email,
-      referralCode,
-      walletBalance: 0,
-      successfulReferrals: 0,
-      totalEarnings: 0,
-      pendingWithdrawal: 0,
-      referralHistory: [],
-    }
+  const handleAuthSuccess = async (profile: any) => {
     setUserProfile(profile)
+    setShowLoginModal(false)
+    setShowPostPaymentModal(false)
+    setShowLockedModal(false)
 
-    // Execute pending surprise creation to upload files & save DB link
     if (pendingSaveSurpriseFn) {
       await pendingSaveSurpriseFn()
       setPendingSaveSurpriseFn(null)
+    } else {
+      setShowReferralModal(true)
     }
   }
 
-  const handleWithdrawRequest = (details: { type: "upi" | "bank"; value: string }) => {
-    playButtonSound()
-    if (userProfile) {
-      setUserProfile((prev) =>
-        prev
-          ? {
-              ...prev,
-              pendingWithdrawal: prev.pendingWithdrawal + prev.walletBalance,
-              walletBalance: 0,
-            }
-          : null
-      )
-    }
+  const handleLogout = async () => {
+    await signOutUser()
+    setUserProfile(null)
+    setShowReferralModal(false)
   }
 
   // Admin State
@@ -4918,34 +4130,27 @@ export default function App() {
         isOpen={showLockedModal}
         onClose={() => setShowLockedModal(false)}
         onCreateSurprise={() => go("dashboard")}
-        onOpenSignIn={() => setShowLoginModal(true)}
-      />
-
-      <PostPaymentAccountModal
-        isOpen={showPostPaymentModal}
-        onClose={() => setShowPostPaymentModal(false)}
-        onSuccessVerified={handleSuccessVerified}
-      />
-
-      <AuthLoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onSuccessLogin={(profile) => {
-          setUserProfile(profile)
-          setShowReferralModal(true)
+        onOpenSignIn={() => {
+          setShowLockedModal(false)
+          setShowLoginModal(true)
         }}
+      />
+
+      <AuthModal
+        isOpen={showLoginModal || showPostPaymentModal}
+        initialTab={showPostPaymentModal ? "signup" : "signin"}
+        onClose={() => {
+          setShowLoginModal(false)
+          setShowPostPaymentModal(false)
+        }}
+        onSuccess={handleAuthSuccess}
       />
 
       <ReferralDashboardModal
         isOpen={showReferralModal}
+        userProfile={userProfile}
         onClose={() => setShowReferralModal(false)}
-        walletBalance={userProfile?.walletBalance || 0}
-        successfulReferrals={userProfile?.successfulReferrals || 0}
-        totalEarnings={userProfile?.totalEarnings || 0}
-        pendingWithdrawal={userProfile?.pendingWithdrawal || 0}
-        referralCode={userProfile?.referralCode || "GF-LOVE-XXXX"}
-        referralHistory={userProfile?.referralHistory || []}
-        onRequestWithdraw={handleWithdrawRequest}
+        onLogout={handleLogout}
       />
 
       {isFemaleUserExperience && <RomanticBGMPlayer />}
