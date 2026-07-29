@@ -123,6 +123,7 @@ export async function executeWalletTransaction(params: {
 
     // Withdrawal Request balance is managed directly by withdrawalService (available -> pending)
     // so it must NOT be counted as a debit here to avoid double-deduction
+    const balanceBefore = Number(walletRecord.available_balance || 0)
     const isDebit = ['Admin Debit', 'Premium Purchase', 'Withdrawal Approved'].includes(type)
     // For Withdrawal Request and Withdrawal Rejected, wallet balance is managed by withdrawalService
     const walletManagedExternally = type === 'Withdrawal Request' || type === 'Withdrawal Rejected'
