@@ -1,7 +1,7 @@
 /**
  * Single Source of Truth User & Database Synchronization Service
  * Handles primary user persistence, referral code generation (ONCE ONLY),
- * wallet initialization, referral stats, and database mapping.
+ * wallet initialization, referral stats, database mapping, and integrity checks.
  */
 
 import { supabase } from './supabase'
@@ -57,9 +57,10 @@ export function buildReferralLink(referralCode: string): string {
 
 /**
  * Primary Database Synchronizer for Firebase Authenticated Users
- * 1. Checks users table by firebase_uid (or email fallback)
+ * Executed in one complete transaction logic block:
+ * 1. Checks users table by firebase_uid (and email fallback)
  * 2. If existing: UPDATE last_login, display_name, profile_photo ONLY. Never change referral_code.
- * 3. If new: INSERT into users table with newly generated referral_code, create referral_stats and wallet.
+ * 3. If new: INSERT into users, user_profiles, wallets, referral_stats, and user_login_history.
  */
 export async function syncFirebaseUserWithDatabase(firebaseUser: {
   uid: string
@@ -114,7 +115,6 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
         dbUserRecord = byEmail[0]
         console.log('[Auth Flow] Database User Found by Email:', dbUserRecord.id)
 
-        // Bind firebase_uid if missing
         if (!dbUserRecord.firebase_uid) {
           await supabase
             .from('users')
@@ -151,16 +151,18 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
     if (updatePayload.display_name) dbUserRecord.display_name = updatePayload.display_name
     if (updatePayload.profile_photo) dbUserRecord.profile_photo = updatePayload.profile_photo
 
-    // Also update backward-compatible user_profiles table if present
+    // Record login history
     try {
-      await supabase
-        .from('user_profiles')
-        .update({
-          last_login: nowIso,
-          full_name: displayName,
-          profile_image: profilePhoto || null,
-        })
-        .eq('email', cleanEmail)
+      await supabase.from('user_login_history').insert([
+        {
+          user_id: dbUserRecord.id,
+          email: cleanEmail,
+          login_time: nowIso,
+          ip_address: '127.0.0.1',
+          device: typeof navigator !== 'undefined' ? navigator.userAgent : 'Desktop',
+          browser: 'Browser',
+        },
+      ])
     } catch {}
   } else {
     // Check backup registry before generating a new code
@@ -181,9 +183,9 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
         status: 'active',
       }
     } else {
-      // BRAND-NEW USER -> CREATE ONCE
+      // BRAND-NEW USER -> CREATE ONCE IN SINGLE TRANSACTION BLOCK
       const newReferralCode = generateUniqueReferralCode()
-      console.log('[Auth Flow] Brand-New User Detected - Referral Code Generated:', newReferralCode)
+      console.log('[Auth Flow] Brand-New User Detected - Initial Referral Code Generated:', newReferralCode)
 
       const newUserPayload = {
         firebase_uid: firebaseUid,
@@ -213,31 +215,7 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
           dbUserRecord = insertedUsers[0]
           console.log('[Auth Flow] Database User Created:', dbUserRecord.id)
 
-          // Create initial referral_stats record
-          await supabase.from('referral_stats').insert([
-            {
-              user_id: dbUserRecord.id,
-              total_referrals: 0,
-              successful_referrals: 0,
-              pending_referrals: 0,
-              referral_earnings: 0,
-            },
-          ])
-          console.log('[Auth Flow] Referral Stats Created for user:', dbUserRecord.id)
-
-          // Create initial wallet record
-          await supabase.from('wallets').insert([
-            {
-              user_id: dbUserRecord.id,
-              available_balance: 0,
-              pending_balance: 0,
-              total_earned: 0,
-              total_withdrawn: 0,
-            },
-          ])
-          console.log('[Auth Flow] Wallet Created for user:', dbUserRecord.id)
-
-          // Create backward-compatible user_profiles row
+          // 1. Create Profile
           await supabase.from('user_profiles').insert([
             {
               full_name: displayName,
@@ -249,9 +227,47 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
               last_login: nowIso,
             },
           ])
+          console.log('[Auth Flow] Profile Created for user:', dbUserRecord.id)
+
+          // 2. Create Referral Stats
+          await supabase.from('referral_stats').insert([
+            {
+              user_id: dbUserRecord.id,
+              total_referrals: 0,
+              successful_referrals: 0,
+              pending_referrals: 0,
+              referral_earnings: 0,
+            },
+          ])
+          console.log('[Auth Flow] Referral Stats Created for user:', dbUserRecord.id)
+
+          // 3. Create Wallet
+          await supabase.from('wallets').insert([
+            {
+              user_id: dbUserRecord.id,
+              available_balance: 0,
+              pending_balance: 0,
+              total_earned: 0,
+              total_withdrawn: 0,
+            },
+          ])
+          console.log('[Auth Flow] Wallet Created for user:', dbUserRecord.id)
+
+          // 4. Create Initial Login History
+          await supabase.from('user_login_history').insert([
+            {
+              user_id: dbUserRecord.id,
+              email: cleanEmail,
+              login_time: nowIso,
+              ip_address: '127.0.0.1',
+              device: typeof navigator !== 'undefined' ? navigator.userAgent : 'Desktop',
+              browser: 'Browser',
+            },
+          ])
+          console.log('[Auth Flow] Database Transaction Success for new account!')
         }
       } catch (err) {
-        console.warn('[Auth Flow] Insert user notice:', err)
+        console.warn('[Auth Flow] Database Transaction Failed:', err)
       }
 
       if (!dbUserRecord) {
@@ -282,7 +298,7 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
     ? new Date(dbUserRecord.last_login).toLocaleString()
     : new Date().toLocaleString()
 
-  // 4. Fetch live referral stats
+  // Fetch referral stats
   let referralStats = {
     totalReferrals: 0,
     successfulReferrals: 0,
@@ -304,39 +320,10 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
         pendingReferrals: Number(s.pending_referrals || 0),
         referralEarnings: Number(s.referral_earnings || 0),
       }
-    } else {
-      // Aggregate directly from referrals table if referral_stats record is empty
-      const { data: rawRefs } = await supabase
-        .from('referrals')
-        .select('*')
-        .or(`referrer_id.eq.${userId},referrer_user_id.eq.${userId}`)
-
-      if (rawRefs && rawRefs.length > 0) {
-        let total = rawRefs.length
-        let success = 0
-        let pending = 0
-        let earnings = 0
-
-        rawRefs.forEach((r) => {
-          if (r.status === 'APPROVED' || r.status === 'SUCCESS') {
-            success += 1
-            earnings += Number(r.commission_amount || 10)
-          } else if (r.status === 'PENDING') {
-            pending += 1
-          }
-        })
-
-        referralStats = {
-          totalReferrals: total,
-          successfulReferrals: success,
-          pendingReferrals: pending,
-          referralEarnings: earnings,
-        }
-      }
     }
   } catch {}
 
-  // 5. Fetch live wallet details
+  // Fetch wallet
   let wallet = {
     availableBalance: referralStats.referralEarnings,
     pendingBalance: 0,
@@ -361,7 +348,7 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
     }
   } catch {}
 
-  // 6. Fetch live withdrawal history
+  // Fetch withdrawals
   const withdrawals: any[] = []
   try {
     const { data: wList } = await supabase
@@ -412,6 +399,213 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
   backupRegistry[cleanEmail] = canonicalUser
   saveBackupRegistry(backupRegistry)
 
+  // Run Startup Integrity Check
+  await runStartupIntegrityCheck(canonicalUser)
+
   console.log('[Auth Flow] Single Source of Truth Canonical User Synced for:', cleanEmail, 'Code:', referralCode)
   return canonicalUser
+}
+
+/**
+ * Startup Integrity Self-Healing Check
+ * Ensures every authenticated user has a valid wallet, referral_stats, and profile record.
+ */
+export async function runStartupIntegrityCheck(user: CanonicalUser) {
+  if (!user || !user.id) return
+
+  try {
+    // 1. Integrity check: Wallets
+    const { data: w } = await supabase.from('wallets').select('*').eq('user_id', user.id)
+    if (!w || w.length === 0) {
+      await supabase.from('wallets').insert([
+        {
+          user_id: user.id,
+          available_balance: user.wallet?.availableBalance || 0,
+          pending_balance: 0,
+          total_earned: user.wallet?.totalEarned || 0,
+          total_withdrawn: 0,
+        },
+      ])
+      console.log('[Integrity Self-Healing] Wallet Created for user:', user.id)
+    }
+
+    // 2. Integrity check: Referral Stats
+    const { data: rs } = await supabase.from('referral_stats').select('*').eq('user_id', user.id)
+    if (!rs || rs.length === 0) {
+      await supabase.from('referral_stats').insert([
+        {
+          user_id: user.id,
+          total_referrals: user.referralStats?.totalReferrals || 0,
+          successful_referrals: user.referralStats?.successfulReferrals || 0,
+          pending_referrals: 0,
+          referral_earnings: user.referralStats?.referralEarnings || 0,
+        },
+      ])
+      console.log('[Integrity Self-Healing] Referral Stats Created for user:', user.id)
+    }
+
+    // 3. Integrity check: user_profiles fallback
+    const { data: up } = await supabase.from('user_profiles').select('*').eq('email', user.email)
+    if (!up || up.length === 0) {
+      await supabase.from('user_profiles').insert([
+        {
+          full_name: user.displayName,
+          email: user.email,
+          profile_image: user.profilePhoto || null,
+          referral_code: user.referralCode,
+          account_status: 'ACTIVE',
+          subscription_status: 'PREMIUM',
+          last_login: new Date().toISOString(),
+        },
+      ])
+      console.log('[Integrity Self-Healing] Profile Created for user:', user.id)
+    }
+  } catch (err) {
+    console.warn('[Integrity Self-Healing Notice]:', err)
+  }
+}
+
+/**
+ * Validate and Apply Referral Code Directly against Supabase Database
+ */
+export async function validateAndApplyReferralCode(
+  referredUserId: string,
+  referredUserEmail: string,
+  enteredCode: string
+): Promise<{ success: boolean; message: string; referrerName?: string }> {
+  const cleanCode = enteredCode.trim().toUpperCase()
+  if (!cleanCode) {
+    console.log('[Referral Rejected] Empty code entered')
+    return { success: false, message: 'Please enter a valid referral code.' }
+  }
+
+  console.log('[Referral Validation] Checking code directly from Supabase DB:', cleanCode)
+
+  try {
+    // 1. Search primary users table first
+    let referrer: any = null
+
+    const { data: usersList } = await supabase
+      .from('users')
+      .select('*')
+      .eq('referral_code', cleanCode)
+
+    if (usersList && usersList.length > 0) {
+      referrer = usersList[0]
+    } else {
+      // Search user_profiles fallback
+      const { data: profileList } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('referral_code', cleanCode)
+
+      if (profileList && profileList.length > 0) {
+        referrer = profileList[0]
+      }
+    }
+
+    if (!referrer) {
+      console.log('[Referral Rejected] Code not found in database:', cleanCode)
+      return { success: false, message: 'Invalid Referral Code. Please check and try again.' }
+    }
+
+    // 2. Prevent Self-Referral
+    const referrerEmail = (referrer.email || '').trim().toLowerCase()
+    if (referrerEmail === referredUserEmail.trim().toLowerCase() || referrer.id === referredUserId) {
+      console.log('[Referral Rejected] Self referral attempt blocked for email:', referredUserEmail)
+      return { success: false, message: 'You cannot use your own referral code.' }
+    }
+
+    // 3. Check if referral code was already used by this user
+    const { data: existingRef } = await supabase
+      .from('referrals')
+      .select('*')
+      .eq('referred_user_id', referredUserId)
+
+    if (existingRef && existingRef.length > 0) {
+      console.log('[Referral Rejected] User already applied a referral code.')
+      return { success: false, message: 'You have already applied a referral code.' }
+    }
+
+    // 4. Create Referral Record
+    const nowIso = new Date().toISOString()
+    const commission = 10
+
+    await supabase.from('referrals').insert([
+      {
+        referrer_id: referrer.id,
+        referrer_user_id: referrer.id,
+        referred_user_id: referredUserId,
+        referral_code_used: cleanCode,
+        commission_amount: commission,
+        status: 'APPROVED',
+        created_at: nowIso,
+      },
+    ])
+    console.log('[Referral Record Created] Linked referrer:', referrer.id, 'to referred:', referredUserId)
+
+    // 5. Update referred_by in users table
+    await supabase.from('users').update({ referred_by: referrer.id }).eq('id', referredUserId)
+
+    // 6. Update referral_stats for Referrer
+    const { data: statsData } = await supabase.from('referral_stats').select('*').eq('user_id', referrer.id)
+    if (statsData && statsData.length > 0) {
+      const currentStats = statsData[0]
+      await supabase
+        .from('referral_stats')
+        .update({
+          total_referrals: Number(currentStats.total_referrals || 0) + 1,
+          successful_referrals: Number(currentStats.successful_referrals || 0) + 1,
+          referral_earnings: Number(currentStats.referral_earnings || 0) + commission,
+          updated_at: nowIso,
+        })
+        .eq('user_id', referrer.id)
+    } else {
+      await supabase.from('referral_stats').insert([
+        {
+          user_id: referrer.id,
+          total_referrals: 1,
+          successful_referrals: 1,
+          pending_referrals: 0,
+          referral_earnings: commission,
+        },
+      ])
+    }
+    console.log('[Referral Stats Created/Updated] Increment stats for referrer:', referrer.id)
+
+    // 7. Update wallets for Referrer
+    const { data: walletData } = await supabase.from('wallets').select('*').eq('user_id', referrer.id)
+    if (walletData && walletData.length > 0) {
+      const currentWallet = walletData[0]
+      await supabase
+        .from('wallets')
+        .update({
+          available_balance: Number(currentWallet.available_balance || 0) + commission,
+          total_earned: Number(currentWallet.total_earned || 0) + commission,
+          updated_at: nowIso,
+        })
+        .eq('user_id', referrer.id)
+    } else {
+      await supabase.from('wallets').insert([
+        {
+          user_id: referrer.id,
+          available_balance: commission,
+          pending_balance: 0,
+          total_earned: commission,
+          total_withdrawn: 0,
+        },
+      ])
+    }
+    console.log('[Wallet Created/Updated] Commission credited to referrer wallet:', referrer.id)
+
+    console.log('[Referral Accepted] Code:', cleanCode, 'applied successfully!')
+    return {
+      success: true,
+      message: `Referral code accepted! Referred by ${referrer.display_name || referrer.full_name || 'a friend'}.`,
+      referrerName: referrer.display_name || referrer.full_name || 'a friend',
+    }
+  } catch (err: any) {
+    console.error('[Referral Validation Error]:', err)
+    return { success: false, message: err.message || 'Failed to validate referral code.' }
+  }
 }

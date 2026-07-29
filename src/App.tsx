@@ -22,6 +22,7 @@ import { SuperAdminSetupModal } from "./components/SuperAdminSetupModal"
 import { AuthModal } from "./components/auth/AuthModal"
 import { ReferralDashboardModal } from "./components/auth/ReferralDashboardModal"
 import { getCurrentSession, signOutUser, subscribeToAuthChanges } from "./lib/authService"
+import { validateAndApplyReferralCode } from "./lib/userService"
 import { getActiveAdminSession, type AdminUser } from "./lib/adminAuthService"
 import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
 
@@ -3967,6 +3968,18 @@ export default function App() {
     setShowPostPaymentModal(false)
     setShowLockedModal(false)
 
+    // Process pending referral code from URL if present
+    const pendingRef = sessionStorage.getItem("pending_ref_code")
+    if (pendingRef && profile && profile.id) {
+      sessionStorage.removeItem("pending_ref_code")
+      try {
+        const result = await validateAndApplyReferralCode(profile.id, profile.email, pendingRef)
+        console.log('[Referral Application Result]:', result)
+      } catch (err) {
+        console.warn('Referral application notice:', err)
+      }
+    }
+
     if (pendingSaveSurpriseFn) {
       await pendingSaveSurpriseFn()
       setPendingSaveSurpriseFn(null)
@@ -4014,6 +4027,11 @@ export default function App() {
 
     const searchParams = new URLSearchParams(window.location.search)
     let slug = searchParams.get("s") || searchParams.get("surprise") || ""
+    const refCode = searchParams.get("ref") || searchParams.get("referral")
+    if (refCode) {
+      sessionStorage.setItem("pending_ref_code", refCode.trim().toUpperCase())
+      console.log('[Referral Auto-Capture] Pending referral code stored from URL:', refCode)
+    }
     const path = window.location.pathname
 
     if (path.includes("setup-super-admin") || searchParams.get("setup") === "super-admin") {

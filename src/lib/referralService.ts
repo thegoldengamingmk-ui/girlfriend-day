@@ -5,7 +5,12 @@ import {
   verifyEmailCode,
   resendVerificationEmail,
 } from './authService'
-import { syncFirebaseUserWithDatabase, buildReferralLink, generateUniqueReferralCode } from './userService'
+import {
+  syncFirebaseUserWithDatabase,
+  buildReferralLink,
+  generateUniqueReferralCode,
+  validateAndApplyReferralCode,
+} from './userService'
 
 export async function signUpUserWithEmail(email: string, password: string) {
   return signUpUser('', email, password)
@@ -102,6 +107,14 @@ export async function recordUserLoginHistory(userId: string, email: string) {
 export function isSelfReferral(userEmail: string, referrerCode: string, userProfileCode?: string): boolean {
   if (!referrerCode || !userProfileCode) return false
   return referrerCode.trim().toUpperCase() === userProfileCode.trim().toUpperCase()
+}
+
+export async function applyReferralCode(
+  referredUserId: string,
+  referredUserEmail: string,
+  enteredCode: string
+) {
+  return validateAndApplyReferralCode(referredUserId, referredUserEmail, enteredCode)
 }
 
 /**
