@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { UserReferralProfile, getOrCreateReferralProfile, applyReferralCode } from '../../lib/referralService'
-import { createWithdrawalRequest } from '../../lib/withdrawalService'
-import { emailService } from '../../lib/emailService'
-import { verifyEmailCode } from '../../lib/authService'
+import React, { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+  UserReferralProfile,
+  getOrCreateReferralProfile,
+  applyReferralCode,
+} from "../../lib/referralService"
+import { createWithdrawalRequest } from "../../lib/withdrawalService"
+import { emailService } from "../../lib/emailService"
+import { verifyEmailCode } from "../../lib/authService"
 
 interface ReferralDashboardModalProps {
   isOpen: boolean
@@ -18,50 +22,52 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
   onClose,
   onLogout,
 }) => {
-  const [profile, setProfile] = useState<UserReferralProfile | null>(initialProfile)
+  const [profile, setProfile] = useState<UserReferralProfile | null>(
+    initialProfile,
+  )
   const [isLoadingProfile, setIsLoadingProfile] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
-  const [toastMsg, setToastMsg] = useState('')
+  const [toastMsg, setToastMsg] = useState("")
 
   // Referral code input state
-  const [applyCodeInput, setApplyCodeInput] = useState('')
-  const [applyCodeMsg, setApplyCodeMsg] = useState('')
+  const [applyCodeInput, setApplyCodeInput] = useState("")
+  const [applyCodeMsg, setApplyCodeMsg] = useState("")
   const [isApplyingCode, setIsApplyingCode] = useState(false)
 
   // Withdrawal Modal & Step states
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
-  const [withdrawStep, setWithdrawStep] = useState<'details' | 'otp'>('details')
+  const [withdrawStep, setWithdrawStep] = useState<"details" | "otp">("details")
   const [withdrawAmount, setWithdrawAmount] = useState(100)
-  const [upiId, setUpiId] = useState('')
-  const [otpToken, setOtpToken] = useState('')
+  const [upiId, setUpiId] = useState("")
+  const [otpToken, setOtpToken] = useState("")
   const [isSubmittingWithdraw, setIsSubmittingWithdraw] = useState(false)
-  const [loadingText, setLoadingText] = useState('')
-  const [withdrawError, setWithdrawError] = useState('')
+  const [loadingText, setLoadingText] = useState("")
+  const [withdrawError, setWithdrawError] = useState("")
 
   const handleApplyCode = async () => {
     if (!applyCodeInput.trim() || !profile) return
     setIsApplyingCode(true)
-    setApplyCodeMsg('')
+    setApplyCodeMsg("")
 
-    console.log('[Referral Input Received] Raw Input:', applyCodeInput)
+    console.log("[Referral Input Received] Raw Input:", applyCodeInput)
     const normalized = applyCodeInput.trim().toUpperCase()
-    console.log('[Normalized Referral Code]:', normalized)
+    console.log("[Normalized Referral Code]:", normalized)
 
     try {
       const res = await applyReferralCode(profile.id, profile.email, normalized)
-      console.log('[Referral Database Query Result]:', res)
+      console.log("[Referral Database Query Result]:", res)
       setIsApplyingCode(false)
       setApplyCodeMsg(res.message)
       if (res.success) {
-        setApplyCodeInput('')
-        setToastMsg('Referral Code Applied! 🎉')
+        setApplyCodeInput("")
+        setToastMsg("Referral Code Applied! 🎉")
         await refreshData()
       }
     } catch (err: any) {
-      console.error('[Referral Thrown Exception]:', err)
+      console.error("[Referral Thrown Exception]:", err)
       setIsApplyingCode(false)
-      setApplyCodeMsg(err.message || 'Failed to apply referral code.')
+      setApplyCodeMsg(err.message || "Failed to apply referral code.")
     }
   }
 
@@ -80,10 +86,13 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
     if (!initialProfile) return
     setIsLoadingProfile(true)
     try {
-      const updated = await getOrCreateReferralProfile(initialProfile.id, initialProfile.email)
+      const updated = await getOrCreateReferralProfile(
+        initialProfile.id,
+        initialProfile.email,
+      )
       setProfile(updated)
     } catch (err) {
-      console.warn('Dashboard refresh notice:', err)
+      console.warn("Dashboard refresh notice:", err)
     } finally {
       setIsLoadingProfile(false)
     }
@@ -96,18 +105,18 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(profile.referralCode)
       } else {
-        const input = document.createElement('input')
+        const input = document.createElement("input")
         input.value = profile.referralCode
         document.body.appendChild(input)
         input.select()
-        document.execCommand('copy')
+        document.execCommand("copy")
         document.body.removeChild(input)
       }
       setCopiedCode(true)
-      setToastMsg('Referral Code Copied! ❤️')
+      setToastMsg("Referral Code Copied! ❤️")
       setTimeout(() => {
         setCopiedCode(false)
-        setToastMsg('')
+        setToastMsg("")
       }, 2500)
     } catch {}
   }
@@ -117,18 +126,18 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(profile.referralLink)
       } else {
-        const input = document.createElement('input')
+        const input = document.createElement("input")
         input.value = profile.referralLink
         document.body.appendChild(input)
         input.select()
-        document.execCommand('copy')
+        document.execCommand("copy")
         document.body.removeChild(input)
       }
       setCopiedLink(true)
-      setToastMsg('Referral Link Copied! 🚀')
+      setToastMsg("Referral Link Copied! 🚀")
       setTimeout(() => {
         setCopiedLink(false)
-        setToastMsg('')
+        setToastMsg("")
       }, 2500)
     } catch {}
   }
@@ -136,26 +145,28 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
   // Request Withdrawal: Step 1 (Trigger OTP)
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!upiId.trim() || !upiId.includes('@')) {
-      setWithdrawError('Please enter a valid UPI ID (e.g. name@upi).')
+    if (!upiId.trim() || !upiId.includes("@")) {
+      setWithdrawError("Please enter a valid UPI ID (e.g. name@upi).")
       return
     }
     if (withdrawAmount < 100 || withdrawAmount > profile.walletBalance) {
-      setWithdrawError(`Amount must be between ₹100 and your current balance (₹${profile.walletBalance}).`)
+      setWithdrawError(
+        `Amount must be between ₹100 and your current balance (₹${profile.walletBalance}).`,
+      )
       return
     }
 
     setIsSubmittingWithdraw(true)
-    setLoadingText('Sending Verification OTP...')
-    setWithdrawError('')
+    setLoadingText("Sending Verification OTP...")
+    setWithdrawError("")
 
     try {
       await emailService.sendWithdrawalOtp(profile.email)
       setIsSubmittingWithdraw(false)
-      setWithdrawStep('otp')
+      setWithdrawStep("otp")
     } catch (err: any) {
       setIsSubmittingWithdraw(false)
-      setWithdrawError(err.message || 'Failed to send OTP. Please try again.')
+      setWithdrawError(err.message || "Failed to send OTP. Please try again.")
     }
   }
 
@@ -163,13 +174,13 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
   const handleConfirmWithdrawal = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!otpToken.trim() || otpToken.trim().length < 6) {
-      setWithdrawError('Please enter the complete 6-digit OTP code.')
+      setWithdrawError("Please enter the complete 6-digit OTP code.")
       return
     }
 
     setIsSubmittingWithdraw(true)
-    setLoadingText('Verifying OTP & Creating Withdrawal...')
-    setWithdrawError('')
+    setLoadingText("Verifying OTP & Creating Withdrawal...")
+    setWithdrawError("")
 
     try {
       // Verify OTP code
@@ -181,23 +192,23 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
         userName: profile.name,
         userEmail: profile.email,
         amount: withdrawAmount,
-        paymentMethod: 'UPI',
+        paymentMethod: "UPI",
         upiId: upiId.trim(),
       })
 
       setIsSubmittingWithdraw(false)
       setShowWithdrawModal(false)
-      setWithdrawStep('details')
-      setOtpToken('')
+      setWithdrawStep("details")
+      setOtpToken("")
 
-      setToastMsg('Withdrawal Request Created Successfully! 🎉')
-      setTimeout(() => setToastMsg(''), 3000)
+      setToastMsg("Withdrawal Request Created Successfully! 🎉")
+      setTimeout(() => setToastMsg(""), 3000)
 
       // Refresh dashboard balance & history
       await refreshData()
     } catch (err: any) {
       setIsSubmittingWithdraw(false)
-      setWithdrawError(err.message || 'Invalid OTP code. Please try again.')
+      setWithdrawError(err.message || "Invalid OTP code. Please try again.")
     }
   }
 
@@ -231,14 +242,16 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
           initial={{ opacity: 0, scale: 0.92, y: 25 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 25 }}
-          transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+          transition={{ type: "spring", stiffness: 280, damping: 24 }}
           className="relative z-10 w-full max-w-2xl p-5 sm:p-7 rounded-3xl text-white shadow-2xl my-auto overflow-hidden border border-pink-300/30"
           style={{
-            background: 'linear-gradient(135deg, rgba(20, 5, 35, 0.98), rgba(55, 10, 48, 0.98))',
-            backdropFilter: 'blur(28px)',
-            boxShadow: '0 20px 70px rgba(0,0,0,0.85), 0 0 50px rgba(255,105,180,0.2)',
-            maxHeight: '90vh',
-            overflowY: 'auto',
+            background:
+              "linear-gradient(135deg, rgba(20, 5, 35, 0.98), rgba(55, 10, 48, 0.98))",
+            backdropFilter: "blur(28px)",
+            boxShadow:
+              "0 20px 70px rgba(0,0,0,0.85), 0 0 50px rgba(255,105,180,0.2)",
+            maxHeight: "90vh",
+            overflowY: "auto",
           }}
         >
           {/* Top Bar */}
@@ -274,7 +287,7 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
                 className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-pink-200 border border-white/10 transition-all cursor-pointer flex items-center gap-1.5"
               >
                 <span>🔄</span>
-                <span>{isLoadingProfile ? 'Loading...' : 'Refresh'}</span>
+                <span>{isLoadingProfile ? "Loading..." : "Refresh"}</span>
               </button>
               <button
                 onClick={onLogout}
@@ -294,19 +307,33 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
           {/* Account Metadata Row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5 text-[11px] text-pink-200/75 bg-white/5 p-3 rounded-2xl border border-white/5">
             <div>
-              <span className="text-pink-300/60 block uppercase font-semibold text-[9px]">Account Created</span>
-              <span className="font-medium text-white">{profile.createdAt}</span>
+              <span className="text-pink-300/60 block uppercase font-semibold text-[9px]">
+                Account Created
+              </span>
+              <span className="font-medium text-white">
+                {profile.createdAt}
+              </span>
             </div>
             <div>
-              <span className="text-pink-300/60 block uppercase font-semibold text-[9px]">Last Login</span>
-              <span className="font-medium text-white">{profile.lastLogin}</span>
+              <span className="text-pink-300/60 block uppercase font-semibold text-[9px]">
+                Last Login
+              </span>
+              <span className="font-medium text-white">
+                {profile.lastLogin}
+              </span>
             </div>
             <div>
-              <span className="text-pink-300/60 block uppercase font-semibold text-[9px]">Total Referrals</span>
-              <span className="font-medium text-white">{profile.totalReferrals}</span>
+              <span className="text-pink-300/60 block uppercase font-semibold text-[9px]">
+                Total Referrals
+              </span>
+              <span className="font-medium text-white">
+                {profile.totalReferrals}
+              </span>
             </div>
             <div>
-              <span className="text-pink-300/60 block uppercase font-semibold text-[9px]">Status</span>
+              <span className="text-pink-300/60 block uppercase font-semibold text-[9px]">
+                Status
+              </span>
               <span className="inline-flex items-center gap-1 font-bold text-emerald-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 Verified
@@ -317,23 +344,39 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
           {/* Metrics Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
             <div className="p-3.5 rounded-2xl bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-500/20">
-              <span className="text-[10px] uppercase font-bold text-pink-300/80 tracking-wider">Withdrawable</span>
-              <div className="text-xl sm:text-2xl font-black text-emerald-400 mt-1">₹{profile.walletBalance}</div>
+              <span className="text-[10px] uppercase font-bold text-pink-300/80 tracking-wider">
+                Withdrawable
+              </span>
+              <div className="text-xl sm:text-2xl font-black text-emerald-400 mt-1">
+                ₹{profile.walletBalance}
+              </div>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-500/20">
-              <span className="text-[10px] uppercase font-bold text-pink-300/80 tracking-wider">Total Earnings</span>
-              <div className="text-xl sm:text-2xl font-black text-amber-300 mt-1">₹{profile.totalEarnings}</div>
+              <span className="text-[10px] uppercase font-bold text-pink-300/80 tracking-wider">
+                Total Earnings
+              </span>
+              <div className="text-xl sm:text-2xl font-black text-amber-300 mt-1">
+                ₹{profile.totalEarnings}
+              </div>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-500/20">
-              <span className="text-[10px] uppercase font-bold text-pink-300/80 tracking-wider">Successful</span>
-              <div className="text-xl sm:text-2xl font-black text-sky-400 mt-1">{profile.successfulReferrals}</div>
+              <span className="text-[10px] uppercase font-bold text-pink-300/80 tracking-wider">
+                Successful
+              </span>
+              <div className="text-xl sm:text-2xl font-black text-sky-400 mt-1">
+                {profile.successfulReferrals}
+              </div>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-500/20">
-              <span className="text-[10px] uppercase font-bold text-pink-300/80 tracking-wider">Pending</span>
-              <div className="text-xl sm:text-2xl font-black text-purple-300 mt-1">{profile.pendingReferrals}</div>
+              <span className="text-[10px] uppercase font-bold text-pink-300/80 tracking-wider">
+                Pending
+              </span>
+              <div className="text-xl sm:text-2xl font-black text-purple-300 mt-1">
+                {profile.pendingReferrals}
+              </div>
             </div>
           </div>
 
@@ -354,7 +397,7 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
                   onClick={handleCopyCode}
                   className="px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-600 text-xs font-bold text-white transition-all cursor-pointer shadow-md"
                 >
-                  {copiedCode ? 'Copied!' : 'Copy Code'}
+                  {copiedCode ? "Copied!" : "Copy Code"}
                 </button>
               </div>
             </div>
@@ -374,7 +417,7 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
                   onClick={handleCopyLink}
                   className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-xs font-bold text-white transition-all cursor-pointer shadow-md"
                 >
-                  {copiedLink ? 'Copied!' : 'Copy Link'}
+                  {copiedLink ? "Copied!" : "Copy Link"}
                 </button>
               </div>
             </div>
@@ -388,7 +431,9 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
                 <input
                   type="text"
                   value={applyCodeInput}
-                  onChange={(e) => setApplyCodeInput(e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    setApplyCodeInput(e.target.value.toUpperCase())
+                  }
                   placeholder="Enter Code (e.g. GF-LOVE-XXXX)"
                   className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/10 font-mono text-xs text-white uppercase placeholder:normal-case placeholder:font-normal"
                 />
@@ -397,12 +442,22 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
                   disabled={isApplyingCode || !applyCodeInput.trim()}
                   className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-xs font-bold text-white transition-all cursor-pointer shadow-md disabled:opacity-50"
                 >
-                  {isApplyingCode ? 'Applying...' : 'Apply Code'}
+                  {isApplyingCode ? "Applying..." : "Apply Code"}
                 </button>
               </div>
               {applyCodeMsg && (
-                <p className={`text-[11px] font-semibold mt-1.5 ${applyCodeMsg.includes('accepted') || applyCodeMsg.includes('Applied') ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {applyCodeMsg.includes('accepted') || applyCodeMsg.includes('Applied') ? '✓ ' : '⚠️ '}
+                <p
+                  className={`text-[11px] font-semibold mt-1.5 ${
+                    applyCodeMsg.includes("accepted") ||
+                    applyCodeMsg.includes("Applied")
+                      ? "text-emerald-400"
+                      : "text-rose-400"
+                  }`}
+                >
+                  {applyCodeMsg.includes("accepted") ||
+                  applyCodeMsg.includes("Applied")
+                    ? "✓ "
+                    : "⚠️ "}
                   {applyCodeMsg}
                 </p>
               )}
@@ -412,16 +467,19 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
           {/* Withdraw CTA */}
           <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 to-teal-500/15 border border-emerald-500/30 mb-6">
             <div>
-              <h4 className="text-sm font-bold text-emerald-300">Ready to Withdraw?</h4>
+              <h4 className="text-sm font-bold text-emerald-300">
+                Ready to Withdraw?
+              </h4>
               <p className="text-[11px] text-emerald-200/75">
-                Minimum payout: ₹100. Withdrawals require Email OTP verification.
+                Minimum payout: ₹100. Withdrawals require Email OTP
+                verification.
               </p>
             </div>
             <button
               onClick={() => {
                 setWithdrawAmount(Math.max(100, profile.walletBalance))
-                setWithdrawStep('details')
-                setWithdrawError('')
+                setWithdrawStep("details")
+                setWithdrawError("")
                 setShowWithdrawModal(true)
               }}
               disabled={profile.walletBalance < 100}
@@ -438,9 +496,10 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
               <span>Wallet Financial Transaction Ledger</span>
             </h3>
 
-            {(!profile.transactions || profile.transactions.length === 0) ? (
+            {!profile.transactions || profile.transactions.length === 0 ? (
               <div className="text-center py-6 bg-white/5 rounded-2xl border border-white/5 text-xs text-pink-200/60">
-                No financial transactions recorded yet. Balance: ₹{profile.walletBalance}
+                No financial transactions recorded yet. Balance: ₹
+                {profile.walletBalance}
               </div>
             ) : (
               <div className="overflow-x-auto rounded-2xl border border-amber-500/20 bg-white/5 max-h-56 overflow-y-auto">
@@ -457,25 +516,48 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
                   </thead>
                   <tbody className="divide-y divide-white/5 font-mono">
                     {profile.transactions.map((txn) => {
-                      const isDebit = ['Admin Debit', 'Withdrawal Request', 'Premium Purchase'].includes(txn.transactionType)
+                      const isDebit = [
+                        "Admin Debit",
+                        "Withdrawal Request",
+                        "Premium Purchase",
+                      ].includes(txn.transactionType)
                       return (
-                        <tr key={txn.id} className="hover:bg-white/5 transition-all text-[11px]">
-                          <td className="p-3 font-bold text-amber-200">{txn.transactionId}</td>
+                        <tr
+                          key={txn.id}
+                          className="hover:bg-white/5 transition-all text-[11px]"
+                        >
+                          <td className="p-3 font-bold text-amber-200">
+                            {txn.transactionId}
+                          </td>
                           <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${isDebit ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}`}>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                isDebit
+                                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                                  : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              }`}
+                            >
                               {txn.transactionType}
                             </span>
                           </td>
-                          <td className={`p-3 font-bold ${isDebit ? 'text-rose-400' : 'text-emerald-400'}`}>
-                            {isDebit ? '-' : '+'}₹{txn.amount}
+                          <td
+                            className={`p-3 font-bold ${
+                              isDebit ? "text-rose-400" : "text-emerald-400"
+                            }`}
+                          >
+                            {isDebit ? "-" : "+"}₹{txn.amount}
                           </td>
-                          <td className="p-3 font-bold text-white">₹{txn.balanceAfter}</td>
+                          <td className="p-3 font-bold text-white">
+                            ₹{txn.balanceAfter}
+                          </td>
                           <td className="p-3">
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">
                               {txn.status}
                             </span>
                           </td>
-                          <td className="p-3 text-[10px] text-pink-200/60">{txn.createdAt}</td>
+                          <td className="p-3 text-[10px] text-pink-200/60">
+                            {txn.createdAt}
+                          </td>
                         </tr>
                       )
                     })}
@@ -510,24 +592,36 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {profile.withdrawHistory.map((item) => (
-                      <tr key={item.id} className="hover:bg-white/5 transition-all">
-                        <td className="p-3 font-mono text-white">{item.requestId}</td>
-                        <td className="p-3 font-bold text-emerald-400">₹{item.amount}</td>
-                        <td className="p-3 font-mono text-[11px] text-pink-200/80">{item.upiId}</td>
+                      <tr
+                        key={item.id}
+                        className="hover:bg-white/5 transition-all"
+                      >
+                        <td className="p-3 font-mono text-white">
+                          {item.requestId}
+                        </td>
+                        <td className="p-3 font-bold text-emerald-400">
+                          ₹{item.amount}
+                        </td>
+                        <td className="p-3 font-mono text-[11px] text-pink-200/80">
+                          {item.upiId}
+                        </td>
                         <td className="p-3">
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              item.status === 'APPROVED' || item.status === 'PAID'
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                : item.status === 'REJECTED'
-                                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                                : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                              item.status === "APPROVED" ||
+                              item.status === "PAID"
+                                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                                : item.status === "REJECTED"
+                                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                                  : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
                             }`}
                           >
                             {item.status}
                           </span>
                         </td>
-                        <td className="p-3 text-[11px] text-pink-200/60">{item.date}</td>
+                        <td className="p-3 text-[11px] text-pink-200/60">
+                          {item.date}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -552,13 +646,16 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="relative z-10 w-full max-w-sm p-6 rounded-3xl text-white shadow-2xl border border-pink-400/30"
             style={{
-              background: 'linear-gradient(135deg, rgba(22, 5, 42, 0.98), rgba(60, 10, 52, 0.98))',
-              backdropFilter: 'blur(24px)',
+              background:
+                "linear-gradient(135deg, rgba(22, 5, 42, 0.98), rgba(60, 10, 52, 0.98))",
+              backdropFilter: "blur(24px)",
             }}
           >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-white">
-                {withdrawStep === 'details' ? 'Withdrawal Request' : 'Verify OTP Code'}
+                {withdrawStep === "details"
+                  ? "Withdrawal Request"
+                  : "Verify OTP Code"}
               </h3>
               <button
                 onClick={() => setShowWithdrawModal(false)}
@@ -574,7 +671,7 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
               </div>
             )}
 
-            {withdrawStep === 'details' ? (
+            {withdrawStep === "details" ? (
               <form onSubmit={handleRequestOtp} className="space-y-3.5">
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-pink-200/80 mb-1">
@@ -613,13 +710,19 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
                   disabled={isSubmittingWithdraw}
                   className="w-full py-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 shadow-md transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {isSubmittingWithdraw ? loadingText : 'Continue to OTP Verification'}
+                  {isSubmittingWithdraw
+                    ? loadingText
+                    : "Continue to OTP Verification"}
                 </button>
               </form>
             ) : (
               <form onSubmit={handleConfirmWithdrawal} className="space-y-3.5">
                 <p className="text-xs text-pink-200/80">
-                  Enter 6-digit OTP sent to <span className="font-semibold text-white">{profile.email}</span> to confirm withdrawal of ₹{withdrawAmount}.
+                  Enter 6-digit OTP sent to{" "}
+                  <span className="font-semibold text-white">
+                    {profile.email}
+                  </span>{" "}
+                  to confirm withdrawal of ₹{withdrawAmount}.
                 </p>
 
                 <div>
@@ -628,7 +731,9 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
                     maxLength={6}
                     required
                     value={otpToken}
-                    onChange={(e) => setOtpToken(e.target.value.replace(/[^0-9]/g, ''))}
+                    onChange={(e) =>
+                      setOtpToken(e.target.value.replace(/[^0-9]/g, ""))
+                    }
                     placeholder="123456"
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-center font-mono text-lg tracking-[0.4em] font-bold text-white focus:outline-none focus:border-pink-400"
                   />
@@ -639,7 +744,9 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
                   disabled={isSubmittingWithdraw}
                   className="w-full py-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-md transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {isSubmittingWithdraw ? loadingText : 'Verify & Submit Withdrawal'}
+                  {isSubmittingWithdraw
+                    ? loadingText
+                    : "Verify & Submit Withdrawal"}
                 </button>
               </form>
             )}

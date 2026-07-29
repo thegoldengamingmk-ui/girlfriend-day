@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react"
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  lazy,
+  Suspense,
+} from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { uploadPhoto, uploadVoiceNote, uploadMusicTrack } from "./lib/storage"
 import {
@@ -19,7 +26,11 @@ import {
 import { AdminLoginModal } from "./components/AdminLoginModal"
 import { SuperAdminSetupModal } from "./components/SuperAdminSetupModal"
 import { AuthModal } from "./components/auth/AuthModal"
-import { getCurrentSession, signOutUser, subscribeToAuthChanges } from "./lib/authService"
+import {
+  getCurrentSession,
+  signOutUser,
+  subscribeToAuthChanges,
+} from "./lib/authService"
 import { validateAndApplyReferralCode } from "./lib/userService"
 import { launchRazorpayCheckout } from "./lib/razorpayService"
 import { getActiveAdminSession, type AdminUser } from "./lib/adminAuthService"
@@ -27,10 +38,14 @@ import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
 
 // Lazy-loaded heavy components (code splitting for faster initial load)
 const AdminDashboard = lazy(() =>
-  import("./components/AdminDashboard").then((m) => ({ default: m.AdminDashboard }))
+  import("./components/AdminDashboard").then((m) => ({
+    default: m.AdminDashboard,
+  })),
 )
 const ReferralDashboardModal = lazy(() =>
-  import("./components/auth/ReferralDashboardModal").then((m) => ({ default: m.ReferralDashboardModal }))
+  import("./components/auth/ReferralDashboardModal").then((m) => ({
+    default: m.ReferralDashboardModal,
+  })),
 )
 
 type Screen = 1 | 2 | 3 | 4 | 5 | 6 | 7 | "dashboard" | "admin-login" | "admin-dashboard" | "setup-super-admin"
@@ -312,11 +327,21 @@ function RomanticBGMPlayer() {
     const handleResumeBGM = () => {
       const currentAudio = audioRef.current
       if (currentAudio && !userMutedRef.current) {
-        currentAudio.play().then(() => setIsPlaying(true)).catch(() => {})
+        currentAudio
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch(() => {})
       }
     }
 
-    const events = ["pointerdown", "touchstart", "click", "keydown", "scroll", "mousemove"]
+    const events = [
+      "pointerdown",
+      "touchstart",
+      "click",
+      "keydown",
+      "scroll",
+      "mousemove",
+    ]
     events.forEach((evt) =>
       window.addEventListener(evt, handleGesture, { passive: true }),
     )
@@ -409,10 +434,10 @@ function Btn({
       className={`${
         full ? "w-full" : ""
       } px-8 py-4 rounded-full font-medium text-base transition-all duration-300 ${
-        disabled ? "opacity-60 cursor-not-allowed" : "hover:scale-[1.04] active:scale-[0.97] cursor-pointer"
-      } select-none ${
-        !outline && !disabled ? "animate-btn-glow" : ""
-      }`}
+        disabled
+          ? "opacity-60 cursor-not-allowed"
+          : "hover:scale-[1.04] active:scale-[0.97] cursor-pointer"
+      } select-none ${!outline && !disabled ? "animate-btn-glow" : ""}`}
       style={
         outline
           ? {
@@ -701,7 +726,8 @@ function S3({ onNext }: { onNext: () => void }) {
               fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            I created this surprise just for you, with all my love. Are you ready?
+            I created this surprise just for you, with all my love. Are you
+            ready?
           </p>
 
           <div
@@ -1272,13 +1298,7 @@ function S5({ onNext }: { onNext: () => void }) {
 
 // ── SCREEN 6 — SUSPENSE ────────────────────────────────────────────────────
 
-function S6({
-  onNext,
-  bgPhoto,
-}: {
-  onNext: () => void
-  bgPhoto?: string
-}) {
+function S6({ onNext, bgPhoto }: { onNext: () => void bgPhoto?: string }) {
   return (
     <div
       className="relative flex flex-col items-center justify-center overflow-hidden"
@@ -1378,7 +1398,11 @@ function isAudioUrl(url?: string): boolean {
   if (url.startsWith("blob:") || url.startsWith("data:audio")) return true
   if (url.match(/\.(mp3|m4a|wav|aac|ogg)(\?.*)?$/i)) return true
   if (url.includes("voice-notes") || url.includes("/music/")) return true
-  if ((url.startsWith("http://") || url.startsWith("https://")) && !url.includes("spotify.com")) return true
+  if (
+    (url.startsWith("http://") || url.startsWith("https://")) &&
+    !url.includes("spotify.com")
+  )
+    return true
   return false
 }
 
@@ -1487,7 +1511,8 @@ function SpotifyPlayer({
     <div
       className="mb-6 p-4 rounded-2xl shadow-2xl relative overflow-hidden transition-all duration-300"
       style={{
-        background: "linear-gradient(135deg, rgba(30,10,40,0.95), rgba(75,15,60,0.95))",
+        background:
+          "linear-gradient(135deg, rgba(30,10,40,0.95), rgba(75,15,60,0.95))",
         backdropFilter: "blur(12px)",
         border: "1px solid rgba(255,182,193,0.35)",
         boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
@@ -1500,7 +1525,8 @@ function SpotifyPlayer({
             isPlaying ? "animate-spin" : ""
           }`}
           style={{
-            background: "radial-gradient(circle, #ff69b4 0%, #8b008b 60%, #1a0020 100%)",
+            background:
+              "radial-gradient(circle, #ff69b4 0%, #8b008b 60%, #1a0020 100%)",
             border: "2px solid rgba(255,255,255,0.4)",
             animationDuration: "4s",
           }}
@@ -1873,15 +1899,14 @@ function Slideshow({ photos }: { photos?: string[] }) {
 
           return (
             <React.Fragment key={i}>
-              {isMemoryBreak && <MemoryBreak quoteIndex={Math.floor(i / 3) - 1} />}
+              {isMemoryBreak && (
+                <MemoryBreak quoteIndex={Math.floor(i / 3) - 1} />
+              )}
 
               {isLast ? (
                 <FinalGrandMemory photo={photo} />
               ) : (
-                <CinematicMemoryCard
-                  photo={photo}
-                  index={i}
-                />
+                <CinematicMemoryCard photo={photo} index={i} />
               )}
             </React.Fragment>
           )
@@ -2028,7 +2053,8 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
             onClick={() => setPlay((p) => !p)}
             className="relative w-36 h-24 rounded-2xl cursor-pointer hover:scale-105 transition-all duration-300 p-3 flex flex-col justify-between overflow-hidden shadow-2xl"
             style={{
-              background: "linear-gradient(135deg, rgba(35,10,45,0.95), rgba(85,15,70,0.95))",
+              background:
+                "linear-gradient(135deg, rgba(35,10,45,0.95), rgba(85,15,70,0.95))",
               border: "1.5px solid rgba(255,182,193,0.4)",
               boxShadow: play
                 ? "0 0 30px rgba(255,105,180,0.65)"
@@ -2040,7 +2066,9 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
               <span className="text-[9px] font-bold uppercase tracking-wider text-pink-300 font-mono">
                 📼 MY VOICE NOTE FOR YOU
               </span>
-              <span className="text-[10px] text-pink-200 font-medium">{play ? "🔊 PLAYING" : "▶ PLAY"}</span>
+              <span className="text-[10px] text-pink-200 font-medium">
+                {play ? "🔊 PLAYING" : "▶ PLAY"}
+              </span>
             </div>
 
             {/* Cassette Tape Reels Window */}
@@ -2072,7 +2100,9 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
             {/* Cassette Bottom Screws / Details */}
             <div className="flex justify-between items-center px-1">
               <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
-              <span className="text-[8px] font-mono text-pink-300/60 uppercase">HIGH FIDELITY STEREO</span>
+              <span className="text-[8px] font-mono text-pink-300/60 uppercase">
+                HIGH FIDELITY STEREO
+              </span>
               <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
             </div>
           </button>
@@ -2204,7 +2234,7 @@ function WithdrawModal({
 }: {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (details: { type: "upi" | "bank"; value: string }) => void
+  onSubmit: (details: { type: "upi" | "bank" value: string }) => void
 }) {
   const [method, setMethod] = useState<"upi" | "bank">("upi")
   const [upiId, setUpiId] = useState("")
@@ -2252,7 +2282,8 @@ function WithdrawModal({
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           className="relative z-10 w-full max-w-sm p-6 rounded-3xl text-white shadow-2xl overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, rgba(25, 5, 45, 0.98), rgba(65, 12, 55, 0.98))",
+            background:
+              "linear-gradient(135deg, rgba(25, 5, 45, 0.98), rgba(65, 12, 55, 0.98))",
             backdropFilter: "blur(24px)",
             border: "1.5px solid rgba(255, 192, 203, 0.35)",
           }}
@@ -2273,18 +2304,28 @@ function WithdrawModal({
           <div className="flex gap-2 p-1 rounded-2xl bg-black/40 border border-white/10 mb-4">
             <button
               type="button"
-              onClick={() => { setMethod("upi"); setError("") }}
+              onClick={() => {
+                setMethod("upi")
+                setError("")
+              }}
               className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                method === "upi" ? "bg-pink-600 text-white shadow-md" : "text-pink-200/60 hover:text-white"
+                method === "upi"
+                  ? "bg-pink-600 text-white shadow-md"
+                  : "text-pink-200/60 hover:text-white"
               }`}
             >
               UPI ID
             </button>
             <button
               type="button"
-              onClick={() => { setMethod("bank"); setError("") }}
+              onClick={() => {
+                setMethod("bank")
+                setError("")
+              }}
               className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                method === "bank" ? "bg-pink-600 text-white shadow-md" : "text-pink-200/60 hover:text-white"
+                method === "bank"
+                  ? "bg-pink-600 text-white shadow-md"
+                  : "text-pink-200/60 hover:text-white"
               }`}
             >
               Bank Transfer
@@ -2396,23 +2437,45 @@ function HamburgerMenu({
         onClick={() => setIsOpen(!isOpen)}
         className="w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl select-none"
         style={{
-          background: "linear-gradient(135deg, rgba(26, 0, 53, 0.95), rgba(60, 10, 50, 0.95))",
+          background:
+            "linear-gradient(135deg, rgba(26, 0, 53, 0.95), rgba(60, 10, 50, 0.95))",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           border: "1.5px solid rgba(255, 180, 210, 0.45)",
-          boxShadow: "0 8px 25px rgba(0,0,0,0.5), 0 0 15px rgba(232,120,154,0.35)",
+          boxShadow:
+            "0 8px 25px rgba(0,0,0,0.5), 0 0 15px rgba(232,120,154,0.35)",
         }}
         aria-label="Toggle Menu"
       >
         {isOpen ? (
           /* SVG Close Icon */
-          <svg className="w-5 h-5 text-pink-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-5 h-5 text-pink-200"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         ) : (
           /* SVG Crisp 3-Lines Icon */
-          <svg className="w-5 h-5 text-pink-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          <svg
+            className="w-5 h-5 text-pink-200"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           </svg>
         )}
       </button>
@@ -2433,7 +2496,8 @@ function HamburgerMenu({
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               className="absolute top-14 left-0 w-56 p-3 rounded-2xl shadow-2xl space-y-1.5 z-10 overflow-hidden"
               style={{
-                background: "linear-gradient(135deg, rgba(25, 5, 45, 0.98), rgba(65, 12, 55, 0.98))",
+                background:
+                  "linear-gradient(135deg, rgba(25, 5, 45, 0.98), rgba(65, 12, 55, 0.98))",
                 backdropFilter: "blur(24px)",
                 border: "1.5px solid rgba(255, 192, 203, 0.35)",
                 boxShadow: "0 15px 40px rgba(0,0,0,0.7)",
@@ -2527,10 +2591,12 @@ function ReferralsLockedModal({
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="relative z-10 w-full max-w-sm p-6 sm:p-7 rounded-center text-center shadow-2xl overflow-hidden text-white"
           style={{
-            background: "linear-gradient(135deg, rgba(25, 5, 45, 0.98), rgba(65, 12, 55, 0.98))",
+            background:
+              "linear-gradient(135deg, rgba(25, 5, 45, 0.98), rgba(65, 12, 55, 0.98))",
             backdropFilter: "blur(24px)",
             border: "1.5px solid rgba(255, 192, 203, 0.35)",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255,105,180,0.3)",
+            boxShadow:
+              "0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255,105,180,0.3)",
           }}
         >
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40 flex items-center justify-center text-3xl shadow-lg animate-pulse">
@@ -2548,7 +2614,10 @@ function ReferralsLockedModal({
             className="text-xs sm:text-sm text-pink-200/80 mb-6 font-sans leading-relaxed"
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
-            To unlock your <strong className="text-pink-300">Referral Dashboard</strong> and start earning <strong className="text-emerald-400">₹10</strong> for every friend who purchases, first create a gift or sign in!
+            To unlock your{" "}
+            <strong className="text-pink-300">Referral Dashboard</strong> and
+            start earning <strong className="text-emerald-400">₹10</strong> for
+            every friend who purchases, first create a gift or sign in!
           </p>
 
           <div className="space-y-3">
@@ -2619,10 +2688,12 @@ function ReferralPopupModal({
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="relative z-10 w-full max-w-xs sm:max-w-sm p-6 sm:p-7 rounded-3xl text-center shadow-2xl overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, rgba(25, 5, 45, 0.96), rgba(65, 12, 55, 0.96))",
+            background:
+              "linear-gradient(135deg, rgba(25, 5, 45, 0.96), rgba(65, 12, 55, 0.96))",
             backdropFilter: "blur(24px)",
             border: "1.5px solid rgba(255, 192, 203, 0.35)",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255,105,180,0.3)",
+            boxShadow:
+              "0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255,105,180,0.3)",
           }}
         >
           {/* Top Icon Badge */}
@@ -2640,7 +2711,9 @@ function ReferralPopupModal({
             className="text-xs sm:text-sm text-pink-200/80 mb-6 font-sans leading-relaxed"
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
-            Use a friend's referral code and unlock <span className="text-emerald-400 font-bold">50% OFF</span> instantly!
+            Use a friend's referral code and unlock{" "}
+            <span className="text-emerald-400 font-bold">50% OFF</span>{" "}
+            instantly!
           </p>
 
           <div className="space-y-4">
@@ -2655,7 +2728,9 @@ function ReferralPopupModal({
                 className="w-full px-4 py-3.5 rounded-2xl text-center font-mono font-bold tracking-widest text-white text-sm outline-none transition-all uppercase placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-pink-200/40"
                 style={{
                   background: "rgba(255,255,255,0.08)",
-                  border: errorMsg ? "1.5px solid #ef4444" : "1px solid rgba(255,192,203,0.3)",
+                  border: errorMsg
+                    ? "1.5px solid #ef4444"
+                    : "1px solid rgba(255,192,203,0.3)",
                   boxShadow: "inset 0 2px 4px rgba(0,0,0,0.2)",
                 }}
                 onKeyDown={(e) => {
@@ -2742,9 +2817,9 @@ function Dashboard({
 
   const applyDiscountCode = async (code: string, isFromPopup = false) => {
     playButtonSound()
-    console.log('[Referral Input Received] Raw Input:', code)
+    console.log("[Referral Input Received] Raw Input:", code)
     const trimmed = code.trim().toUpperCase()
-    console.log('[Normalized Referral Code]:', trimmed)
+    console.log("[Normalized Referral Code]:", trimmed)
 
     if (!trimmed) {
       const errText = "Please enter a referral code."
@@ -2753,10 +2828,10 @@ function Dashboard({
       return false
     }
 
-    const referredUserId = userProfile?.id || ''
-    const referredUserEmail = userProfile?.email || ''
+    const referredUserId = userProfile?.id || ""
+    const referredUserEmail = userProfile?.email || ""
 
-    console.log('[Referral Execution Arguments]:', {
+    console.log("[Referral Execution Arguments]:", {
       referredUserId,
       referredUserEmail,
       enteredCode: trimmed,
@@ -2767,9 +2842,9 @@ function Dashboard({
       const res = await validateAndApplyReferralCode(
         referredUserId,
         referredUserEmail,
-        trimmed
+        trimmed,
       )
-      console.log('[Referral Database Query Result]:', res)
+      console.log("[Referral Database Query Result]:", res)
 
       if (res.success || trimmed === "LOVE50") {
         setIsReferralApplied(true)
@@ -2799,7 +2874,7 @@ function Dashboard({
         return false
       }
     } catch (err: any) {
-      console.error('[Referral Thrown Exception]:', err)
+      console.error("[Referral Thrown Exception]:", err)
       const errText = err.message || "Failed to validate referral code."
       if (isFromPopup) setPopupErrorMsg(errText)
       else setReferralErrorMsg(errText)
@@ -2819,7 +2894,9 @@ function Dashboard({
       typeof MediaRecorder !== "undefined"
     ) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        })
 
         let recorder: MediaRecorder
         if (typeof MediaRecorder.isTypeSupported === "function") {
@@ -2846,15 +2923,16 @@ function Dashboard({
         recorder.onstop = () => {
           const mime = recorder.mimeType || "audio/webm"
           const audioBlob = new Blob(audioChunksRef.current, { type: mime })
-          const ext = mime.includes("mp4") || mime.includes("aac")
-            ? "m4a"
-            : mime.includes("ogg")
-            ? "ogg"
-            : "webm"
+          const ext =
+            mime.includes("mp4") || mime.includes("aac")
+              ? "m4a"
+              : mime.includes("ogg")
+                ? "ogg"
+                : "webm"
           const file = new File(
             [audioBlob],
             `voice_note_${Date.now()}.${ext}`,
-            { type: mime }
+            { type: mime },
           )
           setVoiceNoteFile(file)
           setVoiceNote(true)
@@ -2870,7 +2948,10 @@ function Dashboard({
         }, 1000)
         return
       } catch (err) {
-        console.warn("In-app mic recorder failed, triggering mobile native voice recorder:", err)
+        console.warn(
+          "In-app mic recorder failed, triggering mobile native voice recorder:",
+          err,
+        )
       }
     }
 
@@ -2935,10 +3016,10 @@ function Dashboard({
     await launchRazorpayCheckout({
       amount: finalPrice,
       description: `Romantic Gift Website Customization (${gfName} & ${bfName})`,
-      userEmail: userProfile?.email || '',
+      userEmail: userProfile?.email || "",
       userName: userProfile?.name || bfName,
       onSuccess: async (paymentRes) => {
-        console.log('[Razorpay Verified Payment]:', paymentRes)
+        console.log("[Razorpay Verified Payment]:", paymentRes)
         onRequestCreateAccount(async () => {
           setIsSubmitting(true)
           try {
@@ -2949,7 +3030,9 @@ function Dashboard({
             }
 
             if (uploadedPhotoUrls.length === 0 && photos.length > 0) {
-              uploadedPhotoUrls.push(...photos.filter((p) => p.startsWith("http")))
+              uploadedPhotoUrls.push(
+                ...photos.filter((p) => p.startsWith("http")),
+              )
             }
 
             let musicPublicUrl = ""
@@ -2990,14 +3073,19 @@ function Dashboard({
             setIsSubmitting(false)
           } catch (err: any) {
             console.error("Failed to save surprise:", err)
-            setErrorMsg(err.message || "Failed to save surprise. Please try again.")
+            setErrorMsg(
+              err.message || "Failed to save surprise. Please try again.",
+            )
             setIsSubmitting(false)
           }
         })
       },
       onFailure: (err) => {
-        console.warn('[Razorpay Payment Cancelled or Error]:', err)
-        setErrorMsg(err.message || 'Payment was cancelled. Please try again to unlock your website.')
+        console.warn("[Razorpay Payment Cancelled or Error]:", err)
+        setErrorMsg(
+          err.message ||
+            "Payment was cancelled. Please try again to unlock your website.",
+        )
       },
     })
   }
@@ -3330,7 +3418,9 @@ function Dashboard({
         {/* 4. Voice Note */}
         <div style={card}>
           <div style={secTitle}>🎙️ Voice Note</div>
-          <div style={secSub}>Directly record your voice or upload an audio file</div>
+          <div style={secSub}>
+            Directly record your voice or upload an audio file
+          </div>
 
           {voiceNote ? (
             <div
@@ -3412,7 +3502,8 @@ function Dashboard({
                 onClick={stopRecording}
                 className="px-6 py-3 rounded-full text-xs font-bold text-white cursor-pointer transition-all duration-200 hover:scale-105"
                 style={{
-                  background: "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
+                  background:
+                    "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
                   boxShadow: "0 4px 18px rgba(232,120,154,0.5)",
                 }}
               >
@@ -3476,7 +3567,8 @@ function Dashboard({
         <div style={card}>
           <div style={secTitle}>🎵 Her Special Song (MP3 Upload)</div>
           <div style={secSub}>
-            Upload an MP3 song file so the full song plays when she opens the gift!
+            Upload an MP3 song file so the full song plays when she opens the
+            gift!
           </div>
 
           <div className="space-y-3">
@@ -3485,7 +3577,9 @@ function Dashboard({
               className="p-5 rounded-xl border-2 border-dashed text-center transition-all cursor-pointer hover:border-pink-500"
               style={{
                 borderColor: musicFile ? "#c9438a" : "rgba(200,67,138,0.4)",
-                background: musicFile ? "rgba(255,240,246,0.9)" : "rgba(255,255,255,0.7)",
+                background: musicFile
+                  ? "rgba(255,240,246,0.9)"
+                  : "rgba(255,255,255,0.7)",
               }}
               onClick={() => musicFileInputRef.current?.click()}
             >
@@ -3507,7 +3601,9 @@ function Dashboard({
               />
               <div className="text-3xl mb-2">🎶</div>
               <div className="text-sm font-bold text-[#7a0f50]">
-                {musicFile ? `Uploaded: ${musicFile.name}` : "Click to Upload MP3 Song File"}
+                {musicFile
+                  ? `Uploaded: ${musicFile.name}`
+                  : "Click to Upload MP3 Song File"}
               </div>
               <div className="text-xs text-pink-700/70 mt-1">
                 {musicFile
@@ -3559,7 +3655,8 @@ function Dashboard({
         <div style={card}>
           <div style={secTitle}>🔐 Secret Questions</div>
           <div style={secSub}>
-            Customize the questions and exact answers she must reply to unlock the surprise
+            Customize the questions and exact answers she must reply to unlock
+            the surprise
           </div>
 
           {/* Quick Idea Presets */}
@@ -3590,17 +3687,37 @@ function Dashboard({
                 {
                   label: "🎵 Shared Favorites",
                   items: [
-                    { question: "What is our special couple song?", answer: "" },
-                    { question: "What food did we order on our first date?", answer: "" },
-                    { question: "Where is our dream vacation spot?", answer: "" },
+                    {
+                      question: "What is our special couple song?",
+                      answer: "",
+                    },
+                    {
+                      question: "What food did we order on our first date?",
+                      answer: "",
+                    },
+                    {
+                      question: "Where is our dream vacation spot?",
+                      answer: "",
+                    },
                   ],
                 },
                 {
                   label: "✨ Cute Inside Jokes",
                   items: [
-                    { question: "What color dress were you wearing on our first date?", answer: "" },
-                    { question: "What secret word always makes us laugh?", answer: "" },
-                    { question: "What is our favorite movie to rewatch together?", answer: "" },
+                    {
+                      question:
+                        "What color dress were you wearing on our first date?",
+                      answer: "",
+                    },
+                    {
+                      question: "What secret word always makes us laugh?",
+                      answer: "",
+                    },
+                    {
+                      question:
+                        "What is our favorite movie to rewatch together?",
+                      answer: "",
+                    },
                   ],
                 },
               ].map((p, idx) => (
@@ -3639,7 +3756,7 @@ function Dashboard({
                       type="button"
                       onClick={() =>
                         setSecretQuestions((prev) =>
-                          prev.filter((_, idx) => idx !== i)
+                          prev.filter((_, idx) => idx !== i),
                         )
                       }
                       className="text-xs text-pink-600 hover:text-pink-800 font-bold cursor-pointer"
@@ -3746,7 +3863,8 @@ function Dashboard({
         <div
           className="relative overflow-hidden rounded-3xl p-6 sm:p-7 mb-5 text-white"
           style={{
-            background: "linear-gradient(135deg, #1a0035 0%, #2e0055 50%, #15002a 100%)",
+            background:
+              "linear-gradient(135deg, #1a0035 0%, #2e0055 50%, #15002a 100%)",
             border: "1px solid rgba(255, 192, 203, 0.3)",
             boxShadow: "0 16px 60px rgba(200,67,138,0.3)",
           }}
@@ -3785,7 +3903,9 @@ function Dashboard({
                     >
                       ₹49
                     </span>
-                    <span className="text-xs text-pink-200/60 font-sans">one-time</span>
+                    <span className="text-xs text-pink-200/60 font-sans">
+                      one-time
+                    </span>
                   </div>
 
                   {/* Green Discount Badge */}
@@ -3806,7 +3926,9 @@ function Dashboard({
                     >
                       ₹99
                     </span>
-                    <span className="text-xs text-pink-200/60 font-sans">one-time</span>
+                    <span className="text-xs text-pink-200/60 font-sans">
+                      one-time
+                    </span>
                   </div>
                   <p className="text-[11px] text-pink-300/70 mt-1.5 font-medium">
                     💡 Use a referral code to unlock 50% OFF (Pay ₹49)
@@ -3842,7 +3964,10 @@ function Dashboard({
                   className="text-[11px] leading-relaxed text-pink-200/80"
                   style={{ fontFamily: "'DM Sans', sans-serif" }}
                 >
-                  🔒 <strong>Your memories stay private.</strong> Photos, voice notes, love letters and personal details are securely processed and are not permanently stored on our platform, ensuring complete privacy.
+                  🔒 <strong>Your memories stay private.</strong> Photos, voice
+                  notes, love letters and personal details are securely
+                  processed and are not permanently stored on our platform,
+                  ensuring complete privacy.
                 </p>
               </div>
             </div>
@@ -3878,8 +4003,12 @@ function Dashboard({
                   onClick={() => copyToClipboard(link)}
                   className="cursor-pointer transition-all duration-200 hover:bg-white/10 p-4 rounded-2xl bg-white/5 border border-white/15 text-center"
                 >
-                  <p className="text-xs text-pink-200/70 mb-1">Your Unique Surprise Link:</p>
-                  <p className="text-sm font-mono text-pink-300 font-bold break-all">{link}</p>
+                  <p className="text-xs text-pink-200/70 mb-1">
+                    Your Unique Surprise Link:
+                  </p>
+                  <p className="text-sm font-mono text-pink-300 font-bold break-all">
+                    {link}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -3905,9 +4034,12 @@ function Dashboard({
           {isReferralApplied ? (
             <div className="flex flex-col items-center gap-1.5">
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300">
-                <span>🎉</span> Referral Code Applied: <span className="font-mono">{appliedReferralCode}</span>
+                <span>🎉</span> Referral Code Applied:{" "}
+                <span className="font-mono">{appliedReferralCode}</span>
               </div>
-              <p className="text-xs font-bold text-pink-700">50% OFF Activated ❤️ (You Save ₹50)</p>
+              <p className="text-xs font-bold text-pink-700">
+                50% OFF Activated ❤️ (You Save ₹50)
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -3918,12 +4050,16 @@ function Dashboard({
                 <input
                   type="text"
                   value={referralCodeInput}
-                  onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    setReferralCodeInput(e.target.value.toUpperCase())
+                  }
                   placeholder="Enter Code (e.g. LOVE50)"
                   className="flex-1 px-3.5 py-2.5 rounded-xl text-xs font-mono font-bold tracking-widest text-[#7a0f50] outline-none uppercase placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-pink-900/40"
                   style={{
                     background: "rgba(255,255,255,0.9)",
-                    border: referralErrorMsg ? "1.5px solid #ef4444" : "1.5px solid rgba(200,67,138,0.3)",
+                    border: referralErrorMsg
+                      ? "1.5px solid #ef4444"
+                      : "1.5px solid rgba(200,67,138,0.3)",
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") applyDiscountCode(referralCodeInput)
@@ -3973,16 +4109,20 @@ function Dashboard({
 export default function App() {
   const [spotifyTrackId, setSpotifyTrackId] = useState("4cOdK2wGLETKBW3PvgPWqT")
   const [activeSlug, setActiveSlug] = useState<string>("")
-  const [surpriseData, setSurpriseData] = useState<SurpriseDetailResponse | null>(null)
+  const [surpriseData, setSurpriseData] =
+    useState<SurpriseDetailResponse | null>(null)
   const [isLoadingSlug, setIsLoadingSlug] = useState(false)
 
   // Referral & User Auth State
-  const [userProfile, setUserProfile] = useState<UserReferralProfile | null>(null)
+  const [userProfile, setUserProfile] = useState<UserReferralProfile | null>(
+    null,
+  )
   const [showReferralModal, setShowReferralModal] = useState(false)
   const [showLockedModal, setShowLockedModal] = useState(false)
   const [showPostPaymentModal, setShowPostPaymentModal] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
-  const [pendingSaveSurpriseFn, setPendingSaveSurpriseFn] = useState<(() => Promise<void>) | null>(null)
+  const [pendingSaveSurpriseFn, setPendingSaveSurpriseFn] =
+    useState<(() => Promise<void>) | null>(null)
   const [generatedLink, setGeneratedLink] = useState("")
 
   // Restore persistent Firebase Auth session across browser refreshes & restarts
@@ -4019,10 +4159,14 @@ export default function App() {
     if (pendingRef && profile && profile.id) {
       sessionStorage.removeItem("pending_ref_code")
       try {
-        const result = await validateAndApplyReferralCode(profile.id, profile.email, pendingRef)
-        console.log('[Referral Application Result]:', result)
+        const result = await validateAndApplyReferralCode(
+          profile.id,
+          profile.email,
+          pendingRef,
+        )
+        console.log("[Referral Application Result]:", result)
       } catch (err) {
-        console.warn('Referral application notice:', err)
+        console.warn("Referral application notice:", err)
       }
     }
 
@@ -4041,25 +4185,37 @@ export default function App() {
   }
 
   // Admin State
-  const [adminUser, setAdminUser] = useState<AdminUser | null>(() => getActiveAdminSession())
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(() =>
+    getActiveAdminSession(),
+  )
   const [showAdminLoginModal, setShowAdminLoginModal] = useState(false)
-  const [showSuperAdminSetupModal, setShowSuperAdminSetupModal] = useState(false)
+  const [showSuperAdminSetupModal, setShowSuperAdminSetupModal] =
+    useState(false)
 
   const [screen, setScreen] = useState<Screen>(() => {
     if (typeof window !== "undefined") {
       const search = window.location.search
       const path = window.location.pathname
-      if (path.includes("setup-super-admin") || search.includes("setup=super-admin")) {
+      if (
+        path.includes("setup-super-admin") ||
+        search.includes("setup=super-admin")
+      ) {
         return "setup-super-admin"
       }
-      if (path.includes("admin-login") || path.includes("admin") || search.includes("admin=true")) {
+      if (
+        path.includes("admin-login") ||
+        path.includes("admin") ||
+        search.includes("admin=true")
+      ) {
         const session = getActiveAdminSession()
         if (session) return "admin-dashboard"
         return "admin-login"
       }
 
       const hasSurpriseParam =
-        search.includes("s=") || search.includes("surprise=") || path.includes("/s/")
+        search.includes("s=") ||
+        search.includes("surprise=") ||
+        path.includes("/s/")
       if (hasSurpriseParam) return 1
     }
     return "dashboard"
@@ -4076,16 +4232,26 @@ export default function App() {
     const refCode = searchParams.get("ref") || searchParams.get("referral")
     if (refCode) {
       sessionStorage.setItem("pending_ref_code", refCode.trim().toUpperCase())
-      console.log('[Referral Auto-Capture] Pending referral code stored from URL:', refCode)
+      console.log(
+        "[Referral Auto-Capture] Pending referral code stored from URL:",
+        refCode,
+      )
     }
     const path = window.location.pathname
 
-    if (path.includes("setup-super-admin") || searchParams.get("setup") === "super-admin") {
+    if (
+      path.includes("setup-super-admin") ||
+      searchParams.get("setup") === "super-admin"
+    ) {
       setShowSuperAdminSetupModal(true)
       return
     }
 
-    if (path.includes("admin-login") || path.includes("admin") || searchParams.get("admin") === "true") {
+    if (
+      path.includes("admin-login") ||
+      path.includes("admin") ||
+      searchParams.get("admin") === "true"
+    ) {
       const session = getActiveAdminSession()
       if (session) {
         setAdminUser(session)
@@ -4142,11 +4308,18 @@ export default function App() {
 
   if (screen === "admin-dashboard" && adminUser) {
     return (
-      <Suspense fallback={
-        <div className="fixed inset-0 flex items-center justify-center" style={{ background: "#0d0020" }}>
-          <div className="text-pink-300 text-lg animate-pulse">Loading Admin Panel...</div>
-        </div>
-      }>
+      <Suspense
+        fallback={
+          <div
+            className="fixed inset-0 flex items-center justify-center"
+            style={{ background: "#0d0020" }}
+          >
+            <div className="text-pink-300 text-lg animate-pulse">
+              Loading Admin Panel...
+            </div>
+          </div>
+        }
+      >
         <AdminDashboard
           admin={adminUser}
           onLogout={() => {

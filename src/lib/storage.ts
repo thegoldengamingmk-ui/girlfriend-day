@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from "./supabase"
 
 /**
  * Upload a photo file to the Supabase Storage 'photos' bucket.
@@ -11,7 +11,7 @@ import { supabase } from './supabase'
  */
 async function compressImageFile(file: File): Promise<Blob> {
   // If already small (< 300KB), don't compress
-  if (file.size < 300 * 1024 || !file.type.startsWith('image/')) {
+  if (file.size < 300 * 1024 || !file.type.startsWith("image/")) {
     return file
   }
 
@@ -35,10 +35,10 @@ async function compressImageFile(file: File): Promise<Blob> {
         }
       }
 
-      const canvas = document.createElement('canvas')
+      const canvas = document.createElement("canvas")
       canvas.width = width
       canvas.height = height
-      const ctx = canvas.getContext('2d')
+      const ctx = canvas.getContext("2d")
       if (!ctx) {
         resolve(file)
         return
@@ -49,8 +49,8 @@ async function compressImageFile(file: File): Promise<Blob> {
         (blob) => {
           resolve(blob || file)
         },
-        'image/webp',
-        0.82
+        "image/webp",
+        0.82,
       )
     }
 
@@ -68,29 +68,29 @@ async function compressImageFile(file: File): Promise<Blob> {
  * Returns the public URL of the uploaded image.
  */
 export async function uploadPhoto(file: File): Promise<string> {
-  if (!file) throw new Error('No file provided for photo upload')
+  if (!file) throw new Error("No file provided for photo upload")
 
   const compressedBlob = await compressImageFile(file)
-  const isWebp = compressedBlob.type === 'image/webp'
-  const ext = isWebp ? 'webp' : (file.name.split('.').pop() || 'jpg')
+  const isWebp = compressedBlob.type === "image/webp"
+  const ext = isWebp ? "webp" : file.name.split(".").pop() || "jpg"
   const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}.${ext}`
   const filePath = `uploads/${fileName}`
 
   const { error } = await supabase.storage
-    .from('photos')
+    .from("photos")
     .upload(filePath, compressedBlob, {
-      cacheControl: '31536000', // 1 year cache control
+      cacheControl: "31536000", // 1 year cache control
       upsert: true,
-      contentType: isWebp ? 'image/webp' : file.type,
+      contentType: isWebp ? "image/webp" : file.type,
     })
 
   if (error) {
-    console.error('Error uploading photo to Supabase Storage:', error)
+    console.error("Error uploading photo to Supabase Storage:", error)
     throw new Error(`Photo upload failed: ${error.message}`)
   }
 
   const { data: publicUrlData } = supabase.storage
-    .from('photos')
+    .from("photos")
     .getPublicUrl(filePath)
 
   return publicUrlData.publicUrl
@@ -101,26 +101,26 @@ export async function uploadPhoto(file: File): Promise<string> {
  * Returns the public URL of the uploaded audio file.
  */
 export async function uploadVoiceNote(file: File): Promise<string> {
-  if (!file) throw new Error('No audio file provided for voice note upload')
+  if (!file) throw new Error("No audio file provided for voice note upload")
 
-  const ext = file.name.split('.').pop() || 'mp3'
+  const ext = file.name.split(".").pop() || "mp3"
   const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}.${ext}`
   const filePath = `voice_notes/${fileName}`
 
   const { error } = await supabase.storage
-    .from('voice-notes')
+    .from("voice-notes")
     .upload(filePath, file, {
-      cacheControl: '3600',
+      cacheControl: "3600",
       upsert: true,
     })
 
   if (error) {
-    console.error('Error uploading voice note to Supabase Storage:', error)
+    console.error("Error uploading voice note to Supabase Storage:", error)
     throw new Error(`Voice note upload failed: ${error.message}`)
   }
 
   const { data: publicUrlData } = supabase.storage
-    .from('voice-notes')
+    .from("voice-notes")
     .getPublicUrl(filePath)
 
   return publicUrlData.publicUrl
@@ -131,28 +131,27 @@ export async function uploadVoiceNote(file: File): Promise<string> {
  * Returns the public URL of the uploaded music file.
  */
 export async function uploadMusicTrack(file: File): Promise<string> {
-  if (!file) throw new Error('No music file provided')
+  if (!file) throw new Error("No music file provided")
 
-  const ext = file.name.split('.').pop() || 'mp3'
+  const ext = file.name.split(".").pop() || "mp3"
   const fileName = `music_${Date.now()}_${Math.random().toString(36).slice(2, 9)}.${ext}`
   const filePath = `music/${fileName}`
 
   const { error } = await supabase.storage
-    .from('voice-notes')
+    .from("voice-notes")
     .upload(filePath, file, {
-      cacheControl: '3600',
+      cacheControl: "3600",
       upsert: true,
     })
 
   if (error) {
-    console.error('Error uploading music track to Supabase Storage:', error)
+    console.error("Error uploading music track to Supabase Storage:", error)
     throw new Error(`Music upload failed: ${error.message}`)
   }
 
   const { data: publicUrlData } = supabase.storage
-    .from('voice-notes')
+    .from("voice-notes")
     .getPublicUrl(filePath)
 
   return publicUrlData.publicUrl
 }
-

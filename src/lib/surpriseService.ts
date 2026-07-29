@@ -1,16 +1,16 @@
-import { supabase, getSupabaseAdmin } from './supabase'
+import { supabase, getSupabaseAdmin } from "./supabase"
 import type {
   CreateSurpriseInput,
   SurpriseDetailResponse,
   PublicQuestion,
-} from '../types/database'
+} from "../types/database"
 
 /**
  * Generate a random unique 8-character slug (e.g. AB72KD91)
  */
 export function generateSlug(length = 8): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let result = ''
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  let result = ""
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length))
   }
@@ -20,12 +20,14 @@ export function generateSlug(length = 8): string {
 /**
  * Creates a surprise entry in Supabase DB with photos and secret questions.
  */
-export async function createSurprise(input: CreateSurpriseInput): Promise<string> {
+export async function createSurprise(
+  input: CreateSurpriseInput,
+): Promise<string> {
   const slug = generateSlug()
 
   // 1. Insert Surprise Record
   const { data: surpriseData, error: surpriseError } = await supabase
-    .from('surprises')
+    .from("surprises")
     .insert([
       {
         slug,
@@ -36,12 +38,14 @@ export async function createSurprise(input: CreateSurpriseInput): Promise<string
         voice_note_url: input.voice_note_url || null,
       },
     ])
-    .select('id')
+    .select("id")
     .single()
 
   if (surpriseError || !surpriseData) {
-    console.error('Error creating surprise in DB:', surpriseError)
-    throw new Error(`Failed to create surprise: ${surpriseError?.message || 'Unknown error'}`)
+    console.error("Error creating surprise in DB:", surpriseError)
+    throw new Error(
+      `Failed to create surprise: ${surpriseError?.message || "Unknown error"}`,
+    )
   }
 
   const surpriseId = surpriseData.id
@@ -55,11 +59,11 @@ export async function createSurprise(input: CreateSurpriseInput): Promise<string
     }))
 
     const { error: photosError } = await supabase
-      .from('photos')
+      .from("photos")
       .insert(photoRecords)
 
     if (photosError) {
-      console.error('Error inserting photos into DB:', photosError)
+      console.error("Error inserting photos into DB:", photosError)
       throw new Error(`Failed to save photos: ${photosError.message}`)
     }
   }
@@ -67,7 +71,7 @@ export async function createSurprise(input: CreateSurpriseInput): Promise<string
   // 3. Insert Questions with answers
   if (input.questions && input.questions.length > 0) {
     const validQuestions = input.questions.filter(
-      (q) => q.question.trim() && q.answer.trim()
+      (q) => q.question.trim() && q.answer.trim(),
     )
 
     if (validQuestions.length > 0) {
@@ -78,11 +82,11 @@ export async function createSurprise(input: CreateSurpriseInput): Promise<string
       }))
 
       const { error: questionsError } = await supabase
-        .from('questions')
+        .from("questions")
         .insert(questionRecords)
 
       if (questionsError) {
-        console.error('Error inserting questions into DB:', questionsError)
+        console.error("Error inserting questions into DB:", questionsError)
         throw new Error(`Failed to save questions: ${questionsError.message}`)
       }
     }
@@ -94,14 +98,16 @@ export async function createSurprise(input: CreateSurpriseInput): Promise<string
 /**
  * Fetches a surprise by slug. Answers to secret questions are NOT returned for security.
  */
-export async function getSurpriseBySlug(slug: string): Promise<SurpriseDetailResponse | null> {
+export async function getSurpriseBySlug(
+  slug: string,
+): Promise<SurpriseDetailResponse | null> {
   if (!slug) return null
 
   // 1. Fetch surprise details
   const { data: surprise, error: surpriseError } = await supabase
-    .from('surprises')
-    .select('*')
-    .eq('slug', slug)
+    .from("surprises")
+    .select("*")
+    .eq("slug", slug)
     .single()
 
   if (surpriseError || !surprise) {
@@ -111,29 +117,29 @@ export async function getSurpriseBySlug(slug: string): Promise<SurpriseDetailRes
 
   // 2. Fetch photos ordered by position
   const { data: photos, error: photosError } = await supabase
-    .from('photos')
-    .select('*')
-    .eq('surprise_id', surprise.id)
-    .order('position', { ascending: true })
+    .from("photos")
+    .select("*")
+    .eq("surprise_id", surprise.id)
+    .order("position", { ascending: true })
 
   if (photosError) {
-    console.error('Error fetching photos:', photosError)
+    console.error("Error fetching photos:", photosError)
   }
 
   // 3. Fetch questions (Excluding the 'answer' field for security)
   const { data: questions, error: questionsError } = await supabase
-    .from('questions')
-    .select('id, surprise_id, question')
-    .eq('surprise_id', surprise.id)
+    .from("questions")
+    .select("id, surprise_id, question")
+    .eq("surprise_id", surprise.id)
 
   if (questionsError) {
-    console.error('Error fetching questions:', questionsError)
+    console.error("Error fetching questions:", questionsError)
   }
 
   return {
     surprise,
     photos: photos || [],
-    questions: (questions as PublicQuestion[]) || [],
+    questions: questions as PublicQuestion[] || [],
   }
 }
 
@@ -143,27 +149,27 @@ export async function getSurpriseBySlug(slug: string): Promise<SurpriseDetailRes
  */
 export async function verifyQuestions(
   slug: string,
-  submittedAnswers: string[]
-): Promise<{ success: boolean; message?: string }> {
-  if (!slug) return { success: false, message: 'Invalid slug' }
+  submittedAnswers: string[],
+): Promise<{ success: boolean message?: string }> {
+  if (!slug) return { success: false, message: "Invalid slug" }
 
   // Use admin client or DB query to retrieve actual answers
   const adminClient = getSupabaseAdmin()
 
   const { data: surprise, error: surpriseError } = await adminClient
-    .from('surprises')
-    .select('id')
-    .eq('slug', slug)
+    .from("surprises")
+    .select("id")
+    .eq("slug", slug)
     .single()
 
   if (surpriseError || !surprise) {
-    return { success: false, message: 'Surprise not found' }
+    return { success: false, message: "Surprise not found" }
   }
 
   const { data: dbQuestions, error: questionsError } = await adminClient
-    .from('questions')
-    .select('id, question, answer')
-    .eq('surprise_id', surprise.id)
+    .from("questions")
+    .select("id, question, answer")
+    .eq("surprise_id", surprise.id)
 
   if (questionsError || !dbQuestions || dbQuestions.length === 0) {
     // If no questions were configured, verification passes automatically
@@ -172,8 +178,8 @@ export async function verifyQuestions(
 
   // Compare submitted answers with DB answers (case-insensitive & trimmed)
   const allCorrect = dbQuestions.every((q, idx) => {
-    const userAns = (submittedAnswers[idx] || '').trim().toLowerCase()
-    const correctAns = (q.answer || '').trim().toLowerCase()
+    const userAns = (submittedAnswers[idx] || "").trim().toLowerCase()
+    const correctAns = (q.answer || "").trim().toLowerCase()
 
     // Normalize date format if comparing dates or text
     return userAns === correctAns
@@ -181,6 +187,8 @@ export async function verifyQuestions(
 
   return {
     success: allCorrect,
-    message: allCorrect ? 'Answers verified successfully!' : 'Incorrect answer(s). Please try again ❤️',
+    message: allCorrect
+      ? "Answers verified successfully!"
+      : "Incorrect answer(s). Please try again ❤️",
   }
 }

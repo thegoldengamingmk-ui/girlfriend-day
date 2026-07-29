@@ -1,27 +1,31 @@
-import { supabase } from './supabase'
-import { getUserTransactions, WalletTransaction } from './walletService'
+import { supabase } from "./supabase"
+import { getUserTransactions, WalletTransaction } from "./walletService"
 import {
   signUpUser,
   signInUser,
   verifyEmailCode,
   resendVerificationEmail,
-} from './authService'
+} from "./authService"
 import {
   syncFirebaseUserWithDatabase,
   buildReferralLink,
   generateUniqueReferralCode,
   validateAndApplyReferralCode,
-} from './userService'
+} from "./userService"
 
 export async function signUpUserWithEmail(email: string, password: string) {
-  return signUpUser('', email, password)
+  return signUpUser("", email, password)
 }
 
 export async function sendEmailOtp(email: string) {
   return resendVerificationEmail(email)
 }
 
-export async function verifyEmailOtpToken(email: string, token: string, type: any = 'signup') {
+export async function verifyEmailOtpToken(
+  email: string,
+  token: string,
+  type: any = "signup",
+) {
   return verifyEmailCode(email, token)
 }
 
@@ -32,15 +36,18 @@ export async function signInUserWithPassword(email: string, password: string) {
 export async function sendPasswordResetOtp(email: string) {
   // Auth is handled via Google Sign-In (Firebase). Supabase email/password
   // auth is not used. Password reset is not applicable for Google-only accounts.
-  throw new Error('Password reset is not available. Please sign in with Google.')
+  throw new Error(
+    "Password reset is not available. Please sign in with Google.",
+  )
 }
 
 export async function updatePassword(newPassword: string) {
   // Auth is handled via Google Sign-In (Firebase). Password updates
   // are not supported for Google OAuth accounts.
-  throw new Error('Password update is not available. Please sign in with Google.')
+  throw new Error(
+    "Password update is not available. Please sign in with Google.",
+  )
 }
-
 
 export interface UserReferralProfile {
   id: string
@@ -73,51 +80,62 @@ export function generateReferralLink(referralCode: string): string {
 }
 
 export async function recordUserLoginHistory(userId: string, email: string) {
-  const deviceInfo = typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown Device'
-  const browser = deviceInfo.includes('Chrome')
-    ? 'Chrome'
-    : deviceInfo.includes('Safari')
-    ? 'Safari'
-    : deviceInfo.includes('Firefox')
-    ? 'Firefox'
-    : 'Mobile Browser'
+  const deviceInfo =
+    typeof navigator !== "undefined" ? navigator.userAgent : "Unknown Device"
+  const browser = deviceInfo.includes("Chrome")
+    ? "Chrome"
+    : deviceInfo.includes("Safari")
+      ? "Safari"
+      : deviceInfo.includes("Firefox")
+        ? "Firefox"
+        : "Mobile Browser"
 
   const nowIso = new Date().toISOString()
 
   try {
     await supabase
-      .from('user_profiles')
+      .from("user_profiles")
       .update({
         last_login: nowIso,
-        last_login_ip: '127.0.0.1',
+        last_login_ip: "127.0.0.1",
       })
-      .eq('email', email.trim().toLowerCase())
+      .eq("email", email.trim().toLowerCase())
 
-    await supabase.from('user_login_history').insert([
+    await supabase.from("user_login_history").insert([
       {
-        user_id: userId.includes('-') ? userId : undefined,
+        user_id: userId.includes("-") ? userId : undefined,
         email: email.trim().toLowerCase(),
-        ip_address: '127.0.0.1',
-        device: 'Desktop/Mobile',
+        ip_address: "127.0.0.1",
+        device: "Desktop/Mobile",
         browser,
       },
     ])
   } catch (err) {
-    console.warn('Supabase user_login_history notice:', err)
+    console.warn("Supabase user_login_history notice:", err)
   }
 }
 
-export function isSelfReferral(userEmail: string, referrerCode: string, userProfileCode?: string): boolean {
+export function isSelfReferral(
+  userEmail: string,
+  referrerCode: string,
+  userProfileCode?: string,
+): boolean {
   if (!referrerCode || !userProfileCode) return false
-  return referrerCode.trim().toUpperCase() === userProfileCode.trim().toUpperCase()
+  return (
+    referrerCode.trim().toUpperCase() === userProfileCode.trim().toUpperCase()
+  )
 }
 
 export async function applyReferralCode(
   referredUserId: string,
   referredUserEmail: string,
-  enteredCode: string
+  enteredCode: string,
 ) {
-  return validateAndApplyReferralCode(referredUserId, referredUserEmail, enteredCode)
+  return validateAndApplyReferralCode(
+    referredUserId,
+    referredUserEmail,
+    enteredCode,
+  )
 }
 
 /**
@@ -127,7 +145,7 @@ export async function getOrCreateReferralProfile(
   firebaseUid: string,
   email: string,
   displayName?: string,
-  photoUrl?: string
+  photoUrl?: string,
 ): Promise<UserReferralProfile> {
   const canonical = await syncFirebaseUserWithDatabase({
     uid: firebaseUid,
@@ -144,7 +162,7 @@ export async function getOrCreateReferralProfile(
     name: canonical.displayName,
     email: canonical.email,
     photoUrl: canonical.profilePhoto,
-    phone: '',
+    phone: "",
     referralCode: canonical.referralCode,
     referralLink: canonical.referralLink,
     walletBalance: canonical.wallet.availableBalance,

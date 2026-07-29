@@ -3,35 +3,39 @@
  * Provides XSS HTML escaping, client/API rate-limiting, and centralized security audit logging.
  */
 
-import { supabase } from './supabase'
+import { supabase } from "./supabase"
 
 /**
  * XSS HTML Escaping for User-Generated Content
  */
 export function escapeHtml(str: string): string {
-  if (!str) return ''
+  if (!str) return ""
   return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
 }
 
 /**
  * Sanitize User Input Strings
  */
 export function sanitizeInput(input: string): string {
-  if (!input) return ''
+  if (!input) return ""
   return escapeHtml(input.trim())
 }
 
 /**
  * In-Memory Rate Limiting Tracker
  */
-const rateLimitMap = new Map<string, { count: number; expiresAt: number }>()
+const rateLimitMap = new Map<string, { count: number expiresAt: number }>()
 
-export function checkRateLimit(actionKey: string, maxLimit = 5, windowMs = 60000): { allowed: boolean; remaining: number } {
+export function checkRateLimit(
+  actionKey: string,
+  maxLimit = 5,
+  windowMs = 60000,
+): { allowed: boolean remaining: number } {
   const now = Date.now()
   const key = `ratelimit_${actionKey}`
   const record = rateLimitMap.get(key)
@@ -58,18 +62,27 @@ export async function logSecurityEvent(params: {
   email?: string
   ipAddress?: string
   details?: string
-  status?: 'SUCCESS' | 'WARNING' | 'VIOLATION'
+  status?: "SUCCESS" | "WARNING" | "VIOLATION"
 }) {
-  const { event, userId, email, ipAddress = '127.0.0.1', details = '', status = 'SUCCESS' } = params
+  const {
+    event,
+    userId,
+    email,
+    ipAddress = "127.0.0.1",
+    details = "",
+    status = "SUCCESS",
+  } = params
   const nowIso = new Date().toISOString()
 
-  console.log(`[SECURITY AUDIT LOG] Event: ${event} | Status: ${status} | User: ${email || userId || 'Guest'} | Details: ${details}`)
+  console.log(
+    `[SECURITY AUDIT LOG] Event: ${event} | Status: ${status} | User: ${email || userId || "Guest"} | Details: ${details}`,
+  )
 
   try {
-    await supabase.from('user_login_history').insert([
+    await supabase.from("user_login_history").insert([
       {
-        user_id: userId && userId.includes('-') ? userId : undefined,
-        email: email || 'anonymous@security.log',
+        user_id: userId && userId.includes("-") ? userId : undefined,
+        email: email || "anonymous@security.log",
         login_time: nowIso,
         ip_address: ipAddress,
         device: `Security Event: ${event} (${status})`,
@@ -77,6 +90,6 @@ export async function logSecurityEvent(params: {
       },
     ])
   } catch (err) {
-    console.warn('[Security Log Warning]:', err)
+    console.warn("[Security Log Warning]:", err)
   }
 }

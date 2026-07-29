@@ -4,7 +4,7 @@
  * Supports Supabase Auth default mailer as well as custom SMTP providers (Brevo, Resend, etc.).
  */
 
-import { supabase } from './supabase'
+import { supabase } from "./supabase"
 
 export interface SendEmailOptions {
   to: string
@@ -15,7 +15,7 @@ export interface SendEmailOptions {
 
 export class EmailService {
   private static instance: EmailService
-  private provider: 'supabase' | 'custom' = 'supabase'
+  private provider: "supabase" | "custom" = "supabase"
 
   private constructor() {}
 
@@ -30,7 +30,7 @@ export class EmailService {
    * Send verification email or OTP via current configured provider
    */
   public async sendVerificationOtp(email: string): Promise<boolean> {
-    if (this.provider === 'supabase') {
+    if (this.provider === "supabase") {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
@@ -40,7 +40,7 @@ export class EmailService {
       if (error) {
         // Fall back to resend signup email if user was created via signUp
         const { error: resendErr } = await supabase.auth.resend({
-          type: 'signup',
+          type: "signup",
           email: email.trim(),
         })
         if (resendErr) throw resendErr
@@ -56,7 +56,7 @@ export class EmailService {
    * Send withdrawal confirmation OTP email
    */
   public async sendWithdrawalOtp(email: string): Promise<boolean> {
-    if (this.provider === 'supabase') {
+    if (this.provider === "supabase") {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {

@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { verifyAdminLogin, type AdminUser } from '../lib/adminAuthService'
+import React, { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { verifyAdminLogin, type AdminUser } from "../lib/adminAuthService"
 
 export function AdminLoginModal({
   isOpen,
@@ -11,24 +11,24 @@ export function AdminLoginModal({
   onClose: () => void
   onLoginSuccess: (admin: AdminUser) => void
 }) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
+  const [errorMsg, setErrorMsg] = useState("")
 
   if (!isOpen) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setErrorMsg('')
+    setErrorMsg("")
 
     try {
       const admin = await verifyAdminLogin(email, password)
       onLoginSuccess(admin)
       onClose()
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Invalid email or password.')
+      setErrorMsg(err?.message || "Invalid email or password.")
     } finally {
       setIsLoading(false)
     }
@@ -51,13 +51,15 @@ export function AdminLoginModal({
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="relative z-10 w-full max-w-sm p-7 rounded-3xl text-white shadow-2xl overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98))',
-            backdropFilter: 'blur(24px)',
-            border: '1.5px solid rgba(232, 120, 154, 0.35)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.85), 0 0 40px rgba(232,120,154,0.2)',
+            background:
+              "linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98))",
+            backdropFilter: "blur(24px)",
+            border: "1.5px solid rgba(232, 120, 154, 0.35)",
+            boxShadow:
+              "0 20px 60px rgba(0,0,0,0.85), 0 0 40px rgba(232,120,154,0.2)",
           }}
         >
           {/* Header */}

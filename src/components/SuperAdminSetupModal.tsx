@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   isSetupRoutePermanentlyLocked,
   createInitialSuperAdmin,
   type AdminUser,
-} from '../lib/adminAuthService'
+} from "../lib/adminAuthService"
 
 export function SuperAdminSetupModal({
   isOpen,
@@ -18,12 +18,12 @@ export function SuperAdminSetupModal({
   const [isLocked, setIsLocked] = useState(true)
   const [isCheckingLock, setIsCheckingLock] = useState(true)
 
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
+  const [errorMsg, setErrorMsg] = useState("")
 
   // Check lock status asynchronously (now reads from Supabase)
   useEffect(() => {
@@ -40,23 +40,25 @@ export function SuperAdminSetupModal({
   const handleSetup = async (e: React.FormEvent) => {
     e.preventDefault()
     if (isLocked) {
-      setErrorMsg('403 Forbidden: Initial Super Admin Setup is Permanently Disabled.')
+      setErrorMsg(
+        "403 Forbidden: Initial Super Admin Setup is Permanently Disabled.",
+      )
       return
     }
     if (password !== confirmPassword) {
-      setErrorMsg('Passwords do not match. Please re-enter.')
+      setErrorMsg("Passwords do not match. Please re-enter.")
       return
     }
 
     setIsLoading(true)
-    setErrorMsg('')
+    setErrorMsg("")
 
     try {
       const newAdmin = await createInitialSuperAdmin(name, email, password)
       onSetupSuccess(newAdmin)
       onClose()
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Failed to create Super Admin account.')
+      setErrorMsg(err?.message || "Failed to create Super Admin account.")
     } finally {
       setIsLoading(false)
     }
@@ -81,22 +83,36 @@ export function SuperAdminSetupModal({
           exit={{ opacity: 0, scale: 0.88, y: 20 }}
           className="relative z-10 w-full max-w-md p-7 rounded-3xl text-white shadow-2xl overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98))',
-            backdropFilter: 'blur(24px)',
-            border: isLocked ? '1.5px solid rgba(244, 63, 94, 0.5)' : '1.5px solid rgba(232, 120, 154, 0.4)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.85), 0 0 40px rgba(244,63,94,0.2)',
+            background:
+              "linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98))",
+            backdropFilter: "blur(24px)",
+            border: isLocked
+              ? "1.5px solid rgba(244, 63, 94, 0.5)"
+              : "1.5px solid rgba(232, 120, 154, 0.4)",
+            boxShadow:
+              "0 20px 60px rgba(0,0,0,0.85), 0 0 40px rgba(244,63,94,0.2)",
           }}
         >
           {/* Header */}
           <div className="text-center mb-6">
-            <div className={`w-16 h-16 mx-auto mb-3 rounded-2xl ${isLocked ? 'bg-rose-500/20 border border-rose-500/40' : 'bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40'} flex items-center justify-center text-3xl shadow-lg`}>
-              {isCheckingLock ? '⏳' : isLocked ? '⛔' : '👑'}
+            <div
+              className={`w-16 h-16 mx-auto mb-3 rounded-2xl ${
+                isLocked
+                  ? "bg-rose-500/20 border border-rose-500/40"
+                  : "bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40"
+              } flex items-center justify-center text-3xl shadow-lg`}
+            >
+              {isCheckingLock ? "⏳" : isLocked ? "⛔" : "👑"}
             </div>
             <h2
               className="text-2xl font-bold text-white mb-1"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              {isCheckingLock ? 'Checking Setup Status...' : isLocked ? '403 Forbidden: Setup Disabled' : 'Super Admin Initial Setup'}
+              {isCheckingLock
+                ? "Checking Setup Status..."
+                : isLocked
+                  ? "403 Forbidden: Setup Disabled"
+                  : "Super Admin Initial Setup"}
             </h2>
             <p className="text-xs text-slate-400">
               Route `/setup-super-admin` • Security Protocol Active
@@ -110,12 +126,18 @@ export function SuperAdminSetupModal({
           ) : isLocked ? (
             <div className="text-center p-6 bg-slate-900/90 rounded-2xl border border-rose-500/30 space-y-4">
               <div className="text-4xl">🔒</div>
-              <h3 className="text-base font-bold text-rose-400 font-serif">Initial Setup Permanently Locked</h3>
+              <h3 className="text-base font-bold text-rose-400 font-serif">
+                Initial Setup Permanently Locked
+              </h3>
               <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                A master <strong className="text-pink-300">SUPER_ADMIN</strong> account has already been initialized. For system security, this endpoint is <strong className="text-rose-400">permanently disabled</strong>.
+                A master <strong className="text-pink-300">SUPER_ADMIN</strong>{" "}
+                account has already been initialized. For system security, this
+                endpoint is{" "}
+                <strong className="text-rose-400">permanently disabled</strong>.
               </p>
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 font-mono text-left">
-                To re-enable, perform a secure database reset via Supabase console and clear the `admins` table.
+                To re-enable, perform a secure database reset via Supabase
+                console and clear the `admins` table.
               </div>
               <button
                 onClick={onClose}
@@ -201,7 +223,9 @@ export function SuperAdminSetupModal({
                   disabled={isLoading}
                   className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg shadow-pink-500/25 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                 >
-                  {isLoading ? 'Creating in Supabase...' : 'Initialize Super Admin 👑'}
+                  {isLoading
+                    ? "Creating in Supabase..."
+                    : "Initialize Super Admin 👑"}
                 </button>
               </div>
             </form>

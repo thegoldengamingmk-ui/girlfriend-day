@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { signInWithGoogle } from '../../lib/authService'
+import React, { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { signInWithGoogle } from "../../lib/authService"
 
 interface AuthModalProps {
   isOpen: boolean
-  initialTab?: 'signin' | 'signup'
+  initialTab?: "signin" | "signup"
   onClose: () => void
   onSuccess: (userProfile: any) => void
 }
@@ -15,13 +15,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onSuccess,
 }) => {
   const [isLoading, setIsLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
+  const [errorMsg, setErrorMsg] = useState("")
 
   if (!isOpen) return null
 
   const handleGoogleAuth = async () => {
     setIsLoading(true)
-    setErrorMsg('')
+    setErrorMsg("")
 
     try {
       const profile = await signInWithGoogle()
@@ -29,7 +29,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onSuccess(profile)
     } catch (err: any) {
       setIsLoading(false)
-      setErrorMsg(err.message || 'Google Sign-In failed. Please try again.')
+      setErrorMsg(err.message || "Google Sign-In failed. Please try again.")
     }
   }
 
@@ -50,12 +50,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           initial={{ opacity: 0, scale: 0.93, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.93, y: 20 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="relative z-10 w-full max-w-sm p-6 sm:p-8 rounded-3xl text-center text-white shadow-2xl overflow-hidden border border-pink-400/30"
           style={{
-            background: 'linear-gradient(135deg, rgba(22, 5, 42, 0.98), rgba(60, 10, 52, 0.98))',
-            backdropFilter: 'blur(28px)',
-            boxShadow: '0 25px 70px rgba(0,0,0,0.85), 0 0 50px rgba(255,105,180,0.2)',
+            background:
+              "linear-gradient(135deg, rgba(22, 5, 42, 0.98), rgba(60, 10, 52, 0.98))",
+            backdropFilter: "blur(28px)",
+            boxShadow:
+              "0 25px 70px rgba(0,0,0,0.85), 0 0 50px rgba(255,105,180,0.2)",
           }}
         >
           {/* Close Button */}
@@ -79,7 +81,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </h2>
 
           <p className="text-xs text-pink-200/75 mb-6 font-sans leading-relaxed">
-            Sign in with Google to unlock your referral link, track your earnings, and access your dashboard.
+            Sign in with Google to unlock your referral link, track your
+            earnings, and access your dashboard.
           </p>
 
           {/* Error Banner */}
@@ -103,9 +106,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           >
             {isLoading ? (
               <>
-                <svg className="animate-spin h-4 w-4 text-gray-700" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                <svg
+                  className="animate-spin h-4 w-4 text-gray-700"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  ></path>
                 </svg>
                 <span className="text-gray-700">Connecting to Google...</span>
               </>
@@ -136,7 +154,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </button>
 
           <p className="text-[11px] text-pink-200/50 mt-4 leading-relaxed">
-            By continuing, you agree to access your referral code & dashboard. One-click instant authentication.
+            By continuing, you agree to access your referral code & dashboard.
+            One-click instant authentication.
           </p>
         </motion.div>
       </div>

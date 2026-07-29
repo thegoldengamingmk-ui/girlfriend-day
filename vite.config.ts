@@ -1,4 +1,9 @@
-import { defineConfig, loadEnv, type HtmlTagDescriptor, type Plugin } from "vite"
+import {
+  defineConfig,
+  loadEnv,
+  type HtmlTagDescriptor,
+  type Plugin,
+} from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 import path from "node:path"
@@ -17,10 +22,14 @@ export default defineConfig(({ mode }) => {
       : "/",
     define: {
       "process.env.NEXT_PUBLIC_SUPABASE_URL": JSON.stringify(
-        env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://jyrvbriumhxqutxkriyq.supabase.co"
+        env.NEXT_PUBLIC_SUPABASE_URL ||
+          process.env.NEXT_PUBLIC_SUPABASE_URL ||
+          "https://jyrvbriumhxqutxkriyq.supabase.co",
       ),
       "process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY": JSON.stringify(
-        env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+        env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+          "",
       ),
       // NOTE: SUPABASE_SERVICE_ROLE_KEY is intentionally excluded from the client bundle.
       // It bypasses RLS and must only be used in server-side / edge function environments.

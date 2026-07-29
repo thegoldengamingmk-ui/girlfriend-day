@@ -9,35 +9,39 @@ import {
   signOut,
   onAuthStateChanged,
   User as FirebaseUser,
-} from 'firebase/auth'
-import { firebaseAuth, googleProvider } from './firebase'
-import { getOrCreateReferralProfile, recordUserLoginHistory, UserReferralProfile } from './referralService'
+} from "firebase/auth"
+import { firebaseAuth, googleProvider } from "./firebase"
+import {
+  getOrCreateReferralProfile,
+  recordUserLoginHistory,
+  UserReferralProfile,
+} from "./referralService"
 
 /**
  * Format auth errors into user-friendly messages
  */
 export function formatAuthError(error: any): string {
-  if (!error) return 'An unexpected error occurred during Google Sign-In.'
+  if (!error) return "An unexpected error occurred during Google Sign-In."
 
-  const code = (error.code || error.message || '').toLowerCase()
+  const code = (error.code || error.message || "").toLowerCase()
 
-  if (code.includes('auth/popup-closed-by-user')) {
-    return 'Google Sign-In popup was closed. Please try again.'
+  if (code.includes("auth/popup-closed-by-user")) {
+    return "Google Sign-In popup was closed. Please try again."
   }
-  if (code.includes('auth/popup-blocked')) {
-    return 'Google Sign-In popup was blocked by your browser. Please allow popups for this site.'
+  if (code.includes("auth/popup-blocked")) {
+    return "Google Sign-In popup was blocked by your browser. Please allow popups for this site."
   }
-  if (code.includes('auth/cancelled-popup-request')) {
-    return 'Authentication process was cancelled. Please try again.'
+  if (code.includes("auth/cancelled-popup-request")) {
+    return "Authentication process was cancelled. Please try again."
   }
-  if (code.includes('auth/network-request-failed')) {
-    return 'Network connection error. Please check your internet connection and try again.'
+  if (code.includes("auth/network-request-failed")) {
+    return "Network connection error. Please check your internet connection and try again."
   }
-  if (code.includes('auth/unauthorized-domain')) {
-    return 'This domain is not authorized in Firebase Console. Please add it to Authorized Domains.'
+  if (code.includes("auth/unauthorized-domain")) {
+    return "This domain is not authorized in Firebase Console. Please add it to Authorized Domains."
   }
 
-  return error.message || 'Failed to sign in with Google. Please try again.'
+  return error.message || "Failed to sign in with Google. Please try again."
 }
 
 /**
@@ -50,23 +54,28 @@ export async function signInWithGoogle(): Promise<UserReferralProfile> {
     const user: FirebaseUser = result.user
 
     if (!user || !user.email) {
-      throw new Error('Google Sign-In failed to return a valid user email.')
+      throw new Error("Google Sign-In failed to return a valid user email.")
     }
 
     const email = user.email.trim().toLowerCase()
-    const name = user.displayName || email.split('@')[0]
+    const name = user.displayName || email.split("@")[0]
     const photoUrl = user.photoURL || undefined
     const firebaseUid = user.uid
 
     // Record or fetch user referral profile from database
-    const profile = await getOrCreateReferralProfile(firebaseUid, email, name, photoUrl)
+    const profile = await getOrCreateReferralProfile(
+      firebaseUid,
+      email,
+      name,
+      photoUrl,
+    )
 
     // Record login history
     await recordUserLoginHistory(profile.id, email)
 
     return profile
   } catch (err: any) {
-    console.error('Google Sign-In Error:', err)
+    console.error("Google Sign-In Error:", err)
     throw new Error(formatAuthError(err))
   }
 }
@@ -74,7 +83,9 @@ export async function signInWithGoogle(): Promise<UserReferralProfile> {
 /**
  * Live session change listener to restore session across browser refreshes & restarts
  */
-export function subscribeToAuthChanges(callback: (profile: UserReferralProfile | null) => void) {
+export function subscribeToAuthChanges(
+  callback: (profile: UserReferralProfile | null) => void,
+) {
   return onAuthStateChanged(firebaseAuth, async (user: FirebaseUser | null) => {
     if (!user || !user.email) {
       callback(null)
@@ -83,12 +94,17 @@ export function subscribeToAuthChanges(callback: (profile: UserReferralProfile |
 
     try {
       const email = user.email.trim().toLowerCase()
-      const name = user.displayName || email.split('@')[0]
+      const name = user.displayName || email.split("@")[0]
       const photoUrl = user.photoURL || undefined
-      const profile = await getOrCreateReferralProfile(user.uid, email, name, photoUrl)
+      const profile = await getOrCreateReferralProfile(
+        user.uid,
+        email,
+        name,
+        photoUrl,
+      )
       callback(profile)
     } catch (err) {
-      console.warn('Error syncing restored Firebase session profile:', err)
+      console.warn("Error syncing restored Firebase session profile:", err)
       callback(null)
     }
   })
@@ -99,24 +115,32 @@ export function subscribeToAuthChanges(callback: (profile: UserReferralProfile |
  */
 export async function getCurrentAuthUser(): Promise<UserReferralProfile | null> {
   return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(firebaseAuth, async (user: FirebaseUser | null) => {
-      unsubscribe()
-      if (!user || !user.email) {
-        resolve(null)
-        return
-      }
+    const unsubscribe = onAuthStateChanged(
+      firebaseAuth,
+      async (user: FirebaseUser | null) => {
+        unsubscribe()
+        if (!user || !user.email) {
+          resolve(null)
+          return
+        }
 
-      try {
-        const email = user.email.trim().toLowerCase()
-        const name = user.displayName || email.split('@')[0]
-        const photoUrl = user.photoURL || undefined
-        const profile = await getOrCreateReferralProfile(user.uid, email, name, photoUrl)
-        resolve(profile)
-      } catch (err) {
-        console.warn('Error fetching active Firebase session profile:', err)
-        resolve(null)
-      }
-    })
+        try {
+          const email = user.email.trim().toLowerCase()
+          const name = user.displayName || email.split("@")[0]
+          const photoUrl = user.photoURL || undefined
+          const profile = await getOrCreateReferralProfile(
+            user.uid,
+            email,
+            name,
+            photoUrl,
+          )
+          resolve(profile)
+        } catch (err) {
+          console.warn("Error fetching active Firebase session profile:", err)
+          resolve(null)
+        }
+      },
+    )
   })
 }
 
@@ -126,15 +150,19 @@ export async function getCurrentAuthUser(): Promise<UserReferralProfile | null> 
 export async function signOutFirebase(): Promise<void> {
   try {
     // Clear session storage caches
-    localStorage.removeItem('live_users_cache')
+    localStorage.removeItem("live_users_cache")
     await signOut(firebaseAuth)
   } catch (err) {
-    console.warn('Firebase SignOut Error:', err)
+    console.warn("Firebase SignOut Error:", err)
   }
 }
 
 // Backward-compatible exports for referralService delegators
-export async function signUpUser(fullName: string, email: string, password: string) {
+export async function signUpUser(
+  fullName: string,
+  email: string,
+  password: string,
+) {
   return signInWithGoogle()
 }
 
@@ -145,7 +173,7 @@ export async function signInUser(email: string, password: string) {
 export async function verifyEmailCode(email: string, token: string) {
   const current = await getCurrentAuthUser()
   if (current) return { profile: current }
-  throw new Error('Session expired. Please sign in with Google again.')
+  throw new Error("Session expired. Please sign in with Google again.")
 }
 
 export async function resendVerificationEmail(email: string) {
