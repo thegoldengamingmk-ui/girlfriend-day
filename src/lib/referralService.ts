@@ -36,8 +36,10 @@ export async function updatePassword(newPassword: string) {
 
 export interface UserReferralProfile {
   id: string
+  firebaseUid?: string
   name: string
   email: string
+  photoUrl?: string
   phone?: string
   referralCode: string
   referralLink: string
@@ -120,10 +122,13 @@ export function isSelfReferral(userEmail: string, referrerCode: string, userProf
  */
 export async function getOrCreateReferralProfile(
   userId: string,
-  email: string
+  email: string,
+  displayName?: string,
+  photoUrl?: string
 ): Promise<UserReferralProfile> {
   const defaultCode = generateUserReferralCode()
   const cleanEmail = email.trim().toLowerCase()
+  const cleanName = displayName || cleanEmail.split('@')[0]
 
   try {
     // 1. Query user profile from database
@@ -136,8 +141,9 @@ export async function getOrCreateReferralProfile(
     // 2. If profile doesn't exist, create it safely
     if (!profile) {
       const newProfile = {
-        full_name: cleanEmail.split('@')[0],
+        full_name: cleanName,
         email: cleanEmail,
+        profile_image: photoUrl || null,
         account_status: 'ACTIVE',
         subscription_status: 'PREMIUM',
         referral_code: defaultCode,
@@ -154,6 +160,12 @@ export async function getOrCreateReferralProfile(
       if (inserted) {
         profile = inserted
       }
+    } else if (photoUrl && !profile.profile_image) {
+      // Update profile picture if missing
+      await supabase
+        .from('user_profiles')
+        .update({ profile_image: photoUrl, full_name: cleanName })
+        .eq('id', profile.id)
     }
 
     if (profile) {
@@ -219,8 +231,10 @@ export async function getOrCreateReferralProfile(
 
       return {
         id: profile.id,
-        name: profile.full_name || cleanEmail.split('@')[0],
+        firebaseUid: userId,
+        name: profile.full_name || cleanName,
         email: profile.email || cleanEmail,
+        photoUrl: profile.profile_image || photoUrl || undefined,
         phone: profile.phone || '',
         referralCode: code,
         referralLink: generateReferralLink(code),
@@ -243,8 +257,10 @@ export async function getOrCreateReferralProfile(
   // Fallback state if database connection fails
   const localProfile: UserReferralProfile = {
     id: userId,
-    name: cleanEmail.split('@')[0],
+    firebaseUid: userId,
+    name: cleanName,
     email: cleanEmail,
+    photoUrl: photoUrl || undefined,
     referralCode: defaultCode,
     referralLink: generateReferralLink(defaultCode),
     walletBalance: 0,

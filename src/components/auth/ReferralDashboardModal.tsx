@@ -213,11 +213,25 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
           {/* Top Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10 mb-5">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-500 flex items-center justify-center text-xl font-bold shadow-md">
-                👤
-              </div>
+              {profile.photoUrl ? (
+                <img
+                  src={profile.photoUrl}
+                  alt={profile.name}
+                  className="w-11 h-11 rounded-2xl object-cover border border-pink-400/40 shadow-md"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-500 flex items-center justify-center text-xl font-bold shadow-md">
+                  👤
+                </div>
+              )}
               <div>
-                <h2 className="text-lg font-bold text-white leading-tight">{profile.name}</h2>
+                <h2 className="text-lg font-bold text-white leading-tight flex items-center gap-1.5">
+                  <span>{profile.name}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+                    Google
+                  </span>
+                </h2>
                 <p className="text-xs text-pink-200/70">{profile.email}</p>
               </div>
             </div>
