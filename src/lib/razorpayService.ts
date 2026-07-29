@@ -11,11 +11,11 @@ import { executeWalletTransaction } from './walletService'
 
 export const RAZORPAY_KEY_ID =
   (typeof import.meta !== 'undefined' && import.meta?.env?.VITE_RAZORPAY_KEY_ID) ||
-  'rzp_test_TJJpml3f29qMoT'
+  'rzp_test_TJKjtQ7I0YhFIi'
 
 export const RAZORPAY_KEY_SECRET =
   (typeof import.meta !== 'undefined' && import.meta?.env?.VITE_RAZORPAY_KEY_SECRET) ||
-  'QEgT6DpO2k5QlKtwsAiQWYjc'
+  'U7O7TR98DoOqK3J3bR0JHeDI'
 
 export interface RazorpayPaymentOptions {
   amount: number // In INR (e.g. 99 or 49)
