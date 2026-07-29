@@ -2731,35 +2731,60 @@ function Dashboard({
 
   const finalPrice = isReferralApplied ? DISCOUNTED_PRICE : ORIGINAL_PRICE
 
-  const applyDiscountCode = (code: string, isFromPopup = false) => {
+  const applyDiscountCode = async (code: string, isFromPopup = false) => {
     playButtonSound()
+    console.log('[Referral Input Received] Raw Input:', code)
     const trimmed = code.trim().toUpperCase()
-    if (trimmed === "LOVE50") {
-      setIsReferralApplied(true)
-      setAppliedReferralCode("LOVE50")
-      if (isFromPopup) {
-        setShowReferralPopup(false)
-        setPopupErrorMsg("")
-      }
-      setReferralErrorMsg("")
+    console.log('[Normalized Referral Code]:', trimmed)
 
-      // Confetti celebration
-      if (typeof window !== "undefined" && (window as any).confetti) {
-        ;(window as any).confetti({
-          particleCount: 75,
-          spread: 80,
-          origin: { y: 0.6 },
-          colors: ["#22c55e", "#ffc8d6", "#f4a0b5", "#ffffff"],
-        })
-      }
-      return true
-    } else {
-      const errText = "Invalid Referral Code"
-      if (isFromPopup) {
-        setPopupErrorMsg(errText)
+    if (!trimmed) {
+      const errText = "Please enter a referral code."
+      if (isFromPopup) setPopupErrorMsg(errText)
+      else setReferralErrorMsg(errText)
+      return false
+    }
+
+    try {
+      // Validate directly against Supabase Database
+      const res = await validateAndApplyReferralCode(
+        userProfile?.id || 'guest',
+        userProfile?.email || '',
+        trimmed
+      )
+      console.log('[Referral Database Query Result]:', res)
+
+      if (res.success || trimmed === "LOVE50") {
+        setIsReferralApplied(true)
+        setAppliedReferralCode(trimmed)
+        if (isFromPopup) {
+          setShowReferralPopup(false)
+          setPopupErrorMsg("")
+        }
+        setReferralErrorMsg("")
+
+        if (typeof window !== "undefined" && (window as any).confetti) {
+          ;(window as any).confetti({
+            particleCount: 75,
+            spread: 80,
+            origin: { y: 0.6 },
+            colors: ["#22c55e", "#ffc8d6", "#f4a0b5", "#ffffff"],
+          })
+        }
+        return true
       } else {
-        setReferralErrorMsg(errText)
+        const errText = res.message || "Invalid Referral Code"
+        if (isFromPopup) {
+          setPopupErrorMsg(errText)
+        } else {
+          setReferralErrorMsg(errText)
+        }
+        return false
       }
+    } catch (err: any) {
+      console.error('[Referral Thrown Exception]:', err)
+      const errText = err.message || "Failed to validate referral code."
+      if (isFromPopup) setPopupErrorMsg(errText)
+      else setReferralErrorMsg(errText)
       return false
     }
   }

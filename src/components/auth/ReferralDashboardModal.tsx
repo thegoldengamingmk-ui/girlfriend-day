@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UserReferralProfile, getOrCreateReferralProfile } from '../../lib/referralService'
+import { UserReferralProfile, getOrCreateReferralProfile, applyReferralCode } from '../../lib/referralService'
 import { createWithdrawalRequest } from '../../lib/withdrawalService'
 import { emailService } from '../../lib/emailService'
 import { verifyEmailCode } from '../../lib/authService'
@@ -24,6 +24,11 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
   const [copiedLink, setCopiedLink] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
 
+  // Referral code input state
+  const [applyCodeInput, setApplyCodeInput] = useState('')
+  const [applyCodeMsg, setApplyCodeMsg] = useState('')
+  const [isApplyingCode, setIsApplyingCode] = useState(false)
+
   // Withdrawal Modal & Step states
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [withdrawStep, setWithdrawStep] = useState<'details' | 'otp'>('details')
@@ -33,6 +38,32 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
   const [isSubmittingWithdraw, setIsSubmittingWithdraw] = useState(false)
   const [loadingText, setLoadingText] = useState('')
   const [withdrawError, setWithdrawError] = useState('')
+
+  const handleApplyCode = async () => {
+    if (!applyCodeInput.trim() || !profile) return
+    setIsApplyingCode(true)
+    setApplyCodeMsg('')
+
+    console.log('[Referral Input Received] Raw Input:', applyCodeInput)
+    const normalized = applyCodeInput.trim().toUpperCase()
+    console.log('[Normalized Referral Code]:', normalized)
+
+    try {
+      const res = await applyReferralCode(profile.id, profile.email, normalized)
+      console.log('[Referral Database Query Result]:', res)
+      setIsApplyingCode(false)
+      setApplyCodeMsg(res.message)
+      if (res.success) {
+        setApplyCodeInput('')
+        setToastMsg('Referral Code Applied! 🎉')
+        await refreshData()
+      }
+    } catch (err: any) {
+      console.error('[Referral Thrown Exception]:', err)
+      setIsApplyingCode(false)
+      setApplyCodeMsg(err.message || 'Failed to apply referral code.')
+    }
+  }
 
   useEffect(() => {
     setProfile(initialProfile)
@@ -346,6 +377,35 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
                   {copiedLink ? 'Copied!' : 'Copy Link'}
                 </button>
               </div>
+            </div>
+
+            {/* Apply Friend's Referral Code Section */}
+            <div className="pt-2 border-t border-white/10">
+              <label className="block text-[10px] uppercase font-bold text-amber-300 tracking-wider mb-1">
+                🎁 Have a Friend's Referral Code?
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={applyCodeInput}
+                  onChange={(e) => setApplyCodeInput(e.target.value.toUpperCase())}
+                  placeholder="Enter Code (e.g. GF-LOVE-XXXX)"
+                  className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/10 font-mono text-xs text-white uppercase placeholder:normal-case placeholder:font-normal"
+                />
+                <button
+                  onClick={handleApplyCode}
+                  disabled={isApplyingCode || !applyCodeInput.trim()}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-xs font-bold text-white transition-all cursor-pointer shadow-md disabled:opacity-50"
+                >
+                  {isApplyingCode ? 'Applying...' : 'Apply Code'}
+                </button>
+              </div>
+              {applyCodeMsg && (
+                <p className={`text-[11px] font-semibold mt-1.5 ${applyCodeMsg.includes('accepted') || applyCodeMsg.includes('Applied') ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {applyCodeMsg.includes('accepted') || applyCodeMsg.includes('Applied') ? '✓ ' : '⚠️ '}
+                  {applyCodeMsg}
+                </p>
+              )}
             </div>
           </div>
 
