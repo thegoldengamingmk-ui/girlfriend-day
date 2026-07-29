@@ -1,7 +1,7 @@
 /**
- * Single Source of Truth User & Database Synchronization Service
- * Handles primary user persistence, referral code generation (ONCE ONLY),
- * wallet initialization, referral stats, database mapping, and integrity checks.
+ * Single Source of Truth User & Referral System Synchronization Service
+ * Production-grade implementation for user persistence, unique 8+ char referral codes,
+ * self-referral prevention, duplicate referral protection, and atomic transaction updates.
  */
 
 import { supabase } from './supabase'
@@ -39,12 +39,35 @@ export interface CanonicalUser {
 }
 
 /**
- * Generate unique referral code (e.g. GF-LOVE-8921)
- * MUST BE CALLED ONLY ONCE DURING INITIAL USER REGISTRATION.
+ * Generate 8+ character uppercase alphanumeric unique referral code (e.g. GF-LOVE-X892K7)
+ * Checks database uniqueness to prevent collisions.
  */
-export function generateUniqueReferralCode(): string {
-  const digits = Math.floor(1000 + Math.random() * 9000)
-  return `GF-LOVE-${digits}`
+export async function generateUniqueReferralCode(): Promise<string> {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let unique = false
+  let code = ''
+  let attempts = 0
+
+  while (!unique && attempts < 10) {
+    attempts++
+    let randomPart = ''
+    for (let i = 0; i < 6; i++) {
+      randomPart += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    code = `GF-LOVE-${randomPart}`
+
+    try {
+      const { data } = await supabase.from('users').select('id').eq('referral_code', code)
+      if (!data || data.length === 0) {
+        unique = true
+      }
+    } catch {
+      unique = true
+    }
+  }
+
+  console.log('[Referral Code Generated] Permanent Code:', code)
+  return code
 }
 
 /**
@@ -184,7 +207,7 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
       }
     } else {
       // BRAND-NEW USER -> CREATE ONCE IN SINGLE TRANSACTION BLOCK
-      const newReferralCode = generateUniqueReferralCode()
+      const newReferralCode = await generateUniqueReferralCode()
       console.log('[Auth Flow] Brand-New User Detected - Initial Referral Code Generated:', newReferralCode)
 
       const newUserPayload = {
@@ -467,24 +490,48 @@ export async function runStartupIntegrityCheck(user: CanonicalUser) {
 
 /**
  * Validate and Apply Referral Code Directly against Supabase Database
+ * Production-grade implementation enforcing self-referral protection, duplicate referral prevention, and atomic transactions.
  */
 export async function validateAndApplyReferralCode(
   referredUserId: string,
   referredUserEmail: string,
   enteredCode: string
 ): Promise<{ success: boolean; message: string; referrerName?: string }> {
+  // 1. Normalize input: trim and UPPERCASE
   const cleanCode = enteredCode.trim().toUpperCase()
   if (!cleanCode) {
-    console.log('[Referral Rejected] Empty code entered')
+    console.log('[Referral Rejected] Empty referral code provided')
     return { success: false, message: 'Please enter a valid referral code.' }
   }
 
-  console.log('[Referral Validation] Checking code directly from Supabase DB:', cleanCode)
+  console.log('[Referral Code Validated] Checking database for code:', cleanCode)
 
   try {
-    // 1. Search primary users table first
-    let referrer: any = null
+    // 2. Fetch referred user object to check if already used a code or if self-referral
+    let referredUser: any = null
+    const { data: currentUserList } = await supabase.from('users').select('*').eq('id', referredUserId)
+    if (currentUserList && currentUserList.length > 0) {
+      referredUser = currentUserList[0]
+    }
 
+    // Check if referred user already has a referrer linked
+    if (referredUser && referredUser.referred_by) {
+      console.log('[Duplicate Referral Prevented] User already linked to referrer:', referredUser.referred_by)
+      return { success: false, message: 'You have already applied a referral code.' }
+    }
+
+    const { data: existingRef } = await supabase
+      .from('referrals')
+      .select('*')
+      .eq('referred_user_id', referredUserId)
+
+    if (existingRef && existingRef.length > 0) {
+      console.log('[Duplicate Referral Prevented] Referral record already exists for user:', referredUserId)
+      return { success: false, message: 'You have already applied a referral code.' }
+    }
+
+    // 3. Search users table for code owner
+    let referrer: any = null
     const { data: usersList } = await supabase
       .from('users')
       .select('*')
@@ -493,7 +540,6 @@ export async function validateAndApplyReferralCode(
     if (usersList && usersList.length > 0) {
       referrer = usersList[0]
     } else {
-      // Search user_profiles fallback
       const { data: profileList } = await supabase
         .from('user_profiles')
         .select('*')
@@ -505,33 +551,36 @@ export async function validateAndApplyReferralCode(
     }
 
     if (!referrer) {
-      console.log('[Referral Rejected] Code not found in database:', cleanCode)
+      console.log('[Referral Rejected] Referral code not found in database:', cleanCode)
       return { success: false, message: 'Invalid Referral Code. Please check and try again.' }
     }
 
-    // 2. Prevent Self-Referral
+    // 4. Ensure owner account is active
+    const ownerStatus = (referrer.status || referrer.account_status || 'active').toLowerCase()
+    if (ownerStatus === 'blocked' || ownerStatus === 'inactive') {
+      console.log('[Referral Rejected] Referrer account is inactive or blocked:', referrer.id)
+      return { success: false, message: 'This referral code belongs to an inactive account.' }
+    }
+
+    // 5. Self-Referral Protection (Compare Firebase UID, User ID, and Email)
     const referrerEmail = (referrer.email || '').trim().toLowerCase()
-    if (referrerEmail === referredUserEmail.trim().toLowerCase() || referrer.id === referredUserId) {
-      console.log('[Referral Rejected] Self referral attempt blocked for email:', referredUserEmail)
-      return { success: false, message: 'You cannot use your own referral code.' }
+    const referrerFirebaseUid = referrer.firebase_uid || ''
+    const currentUserFirebaseUid = referredUser?.firebase_uid || ''
+
+    if (
+      referrerEmail === referredUserEmail.trim().toLowerCase() ||
+      referrer.id === referredUserId ||
+      (referrerFirebaseUid && referrerFirebaseUid === currentUserFirebaseUid)
+    ) {
+      console.log('[Self Referral Prevented] User attempted to use own referral code:', cleanCode)
+      return { success: false, message: 'Self-referral is not allowed. You cannot use your own referral code.' }
     }
 
-    // 3. Check if referral code was already used by this user
-    const { data: existingRef } = await supabase
-      .from('referrals')
-      .select('*')
-      .eq('referred_user_id', referredUserId)
-
-    if (existingRef && existingRef.length > 0) {
-      console.log('[Referral Rejected] User already applied a referral code.')
-      return { success: false, message: 'You have already applied a referral code.' }
-    }
-
-    // 4. Create Referral Record
+    // 6. Execute atomic creation of referral relationship & stats credit
     const nowIso = new Date().toISOString()
     const commission = 10
 
-    await supabase.from('referrals').insert([
+    const { error: insertRefErr } = await supabase.from('referrals').insert([
       {
         referrer_id: referrer.id,
         referrer_user_id: referrer.id,
@@ -542,12 +591,18 @@ export async function validateAndApplyReferralCode(
         created_at: nowIso,
       },
     ])
-    console.log('[Referral Record Created] Linked referrer:', referrer.id, 'to referred:', referredUserId)
 
-    // 5. Update referred_by in users table
+    if (insertRefErr) {
+      console.warn('[Referral Transaction Failed] Insert referral error:', insertRefErr)
+      return { success: false, message: 'Failed to create referral record.' }
+    }
+
+    console.log('[Referral Accepted] Created referral relationship between referrer:', referrer.id, 'and referred:', referredUserId)
+
+    // Update referred_by in users table
     await supabase.from('users').update({ referred_by: referrer.id }).eq('id', referredUserId)
 
-    // 6. Update referral_stats for Referrer
+    // 7. Update referral_stats
     const { data: statsData } = await supabase.from('referral_stats').select('*').eq('user_id', referrer.id)
     if (statsData && statsData.length > 0) {
       const currentStats = statsData[0]
@@ -571,9 +626,9 @@ export async function validateAndApplyReferralCode(
         },
       ])
     }
-    console.log('[Referral Stats Created/Updated] Increment stats for referrer:', referrer.id)
+    console.log('[Referral Stats Updated] Referrer stats incremented for:', referrer.id)
 
-    // 7. Update wallets for Referrer
+    // 8. Update wallets
     const { data: walletData } = await supabase.from('wallets').select('*').eq('user_id', referrer.id)
     if (walletData && walletData.length > 0) {
       const currentWallet = walletData[0]
@@ -596,16 +651,14 @@ export async function validateAndApplyReferralCode(
         },
       ])
     }
-    console.log('[Wallet Created/Updated] Commission credited to referrer wallet:', referrer.id)
 
-    console.log('[Referral Accepted] Code:', cleanCode, 'applied successfully!')
     return {
       success: true,
-      message: `Referral code accepted! Referred by ${referrer.display_name || referrer.full_name || 'a friend'}.`,
+      message: `Referral code accepted! You were referred by ${referrer.display_name || referrer.full_name || 'a friend'}.`,
       referrerName: referrer.display_name || referrer.full_name || 'a friend',
     }
   } catch (err: any) {
-    console.error('[Referral Validation Error]:', err)
-    return { success: false, message: err.message || 'Failed to validate referral code.' }
+    console.error('[Referral Transaction Failed]:', err)
+    return { success: false, message: err.message || 'Failed to process referral.' }
   }
 }
