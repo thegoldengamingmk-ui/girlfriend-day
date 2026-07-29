@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { processAdminWithdrawalAction } from '../lib/withdrawalService'
 import {
   type AdminUser,
   logoutAdminSession,
@@ -125,7 +126,13 @@ export function AdminDashboard({
 
   const handleUpdateWithdrawal = async (status: 'APPROVED' | 'REJECTED' | 'PAID') => {
     if (!actionWithdrawal) return
-    await updateWithdrawalStatus(actionWithdrawal.id, status, withdrawNotes, withdrawRefId)
+    const action = status === 'REJECTED' ? 'REJECT' : 'APPROVE'
+    await processAdminWithdrawalAction({
+      withdrawalId: actionWithdrawal.id,
+      action,
+      adminNotes: withdrawNotes,
+      adminEmail: admin.email,
+    })
     logAdminAction(admin.id, admin.email, `WITHDRAWAL_${status}`, `Updated withdrawal request ${actionWithdrawal.requestId} to ${status}`)
     setActionWithdrawal(null)
     setWithdrawRefId('')

@@ -80,15 +80,24 @@ CREATE TABLE IF NOT EXISTS public.referrals (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. Withdrawals Requests Table
+-- 5. Withdrawals Requests Table (Controlled Approval Workflow)
 CREATE TABLE IF NOT EXISTS public.withdrawals (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  withdrawal_id TEXT UNIQUE NOT NULL,
   request_id TEXT,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   amount NUMERIC NOT NULL,
+  currency TEXT DEFAULT 'INR',
   payment_method TEXT DEFAULT 'UPI',
+  payment_details TEXT,
   upi_id TEXT,
   status TEXT DEFAULT 'PENDING',
+  admin_notes TEXT,
+  requested_at TIMESTAMPTZ DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  reviewed_by TEXT,
+  transaction_id TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -130,6 +139,8 @@ CREATE INDEX IF NOT EXISTS idx_referral_stats_user_id ON public.referral_stats(u
 CREATE INDEX IF NOT EXISTS idx_wallets_user_id ON public.wallets(user_id);
 CREATE INDEX IF NOT EXISTS idx_referrals_referrer_id ON public.referrals(referrer_id);
 CREATE INDEX IF NOT EXISTS idx_withdrawals_user_id ON public.withdrawals(user_id);
+CREATE INDEX IF NOT EXISTS idx_withdrawals_withdrawal_id ON public.withdrawals(withdrawal_id);
+CREATE INDEX IF NOT EXISTS idx_withdrawals_status ON public.withdrawals(status);
 CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON public.transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_transaction_id ON public.transactions(transaction_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_type ON public.transactions(transaction_type);
@@ -152,6 +163,16 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public update on users') THEN
     CREATE POLICY "Allow public update on users" ON public.users FOR UPDATE USING (true);
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public select on withdrawals') THEN
+    CREATE POLICY "Allow public select on withdrawals" ON public.withdrawals FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public insert on withdrawals') THEN
+    CREATE POLICY "Allow public insert on withdrawals" ON public.withdrawals FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public update on withdrawals') THEN
+    CREATE POLICY "Allow public update on withdrawals" ON public.withdrawals FOR UPDATE USING (true);
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public select on transactions') THEN
