@@ -10,7 +10,7 @@
 // Read from env secrets (set via Supabase dashboard Settings > Edge Functions)
 // Fallback to test credential if secrets not yet configured
 const RAZORPAY_KEY_SECRET =
-  Deno.env.get("RAZORPAY_KEY_SECRET") ?? "mVmZ2l0PfxvEbfLskn0nQnRe"
+  Deno.env.get("RAZORPAY_KEY_SECRET") ?? "qSQAVuY97b8XHk5z0c0MQVJG"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
