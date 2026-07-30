@@ -2844,10 +2844,20 @@ function Dashboard({
   const [referralCodeInput, setReferralCodeInput] = useState("")
   const [referralErrorMsg, setReferralErrorMsg] = useState("")
 
-  const [showReferralPopup, setShowReferralPopup] = useState(
-    initialDraft ? !initialDraft.isReferralApplied : true,
-  )
+  const [showReferralPopup, setShowReferralPopup] = useState(() => {
+    try {
+      const hasSeen = localStorage.getItem("has_seen_referral_popup")
+      if (hasSeen === "true") return false
+    } catch {}
+    return initialDraft ? !initialDraft.isReferralApplied : true
+  })
   const [popupErrorMsg, setPopupErrorMsg] = useState("")
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("has_seen_referral_popup", "true")
+    } catch {}
+  }, [])
 
   const finalPrice = isReferralApplied ? DISCOUNTED_PRICE : ORIGINAL_PRICE
 
