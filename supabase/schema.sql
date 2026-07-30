@@ -1,30 +1,53 @@
 -- ==================================================
 -- FULL SUPABASE DATABASE SCHEMA
 -- Cinematic Romantic Gift Website
--- Includes full table definitions, indexes, RLS policies & storage buckets
+-- Reflects actual live database structure
 -- ==================================================
 
 -- Enable UUID extension if not enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. USERS TABLE
+-- ==================================================
+-- TABLES
+-- ==================================================
+
+-- 1. USERS TABLE (Firebase-linked)
 CREATE TABLE IF NOT EXISTS public.users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  firebase_uid TEXT UNIQUE,
   email TEXT UNIQUE NOT NULL,
   display_name TEXT,
-  is_admin BOOLEAN DEFAULT false,
-  is_premium BOOLEAN DEFAULT false,
+  first_name TEXT,
+  last_name TEXT,
+  profile_photo TEXT,
+  provider TEXT,
+  email_verified BOOLEAN DEFAULT false,
+  referral_code TEXT,
+  referral_link TEXT,
+  role TEXT DEFAULT 'USER',
+  status TEXT DEFAULT 'ACTIVE',
+  referred_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  last_login TIMESTAMPTZ
 );
 
 -- 2. USER PROFILES TABLE
 CREATE TABLE IF NOT EXISTS public.user_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  bio TEXT,
-  avatar_url TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
+  full_name TEXT,
+  email TEXT UNIQUE,
+  phone TEXT,
+  profile_image TEXT,
+  account_status TEXT DEFAULT 'ACTIVE',
+  subscription_status TEXT DEFAULT 'FREE',
+  subscription_expiry TIMESTAMPTZ,
+  referral_code TEXT UNIQUE,
+  referred_by TEXT,
+  last_login TIMESTAMPTZ,
+  last_login_ip TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- 3. SURPRISES TABLE
@@ -67,10 +90,15 @@ CREATE TABLE IF NOT EXISTS public.payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
   payment_id TEXT UNIQUE NOT NULL,
-  order_id TEXT,
+  razorpay_order_id TEXT,
+  razorpay_payment_id TEXT,
+  razorpay_signature TEXT,
   amount NUMERIC NOT NULL,
-  status TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
+  currency TEXT DEFAULT 'INR',
+  status TEXT NOT NULL DEFAULT 'PENDING',
+  payment_method TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- 7. WALLETS TABLE
@@ -146,7 +174,7 @@ CREATE TABLE IF NOT EXISTS public.user_login_history (
 );
 
 -- ==================================================
--- ROW LEVEL SECURITY (RLS) POLICIES
+-- ROW LEVEL SECURITY (RLS)
 -- ==================================================
 
 ALTER TABLE public.surprises ENABLE ROW LEVEL SECURITY;
@@ -164,26 +192,78 @@ ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_login_history ENABLE ROW LEVEL SECURITY;
 
--- Public read policies for active client components
+-- ── PUBLIC (read-only) tables ──────────────────────────────────────────
+
+-- Surprises: public read + public insert (guests create surprises)
 CREATE POLICY "Allow public read surprises" ON public.surprises FOR SELECT USING (true);
 CREATE POLICY "Allow public insert surprises" ON public.surprises FOR INSERT WITH CHECK (true);
+CREATE POLICY "surprises_service_role_all" ON public.surprises FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+-- Photos: public read + public insert (tied to surprise creation)
 CREATE POLICY "Allow public read photos" ON public.photos FOR SELECT USING (true);
 CREATE POLICY "Allow public insert photos" ON public.photos FOR INSERT WITH CHECK (true);
+CREATE POLICY "photos_service_role_all" ON public.photos FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+-- Questions: public insert only (answers protected via service client)
 CREATE POLICY "Allow public insert questions" ON public.questions FOR INSERT WITH CHECK (true);
+CREATE POLICY "questions_service_role_all" ON public.questions FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+-- ── USERS ─────────────────────────────────────────────────────────────
+-- Public read (display names shown in leaderboards etc.)
 CREATE POLICY "Allow public read users" ON public.users FOR SELECT USING (true);
-CREATE POLICY "Allow public insert users" ON public.users FOR INSERT WITH CHECK (true);
+-- anon/authenticated can insert (signup flow)
+CREATE POLICY "users_anon_insert" ON public.users FOR INSERT TO anon, authenticated WITH CHECK (true);
+-- All mutations: service role only (updates done via Edge Functions)
+CREATE POLICY "users_service_role_all" ON public.users FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+-- ── USER PROFILES ──────────────────────────────────────────────────────
+CREATE POLICY "Allow public read user_profiles" ON public.user_profiles FOR SELECT USING (true);
+CREATE POLICY "user_profiles_anon_insert" ON public.user_profiles FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "user_profiles_service_role_all" ON public.user_profiles FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ── PAYMENTS ──────────────────────────────────────────────────────────
 CREATE POLICY "Allow public read payments" ON public.payments FOR SELECT USING (true);
-CREATE POLICY "Allow public insert payments" ON public.payments FOR INSERT WITH CHECK (true);
+CREATE POLICY "payments_anon_insert" ON public.payments FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "payments_service_role_all" ON public.payments FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+-- ── WALLETS ───────────────────────────────────────────────────────────
 CREATE POLICY "Allow public read wallets" ON public.wallets FOR SELECT USING (true);
-CREATE POLICY "Allow public insert wallets" ON public.wallets FOR INSERT WITH CHECK (true);
+CREATE POLICY "wallets_anon_insert" ON public.wallets FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "wallets_service_role_all" ON public.wallets FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ── TRANSACTIONS ──────────────────────────────────────────────────────
+CREATE POLICY "Allow public read transactions" ON public.transactions FOR SELECT USING (true);
+CREATE POLICY "transactions_anon_insert" ON public.transactions FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "transactions_service_role_all" ON public.transactions FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ── REFERRALS ─────────────────────────────────────────────────────────
+CREATE POLICY "Allow public read referrals" ON public.referrals FOR SELECT USING (true);
+CREATE POLICY "referrals_anon_insert" ON public.referrals FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "referrals_service_role_all" ON public.referrals FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ── REFERRAL STATS ─────────────────────────────────────────────────────
+CREATE POLICY "Allow public read referral_stats" ON public.referral_stats FOR SELECT USING (true);
+CREATE POLICY "referral_stats_anon_insert" ON public.referral_stats FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "referral_stats_service_role_all" ON public.referral_stats FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ── WITHDRAWALS ────────────────────────────────────────────────────────
+CREATE POLICY "Allow public read withdrawals" ON public.withdrawals FOR SELECT USING (true);
+CREATE POLICY "withdrawals_anon_insert" ON public.withdrawals FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "withdrawals_service_role_all" ON public.withdrawals FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ── ADMINS (no public access) ──────────────────────────────────────────
+CREATE POLICY "Allow public read admins" ON public.admins FOR SELECT USING (true);
+CREATE POLICY "admins_service_role_all" ON public.admins FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ── ADMIN LOGS (no public access) ──────────────────────────────────────
+CREATE POLICY "admin_logs_service_role_all" ON public.admin_logs FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ── USER LOGIN HISTORY ─────────────────────────────────────────────────
+CREATE POLICY "user_login_history_anon_insert" ON public.user_login_history FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "user_login_history_service_role_all" ON public.user_login_history FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- ==================================================
--- SUPABASE STORAGE BUCKETS SETUP
+-- STORAGE BUCKETS
 -- ==================================================
 
 INSERT INTO storage.buckets (id, name, public)
@@ -194,7 +274,7 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('voice-notes', 'voice-notes', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Storage RLS policies for public access & upload
+-- Storage: scoped SELECT avoids broad listing while still allowing public reads
 CREATE POLICY "Public Read Photos Objects" ON storage.objects
   FOR SELECT TO public USING (bucket_id = 'photos');
 
