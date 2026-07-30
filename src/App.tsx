@@ -33,7 +33,7 @@ import {
 } from "./lib/authService"
 import { validateAndApplyReferralCode } from "./lib/userService"
 import { launchRazorpayCheckout } from "./lib/razorpayService"
-import { getActiveAdminSession, type AdminUser } from "./lib/adminAuthService"
+import { getActiveAdminSession, resetAdminSetupLock, type AdminUser } from "./lib/adminAuthService"
 import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
 
 // Lazy-loaded heavy components (code splitting for faster initial load)
@@ -2421,12 +2421,10 @@ function HamburgerMenu({
   onOpenReferrals,
   onOpenDashboard,
   onPreview,
-  onOpenAdmin,
 }: {
   onOpenReferrals: () => void
   onOpenDashboard: () => void
   onPreview: () => void
-  onOpenAdmin: () => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -2539,17 +2537,7 @@ function HamburgerMenu({
                 <span className="text-base">👀</span> Preview Flow
               </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setIsOpen(false)
-                  playButtonSound()
-                  onOpenAdmin()
-                }}
-                className="w-full px-3.5 py-3 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-3 transition-colors cursor-pointer border-t border-white/10"
-              >
-                <span className="text-base">🛡️</span> Admin Portal
-              </button>
+
             </motion.div>
           </>
         )}
@@ -4196,17 +4184,13 @@ export default function App() {
     if (typeof window !== "undefined") {
       const search = window.location.search
       const path = window.location.pathname
-      if (
-        path.includes("setup-super-admin") ||
-        search.includes("setup=super-admin")
-      ) {
-        return "setup-super-admin"
-      }
-      if (
-        path.includes("admin-login") ||
-        path.includes("admin") ||
-        search.includes("admin=true")
-      ) {
+      // Secret token gate — admin accessible ONLY via ?token=cg_admin_secret_7x9k2m
+      const secretToken = new URLSearchParams(search).get("token")
+      const ADMIN_SECRET = "cg_admin_secret_7x9k2m"
+      if (secretToken === ADMIN_SECRET || path.includes("setup-super-admin")) {
+        if (search.includes("setup=super-admin") || path.includes("setup-super-admin")) {
+          return "setup-super-admin"
+        }
         const session = getActiveAdminSession()
         if (session) return "admin-dashboard"
         return "admin-login"
@@ -4239,19 +4223,15 @@ export default function App() {
     }
     const path = window.location.pathname
 
-    if (
-      path.includes("setup-super-admin") ||
-      searchParams.get("setup") === "super-admin"
-    ) {
+    const ADMIN_SECRET = "cg_admin_secret_7x9k2m"
+    const secretToken = searchParams.get("token")
+    if (path.includes("setup-super-admin") || searchParams.get("setup") === "super-admin") {
+      // Clear localStorage lock so fresh setup always works after DB reset
+      resetAdminSetupLock()
       setShowSuperAdminSetupModal(true)
       return
     }
-
-    if (
-      path.includes("admin-login") ||
-      path.includes("admin") ||
-      searchParams.get("admin") === "true"
-    ) {
+    if (secretToken === ADMIN_SECRET) {
       const session = getActiveAdminSession()
       if (session) {
         setAdminUser(session)
@@ -4337,13 +4317,6 @@ export default function App() {
         onOpenReferrals={handleOpenReferralsMenu}
         onOpenDashboard={() => go("dashboard")}
         onPreview={() => go(1)}
-        onOpenAdmin={() => {
-          if (adminUser) {
-            go("admin-dashboard")
-          } else {
-            setShowAdminLoginModal(true)
-          }
-        }}
       />
 
       <AdminLoginModal

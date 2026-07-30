@@ -529,6 +529,16 @@ export async function logoutAdminSession() {
   localStorage.removeItem(ADMIN_SESSION_KEY)
 }
 
+/**
+ * Reset Admin Setup Lock
+ * Call this after wiping the admins table in the database so the
+ * setup route becomes accessible again for creating a new Super Admin.
+ */
+export function resetAdminSetupLock(): void {
+  localStorage.removeItem(SETUP_LOCKED_KEY)
+  localStorage.removeItem(ADMIN_SESSION_KEY)
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Audit Logging
 // ─────────────────────────────────────────────────────────────────────────────
