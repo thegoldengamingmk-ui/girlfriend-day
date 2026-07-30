@@ -238,7 +238,7 @@ export async function processAdminWithdrawalAction(params: {
   action: "APPROVE" | "REJECT" | "MARK_PROCESSING"
   adminNotes?: string
   adminEmail?: string
-}): Promise<{ success: boolean message: string }> {
+}): Promise<{ success: boolean; message: string }> {
   const { withdrawalId, action, adminNotes = "", adminEmail = "Admin" } = params
   const nowIso = new Date().toISOString()
 

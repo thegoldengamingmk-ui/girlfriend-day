@@ -150,7 +150,7 @@ export async function getSurpriseBySlug(
 export async function verifyQuestions(
   slug: string,
   submittedAnswers: string[],
-): Promise<{ success: boolean message?: string }> {
+): Promise<{ success: boolean; message?: string }> {
   if (!slug) return { success: false, message: "Invalid slug" }
 
   // Use admin client or DB query to retrieve actual answers

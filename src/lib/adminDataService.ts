@@ -272,7 +272,7 @@ export async function getAdminUsers(): Promise<AdminUserRecord[]> {
     ])
 
     // Build referral stats map by user_id
-    const refStatsMap = new Map<string, { count: number earnings: number }>()
+    const refStatsMap = new Map<string, { count: number; earnings: number }>()
     if (refStatsList && refStatsList.length > 0) {
       refStatsList.forEach((s) => {
         refStatsMap.set(s.user_id, {
@@ -424,7 +424,7 @@ export async function getAdminTransactions(): Promise<PaymentTransaction[]> {
     const { data: usersList } = await supabase
       .from("users")
       .select("id, email, display_name")
-    const userMap = new Map<string, { email: string name: string }>()
+    const userMap = new Map<string, { email: string; name: string }>()
     if (usersList && usersList.length > 0) {
       usersList.forEach((u) => {
         userMap.set(u.id, {
@@ -482,7 +482,7 @@ export async function getAdminWithdrawals(): Promise<WithdrawalRecord[]> {
     const { data: usersList } = await supabase
       .from("users")
       .select("id, email, display_name")
-    const userMap = new Map<string, { email: string name: string }>()
+    const userMap = new Map<string, { email: string; name: string }>()
     if (usersList && usersList.length > 0) {
       usersList.forEach((u) => {
         userMap.set(u.id, {

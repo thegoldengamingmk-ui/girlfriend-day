@@ -29,13 +29,13 @@ export function sanitizeInput(input: string): string {
 /**
  * In-Memory Rate Limiting Tracker
  */
-const rateLimitMap = new Map<string, { count: number expiresAt: number }>()
+const rateLimitMap = new Map<string, { count: number; expiresAt: number }>()
 
 export function checkRateLimit(
   actionKey: string,
   maxLimit = 5,
   windowMs = 60000,
-): { allowed: boolean remaining: number } {
+): { allowed: boolean; remaining: number } {
   const now = Date.now()
   const key = `ratelimit_${actionKey}`
   const record = rateLimitMap.get(key)

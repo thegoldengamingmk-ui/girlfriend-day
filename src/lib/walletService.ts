@@ -355,7 +355,7 @@ export async function getAllSystemTransactions(): Promise<any[]> {
  */
 export async function verifyWalletIntegrity(
   userId: string,
-): Promise<{ valid: boolean calculatedBalance: number actualBalance: number }> {
+): Promise<{ valid: boolean; calculatedBalance: number; actualBalance: number }> {
   try {
     const { data: walletData } = await supabase
       .from("wallets")

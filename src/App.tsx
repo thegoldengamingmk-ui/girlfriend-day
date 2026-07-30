@@ -1298,7 +1298,7 @@ function S5({ onNext }: { onNext: () => void }) {
 
 // ── SCREEN 6 — SUSPENSE ────────────────────────────────────────────────────
 
-function S6({ onNext, bgPhoto }: { onNext: () => void bgPhoto?: string }) {
+function S6({ onNext, bgPhoto }: { onNext: () => void; bgPhoto?: string }) {
   return (
     <div
       className="relative flex flex-col items-center justify-center overflow-hidden"
@@ -2234,7 +2234,7 @@ function WithdrawModal({
 }: {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (details: { type: "upi" | "bank" value: string }) => void
+  onSubmit: (details: { type: "upi" | "bank"; value: string }) => void
 }) {
   const [method, setMethod] = useState<"upi" | "bank">("upi")
   const [upiId, setUpiId] = useState("")

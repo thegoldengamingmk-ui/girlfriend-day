@@ -570,7 +570,7 @@ export async function validateAndApplyReferralCode(
   referredUserId: string,
   referredUserEmail: string,
   enteredCode: string,
-): Promise<{ success: boolean message: string referrerName?: string }> {
+): Promise<{ success: boolean; message: string; referrerName?: string }> {
   // 1. Normalize input: trim and UPPERCASE
   const cleanCode = enteredCode.trim().toUpperCase()
   if (!cleanCode) {

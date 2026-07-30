@@ -46,7 +46,7 @@ export async function hashPassword(password: string): Promise<string> {
  */
 export function validatePasswordStrength(
   password: string,
-): { isValid: boolean error?: string } {
+): { isValid: boolean; error?: string } {
   if (password.length < 12) {
     return {
       isValid: false,
