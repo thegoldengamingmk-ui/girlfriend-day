@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /super-admin
 
-Sitemap: https://cinematic-romantic-gift.web.app/sitemap.xml
+Sitemap: https://oursmemories.online/sitemap.xml
