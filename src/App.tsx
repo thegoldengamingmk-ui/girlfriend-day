@@ -2755,6 +2755,35 @@ function ReferralPopupModal({
   )
 }
 
+const DASHBOARD_DRAFT_KEY = "cinematic_gift_surprise_draft_v1"
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+function base64ToFile(dataurl: string, filename: string): File {
+  try {
+    const arr = dataurl.split(",")
+    const mimeMatch = arr[0].match(/:(.*?);/)
+    const mime = mimeMatch ? mimeMatch[1] : "image/png"
+    const bstr = atob(arr[1])
+    let n = bstr.length
+    const u8arr = new Uint8Array(n)
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n)
+    }
+    return new File([u8arr], filename, { type: mime })
+  } catch (err) {
+    console.warn("Failed converting base64 to file:", err)
+    return new File([], filename)
+  }
+}
+
 // ── DASHBOARD ──────────────────────────────────────────────────────────────
 
 function Dashboard({
@@ -2774,12 +2803,24 @@ function Dashboard({
   setLink: (link: string) => void
   userProfile?: UserReferralProfile | null
 }) {
-  const [gfName, setGfName] = useState("")
-  const [bfName, setBfName] = useState("")
-  const [photos, setPhotos] = useState<string[]>([])
+  const initialDraft = useMemo(() => {
+    try {
+      const saved = localStorage.getItem(DASHBOARD_DRAFT_KEY)
+      if (saved) {
+        return JSON.parse(saved)
+      }
+    } catch (e) {
+      console.warn("Failed to load draft from localStorage:", e)
+    }
+    return null
+  }, [])
+
+  const [gfName, setGfName] = useState(initialDraft?.gfName || "")
+  const [bfName, setBfName] = useState(initialDraft?.bfName || "")
+  const [photos, setPhotos] = useState<string[]>(initialDraft?.photoBase64s || [])
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
-  const [letter, setLetter] = useState("")
-  const [voiceNote, setVoiceNote] = useState(false)
+  const [letter, setLetter] = useState(initialDraft?.letter || "")
+  const [voiceNote, setVoiceNote] = useState(!!initialDraft?.voiceNoteBase64)
   const [voiceNoteFile, setVoiceNoteFile] = useState<File | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   const [recordSecs, setRecordSecs] = useState(0)
@@ -2793,12 +2834,18 @@ function Dashboard({
   const ORIGINAL_PRICE = 99
   const DISCOUNTED_PRICE = 49
 
-  const [isReferralApplied, setIsReferralApplied] = useState(false)
-  const [appliedReferralCode, setAppliedReferralCode] = useState("")
+  const [isReferralApplied, setIsReferralApplied] = useState(
+    initialDraft?.isReferralApplied || false,
+  )
+  const [appliedReferralCode, setAppliedReferralCode] = useState(
+    initialDraft?.appliedReferralCode || "",
+  )
   const [referralCodeInput, setReferralCodeInput] = useState("")
   const [referralErrorMsg, setReferralErrorMsg] = useState("")
 
-  const [showReferralPopup, setShowReferralPopup] = useState(true)
+  const [showReferralPopup, setShowReferralPopup] = useState(
+    initialDraft ? !initialDraft.isReferralApplied : true,
+  )
   const [popupErrorMsg, setPopupErrorMsg] = useState("")
 
   const finalPrice = isReferralApplied ? DISCOUNTED_PRICE : ORIGINAL_PRICE
@@ -2969,18 +3016,105 @@ function Dashboard({
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
   }
 
-  const [spotifyQ, setSpotifyQ] = useState("")
+  const [spotifyQ, setSpotifyQ] = useState(initialDraft?.spotifyQ || "")
   const [musicFile, setMusicFile] = useState<File | null>(null)
   const musicFileInputRef = useRef<HTMLInputElement>(null)
-  const [secretQuestions, setSecretQuestions] = useState([
-    { question: "When did we first meet?", answer: "" },
-    { question: "What nickname do I call you?", answer: "" },
-    { question: "What is our favorite memory together?", answer: "" },
-  ])
+  const [secretQuestions, setSecretQuestions] = useState(
+    initialDraft?.secretQuestions || [
+      { question: "When did we first meet?", answer: "" },
+      { question: "What nickname do I call you?", answer: "" },
+      { question: "What is our favorite memory together?", answer: "" },
+    ],
+  )
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState("")
   const [dragOver, setDragOver] = useState(false)
   const photoInput = useRef<HTMLInputElement>(null)
+
+  // 1. Auto-Restore Files (Photos & Voice Note) from Initial Draft Base64
+  useEffect(() => {
+    if (initialDraft) {
+      if (initialDraft.photoBase64s && Array.isArray(initialDraft.photoBase64s)) {
+        const files = initialDraft.photoBase64s.map((b64: string, idx: number) =>
+          base64ToFile(b64, `restored_photo_${idx}.png`),
+        )
+        setPhotoFiles(files)
+      }
+      if (initialDraft.voiceNoteBase64) {
+        const file = base64ToFile(
+          initialDraft.voiceNoteBase64,
+          "restored_voice_note.webm",
+        )
+        setVoiceNoteFile(file)
+        setVoiceNote(true)
+      }
+    }
+  }, [initialDraft])
+
+  // 2. Auto-Save Draft to LocalStorage whenever form fields change
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        const photoBase64s: string[] = []
+        for (const file of photoFiles) {
+          try {
+            const b64 = await fileToBase64(file)
+            photoBase64s.push(b64)
+          } catch {}
+        }
+        if (photoBase64s.length === 0 && photos.length > 0) {
+          photoBase64s.push(...photos.filter((p) => p.startsWith("data:")))
+        }
+
+        let voiceNoteBase64 = ""
+        if (voiceNoteFile) {
+          try {
+            voiceNoteBase64 = await fileToBase64(voiceNoteFile)
+          } catch {}
+        }
+
+        const draft = {
+          gfName,
+          bfName,
+          letter,
+          spotifyQ,
+          secretQuestions,
+          isReferralApplied,
+          appliedReferralCode,
+          photoBase64s,
+          voiceNoteBase64,
+          updatedAt: Date.now(),
+        }
+
+        if (
+          gfName.trim() ||
+          bfName.trim() ||
+          letter.trim() ||
+          spotifyQ.trim() ||
+          photoBase64s.length > 0 ||
+          voiceNoteBase64 ||
+          secretQuestions.some((q) => q.answer.trim())
+        ) {
+          localStorage.setItem(DASHBOARD_DRAFT_KEY, JSON.stringify(draft))
+        }
+      } catch (err) {
+        console.warn("[Draft Auto-Save] Failed to persist draft:", err)
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [
+    gfName,
+    bfName,
+    letter,
+    spotifyQ,
+    secretQuestions,
+    isReferralApplied,
+    appliedReferralCode,
+    photoFiles,
+    photos,
+    voiceNoteFile,
+  ])
 
   const addPhotos = (files: FileList | null) => {
     if (!files) return
@@ -3058,6 +3192,7 @@ function Dashboard({
 
             const fullShareLink = `${window.location.origin}/s/${result}`
             setLink(fullShareLink)
+            localStorage.removeItem(DASHBOARD_DRAFT_KEY)
             setIsSubmitting(false)
           } catch (err: any) {
             console.error("Failed to save surprise:", err)
