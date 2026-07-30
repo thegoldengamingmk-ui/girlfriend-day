@@ -13,7 +13,7 @@ import { executeWalletTransaction } from "./walletService"
 export const RAZORPAY_KEY_ID =
   (typeof import.meta !== "undefined" &&
     import.meta?.env?.VITE_RAZORPAY_KEY_ID) ||
-  "rzp_test_TJiGwmk2BFJx3p"
+  "rzp_live_TJikQRma7texEz"
 
 // NOTE: The Razorpay Key Secret must NEVER be exposed in client-side code.
 
