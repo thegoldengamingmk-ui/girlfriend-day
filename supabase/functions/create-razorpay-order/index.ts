@@ -1,4 +1,3 @@
-/// <reference lib="deno.ns" />
 /**
  * Supabase Edge Function: create-razorpay-order
  * Creates a Razorpay order server-side using the KEY_SECRET.

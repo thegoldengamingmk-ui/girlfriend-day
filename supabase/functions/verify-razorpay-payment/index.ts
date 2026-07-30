@@ -1,4 +1,3 @@
-/// <reference lib="deno.ns" />
 /**
  * Supabase Edge Function: verify-razorpay-payment
  * Verifies Razorpay payment signature server-side using HMAC-SHA256.
