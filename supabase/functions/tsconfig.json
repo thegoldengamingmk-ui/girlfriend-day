@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
+    "moduleDetection": "force",
     "lib": ["ESNext", "DOM"],
     "strict": true,
     "noImplicitAny": false,
