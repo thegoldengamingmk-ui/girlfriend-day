@@ -1,7 +1,7 @@
 {
-  "description": "Creates a luxurious, cinematic digital gift experience for girlfriends featuring personalized photos, love letters, music, and interactive surprises.",
+  "description": "Create personalized romantic surprise pages using photos, voice notes, music, and heartfelt messages.",
   "robots": {
-    "index": false
+    "index": true
   },
   "accessibility": {
     "addBypassLinks": false,

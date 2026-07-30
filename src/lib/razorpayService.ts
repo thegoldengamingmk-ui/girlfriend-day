@@ -459,12 +459,12 @@ export async function launchRazorpayCheckout(
 
     order_id: order.order_id,
 
-    name: "Cinematic Romantic Gift 💝",
+    name: "Our Memories ❤️",
 
     description:
       options.description || "Personalized Romantic Surprise Package",
 
-    image: "https://cdn-icons-png.flaticon.com/512/3408/3408545.png",
+    image: "https://oursmemories.online/logo.png",
 
     prefill: {
       name: options.userName || "Romantic Partner",
