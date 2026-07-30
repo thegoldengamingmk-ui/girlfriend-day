@@ -3190,14 +3190,7 @@ function Dashboard({
           borderBottom: "1px solid rgba(232,120,154,0.18)",
         }}
       >
-        <div className="max-w-sm mx-auto px-4 py-4 flex items-center justify-between">
-          <button
-            onClick={onBack}
-            className="cursor-pointer transition-opacity hover:opacity-60 text-sm flex items-center gap-1 font-semibold"
-            style={{ color: "#7a0f50", fontFamily: "'DM Sans', sans-serif" }}
-          >
-            ← Back
-          </button>
+        <div className="max-w-sm mx-auto px-4 py-4 flex items-center justify-center">
           <h1
             style={{
               fontFamily: "'Playfair Display', serif",
@@ -3208,7 +3201,6 @@ function Dashboard({
           >
             Create a Surprise ❤️
           </h1>
-          <div className="w-14" />
         </div>
       </div>
 
