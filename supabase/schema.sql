@@ -251,11 +251,16 @@ CREATE POLICY "Allow public read withdrawals" ON public.withdrawals FOR SELECT U
 CREATE POLICY "withdrawals_anon_insert" ON public.withdrawals FOR INSERT TO anon, authenticated WITH CHECK (true);
 CREATE POLICY "withdrawals_service_role_all" ON public.withdrawals FOR ALL TO service_role USING (true) WITH CHECK (true);
 
--- ── ADMINS (no public access) ──────────────────────────────────────────
+-- ── ADMINS ──────────────────────────────────────────
 CREATE POLICY "Allow public read admins" ON public.admins FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on admins" ON public.admins FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY "Allow public update on admins" ON public.admins FOR UPDATE TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public delete on admins" ON public.admins FOR DELETE TO public USING (true);
 CREATE POLICY "admins_service_role_all" ON public.admins FOR ALL TO service_role USING (true) WITH CHECK (true);
 
--- ── ADMIN LOGS (no public access) ──────────────────────────────────────
+-- ── ADMIN LOGS ──────────────────────────────────────
+CREATE POLICY "Allow public select on admin_logs" ON public.admin_logs FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on admin_logs" ON public.admin_logs FOR INSERT TO public WITH CHECK (true);
 CREATE POLICY "admin_logs_service_role_all" ON public.admin_logs FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- ── USER LOGIN HISTORY ─────────────────────────────────────────────────
