@@ -1409,8 +1409,10 @@ function isAudioUrl(url?: string): boolean {
 
 function SpotifyPlayer({
   trackId = "4cOdK2wGLETKBW3PvgPWqT",
+  autoPlay = true,
 }: {
   trackId?: string
+  autoPlay?: boolean
 }) {
   const isDirectAudio = isAudioUrl(trackId)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -1422,27 +1424,94 @@ function SpotifyPlayer({
   useEffect(() => {
     if (!isDirectAudio || !trackId) return
     const audio = new Audio(trackId)
+    audio.loop = true
     audioRef.current = audio
 
     const onTime = () => setCurrentTime(audio.currentTime)
     const onMeta = () => setDuration(audio.duration || 0)
     const onEnded = () => {
       setIsPlaying(false)
-      window.dispatchEvent(new Event("resume-bgm"))
     }
 
     audio.addEventListener("timeupdate", onTime)
     audio.addEventListener("loadedmetadata", onMeta)
     audio.addEventListener("ended", onEnded)
 
+    const handlePauseUploaded = () => {
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause()
+        setIsPlaying(false)
+      }
+    }
+
+    const handlePlayUploaded = () => {
+      if (audioRef.current) {
+        window.dispatchEvent(new Event("pause-bgm"))
+        audioRef.current
+          .play()
+          .then(() => {
+            setIsPlaying(true)
+            setIsMuted(false)
+          })
+          .catch(() => {})
+      }
+    }
+
+    window.addEventListener("pause-uploaded-song", handlePauseUploaded)
+    window.addEventListener("play-uploaded-song", handlePlayUploaded)
+
+    // Auto-play uploaded song & stop background BGM automatically
+    if (autoPlay) {
+      window.dispatchEvent(new Event("pause-bgm"))
+      audio
+        .play()
+        .then(() => {
+          setIsPlaying(true)
+          setIsMuted(false)
+        })
+        .catch(() => {
+          audio.muted = true
+          audio
+            .play()
+            .then(() => {
+              setIsPlaying(true)
+              setIsMuted(true)
+            })
+            .catch(() => setIsPlaying(false))
+        })
+
+      const handleUserGesture = () => {
+        if (audioRef.current && audioRef.current.paused) {
+          window.dispatchEvent(new Event("pause-bgm"))
+          audioRef.current.muted = false
+          audioRef.current
+            .play()
+            .then(() => {
+              setIsPlaying(true)
+              setIsMuted(false)
+            })
+            .catch(() => {})
+        }
+      }
+
+      const gestures = ["pointerdown", "touchstart", "click"]
+      gestures.forEach((evt) =>
+        window.addEventListener(evt, handleUserGesture, {
+          passive: true,
+          once: true,
+        }),
+      )
+    }
+
     return () => {
       audio.pause()
       audio.removeEventListener("timeupdate", onTime)
       audio.removeEventListener("loadedmetadata", onMeta)
       audio.removeEventListener("ended", onEnded)
-      window.dispatchEvent(new Event("resume-bgm"))
+      window.removeEventListener("pause-uploaded-song", handlePauseUploaded)
+      window.removeEventListener("play-uploaded-song", handlePlayUploaded)
     }
-  }, [trackId, isDirectAudio])
+  }, [trackId, isDirectAudio, autoPlay])
 
   const togglePlay = () => {
     playButtonSound()
@@ -1452,7 +1521,6 @@ function SpotifyPlayer({
     if (isPlaying) {
       audio.pause()
       setIsPlaying(false)
-      window.dispatchEvent(new Event("resume-bgm"))
     } else {
       window.dispatchEvent(new Event("pause-bgm"))
       audio
@@ -2017,6 +2085,8 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
   useEffect(() => {
     const audio = audioObjRef.current
     if (play) {
+      window.dispatchEvent(new Event("pause-bgm"))
+      window.dispatchEvent(new Event("pause-uploaded-song"))
       if (audio) {
         audio.play().catch(() => setPlay(false))
       } else {
@@ -2024,6 +2094,7 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
           setProg((p) => {
             if (p >= 100) {
               setPlay(false)
+              window.dispatchEvent(new Event("play-uploaded-song"))
               return 0
             }
             return p + 0.38
@@ -4416,6 +4487,14 @@ export default function App() {
   }, [])
 
   const go = useCallback((to: Screen) => {
+    if (typeof to === "number" && to >= 2) {
+      // Transitioning to photos, letter, voice note page: pause background BGM and auto-play uploaded song
+      window.dispatchEvent(new Event("pause-bgm"))
+      window.dispatchEvent(new Event("play-uploaded-song"))
+    } else if (to === 1) {
+      window.dispatchEvent(new Event("pause-uploaded-song"))
+      window.dispatchEvent(new Event("resume-bgm"))
+    }
     setOverlay(true)
     setTimeout(() => {
       setScreen(to)
