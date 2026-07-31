@@ -147,3 +147,21 @@ html::-webkit-scrollbar { display: none; }
 /* Input placeholder color */
 input::placeholder { color: #8c2262; opacity: 0.65; }
 textarea::placeholder { color: #8c2262; opacity: 0.65; }
+
+/* ── GPU HARDWARE ACCELERATION & SMOOTH RENDERING ── */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.animate-float-heart,
+.animate-sparkle,
+.animate-pulse-heart,
+.animate-pulse-glow,
+.animate-float-orb,
+.animate-btn-glow,
+.animate-gift-float,
+.animate-bg-zoom {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}

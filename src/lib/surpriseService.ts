@@ -95,52 +95,67 @@ export async function createSurprise(
   return slug
 }
 
+const surpriseCache = new Map<
+  string,
+  { data: SurpriseDetailResponse; timestamp: number }
+>()
+const CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+
 /**
- * Fetches a surprise by slug. Answers to secret questions are NOT returned for security.
+ * Fetches a surprise by slug using a single consolidated relational query and in-memory cache.
+ * Answers to secret questions are NOT returned for security.
  */
 export async function getSurpriseBySlug(
   slug: string,
 ): Promise<SurpriseDetailResponse | null> {
   if (!slug) return null
 
-  // 1. Fetch surprise details
-  const { data: surprise, error: surpriseError } = await supabase
+  // Return cached result if available and fresh
+  const cached = surpriseCache.get(slug)
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data
+  }
+
+  // Single relational query retrieving surprise, photos, and questions in 1 DB roundtrip
+  const { data: surpriseData, error } = await supabase
     .from("surprises")
-    .select("*")
+    .select(`
+      *,
+      photos:photos(*),
+      questions:questions(id, surprise_id, question)
+    `)
     .eq("slug", slug)
     .single()
 
-  if (surpriseError || !surprise) {
-    console.warn(`Surprise not found for slug: ${slug}`)
+  if (error || !surpriseData) {
+    console.warn(`Surprise not found for slug: ${slug}`, error?.message)
     return null
   }
 
-  // 2. Fetch photos ordered by position
-  const { data: photos, error: photosError } = await supabase
-    .from("photos")
-    .select("*")
-    .eq("surprise_id", surprise.id)
-    .order("position", { ascending: true })
+  // Sort photos by position index
+  const sortedPhotos = Array.isArray(surpriseData.photos)
+    ? [...surpriseData.photos].sort((a, b) => (a.position || 0) - (b.position || 0))
+    : []
 
-  if (photosError) {
-    console.error("Error fetching photos:", photosError)
+  const result: SurpriseDetailResponse = {
+    surprise: {
+      id: surpriseData.id,
+      slug: surpriseData.slug,
+      boyfriend_name: surpriseData.boyfriend_name,
+      girlfriend_name: surpriseData.girlfriend_name,
+      letter: surpriseData.letter,
+      spotify_url: surpriseData.spotify_url,
+      voice_note_url: surpriseData.voice_note_url,
+      created_at: surpriseData.created_at,
+    },
+    photos: sortedPhotos,
+    questions: (surpriseData.questions as PublicQuestion[]) || [],
   }
 
-  // 3. Fetch questions (Excluding the 'answer' field for security)
-  const { data: questions, error: questionsError } = await supabase
-    .from("questions")
-    .select("id, surprise_id, question")
-    .eq("surprise_id", surprise.id)
+  // Store in memory cache
+  surpriseCache.set(slug, { data: result, timestamp: Date.now() })
 
-  if (questionsError) {
-    console.error("Error fetching questions:", questionsError)
-  }
-
-  return {
-    surprise,
-    photos: photos || [],
-    questions: questions as PublicQuestion[] || [],
-  }
+  return result
 }
 
 /**
