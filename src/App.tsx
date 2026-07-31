@@ -2069,6 +2069,7 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
       const handleEnded = () => {
         setPlay(false)
         setProg(0)
+        window.dispatchEvent(new Event("play-uploaded-song"))
       }
 
       audio.addEventListener("timeupdate", updateProgress)
@@ -2247,6 +2248,11 @@ function S7({
   letter?: string
   voiceNoteUrl?: string
 }) {
+  useEffect(() => {
+    window.dispatchEvent(new Event("pause-bgm"))
+    window.dispatchEvent(new Event("play-uploaded-song"))
+  }, [])
+
   return (
     <div
       className="relative overflow-hidden"
@@ -4487,11 +4493,12 @@ export default function App() {
   }, [])
 
   const go = useCallback((to: Screen) => {
-    if (typeof to === "number" && to >= 2) {
-      // Transitioning to photos, letter, voice note page: pause background BGM and auto-play uploaded song
+    if (to === 7) {
+      // Screen 7 (Finale): Stop background BGM and auto-play uploaded song
       window.dispatchEvent(new Event("pause-bgm"))
       window.dispatchEvent(new Event("play-uploaded-song"))
-    } else if (to === 1) {
+    } else if (typeof to === "number" && to >= 1 && to <= 6) {
+      // Screens 1 through 6: Background BGM plays continuously, uploaded song stays paused
       window.dispatchEvent(new Event("pause-uploaded-song"))
       window.dispatchEvent(new Event("resume-bgm"))
     }
