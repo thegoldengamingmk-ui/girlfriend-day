@@ -51,22 +51,22 @@ const ReferralDashboardModal = lazy(() =>
 
 type Screen = 1 | 2 | 3 | 4 | 5 | 6 | 7 | "dashboard" | "admin-login" | "admin-dashboard" | "setup-super-admin"
 
-// ── CONSTANTS ──────────────────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ CONSTANTS ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 const ROMANTIC_CAPTIONS = [
-  "The day my world changed forever ❤️",
-  "Every smile with you feels like home ✨",
-  "My favorite place in the whole world is right next to you 🌹",
-  "Little moments with you become everlasting memories 💖",
-  "Forever wouldn't be long enough with you 💕",
-  "You make every single day feel magical 🥂",
-  "Our happiest chapter, written together ❤️",
+  "The day my world changed forever ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â",
+  "Every smile with you feels like home ÃƒÂ¢Ã…â€œÃ‚Â¨",
+  "My favorite place in the whole world is right next to you ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â¹",
+  "Little moments with you become everlasting memories ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã¢â‚¬â€œ",
+  "Forever wouldn't be long enough with you ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã¢â‚¬Â¢",
+  "You make every single day feel magical ÃƒÂ°Ã…Â¸Ã‚Â¥Ã¢â‚¬Å¡",
+  "Our happiest chapter, written together ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â",
 ]
 
 const MEMORY_QUOTES = [
-  "“In all the world, there is no heart for me like yours. In all the world, there is no love for you like mine.”",
-  "“If I had a flower for every time I thought of you... I could walk through my garden forever.”",
-  "“You are my today and all of my tomorrows.”",
+  "ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œIn all the world, there is no heart for me like yours. In all the world, there is no love for you like mine.ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â",
+  "ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œIf I had a flower for every time I thought of you... I could walk through my garden forever.ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â",
+  "ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œYou are my today and all of my tomorrows.ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â",
 ]
 
 const DEFAULT_PHOTOS = [
@@ -81,13 +81,13 @@ const DEFAULT_LETTER = `My dearest love,
 
 Every single day with you feels like a dream I never want to wake up from. You are the reason my mornings are beautiful, my evenings are warm, and my heart is completely full.
 
-On this special Girlfriend Day, I want you to know that loving you is the greatest adventure of my life. You make everything brighter — every moment sweeter, every memory worth treasuring forever.
+On this special Girlfriend Day, I want you to know that loving you is the greatest adventure of my life. You make everything brighter ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â every moment sweeter, every memory worth treasuring forever.
 
 I fall in love with you more every single day, and I am so grateful you are mine.
 
 Thank you for being my person, my peace, my home.
 
-Forever yours, with all my love ❤️`
+Forever yours, with all my love ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â`
 
 const CONFETTI_COLORS = [
   "#ffc8d6",
@@ -106,7 +106,7 @@ const DARK_BG: React.CSSProperties = {
     "linear-gradient(135deg, #0d0020 0%, #1a0035 28%, #0e001a 58%, #1a002d 100%)",
 }
 
-// ── SHARED ATOMS ───────────────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SHARED ATOMS ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function FloatingHearts({ n = 12 }: { n?: number }) {
   const items = useRef(
@@ -135,7 +135,7 @@ function FloatingHearts({ n = 12 }: { n?: number }) {
             opacity: h.op,
           }}
         >
-          ❤️
+          ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â
         </div>
       ))}
     </div>
@@ -197,7 +197,7 @@ function GlowOrbs() {
   )
 }
 
-// ── AUDIO SYSTEM (WEB AUDIO SYNTHESIZER & BGM) ─────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ AUDIO SYSTEM (WEB AUDIO SYNTHESIZER & BGM) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 let audioCtx: AudioContext | null = null
 
@@ -403,8 +403,8 @@ function RomanticBGMPlayer() {
         }
       >
         {isPlaying && !isMuted
-          ? "🎵 Playing • Tap to Mute"
-          : "🔇 Muted • Tap to Play"}
+          ? "ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Âµ Playing ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Tap to Mute"
+          : "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â¡ Muted ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Tap to Play"}
       </span>
     </button>
   )
@@ -489,7 +489,7 @@ function Glass({
   )
 }
 
-// ── SCREEN 1 — LANDING ─────────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SCREEN 1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â LANDING ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function S1({
   onNext,
@@ -518,7 +518,7 @@ function S1({
               "drop-shadow(0 0 32px rgba(255,80,140,0.85)) drop-shadow(0 0 75px rgba(255,80,140,0.45))",
           }}
         >
-          ❤️
+          ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â
         </div>
 
         <h1
@@ -544,7 +544,7 @@ function S1({
           I put all my love into this surprise for you.
         </p>
 
-        <Btn onClick={onNext}>Unlock ❤️</Btn>
+        <Btn onClick={onNext}>Unlock ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â</Btn>
 
         <p
           className="mt-14 text-xs"
@@ -566,14 +566,14 @@ function S1({
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          Create ↗
+          Create ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â€
         </button>
       )}
     </div>
   )
 }
 
-// ── SCREEN 2 — LOADING ─────────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SCREEN 2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â LOADING ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function S2({ onNext }: { onNext: () => void }) {
   const [pct, setPct] = useState(0)
@@ -690,7 +690,7 @@ function S2({ onNext }: { onNext: () => void }) {
                     : "none",
                 }}
               >
-                {checks.has(i) ? "✓" : ""}
+                {checks.has(i) ? "ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“" : ""}
               </div>
               <span
                 className="text-pink-100 text-sm"
@@ -706,7 +706,7 @@ function S2({ onNext }: { onNext: () => void }) {
   )
 }
 
-// ── SCREEN 3 — VERIFY ──────────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SCREEN 3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â VERIFY ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function S3({ onNext }: { onNext: () => void }) {
   return (
@@ -720,7 +720,7 @@ function S3({ onNext }: { onNext: () => void }) {
 
       <div className="cinematic-container relative z-10 animate-fade-up">
         <Glass className="p-8 text-center">
-          <div className="text-6xl mb-5">🔒</div>
+          <div className="text-6xl mb-5">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢</div>
           <h2
             className="font-bold text-white mb-4 leading-snug"
             style={{
@@ -750,7 +750,7 @@ function S3({ onNext }: { onNext: () => void }) {
           />
 
           <Btn onClick={onNext} full>
-            Continue ❤️
+            Continue ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â
           </Btn>
         </Glass>
       </div>
@@ -758,7 +758,7 @@ function S3({ onNext }: { onNext: () => void }) {
   )
 }
 
-// ── ROMANTIC CALENDAR PICKER ───────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ ROMANTIC CALENDAR PICKER ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function RomanticCalendarPicker({
   value,
@@ -860,7 +860,7 @@ function RomanticCalendarPicker({
           fontFamily: "'DM Sans', sans-serif",
         }}
       >
-        <span className="truncate">{value ? `📅 ${value}` : placeholder}</span>
+        <span className="truncate">{value ? `ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦ ${value}` : placeholder}</span>
         <span
           className={
             isDark
@@ -868,7 +868,7 @@ function RomanticCalendarPicker({
               : "text-pink-600 text-xs ml-2"
           }
         >
-          📅
+          ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦
         </span>
       </button>
 
@@ -890,7 +890,7 @@ function RomanticCalendarPicker({
               onClick={handlePrevMonth}
               className="w-8 h-8 rounded-full flex items-center justify-center text-pink-200 hover:bg-pink-500/20 cursor-pointer transition-colors"
             >
-              ‹
+              ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹
             </button>
 
             <div className="flex items-center gap-1.5">
@@ -934,7 +934,7 @@ function RomanticCalendarPicker({
               onClick={handleNextMonth}
               className="w-8 h-8 rounded-full flex items-center justify-center text-pink-200 hover:bg-pink-500/20 cursor-pointer transition-colors"
             >
-              ›
+              ÃƒÂ¢Ã¢â€šÂ¬Ã‚Âº
             </button>
           </div>
 
@@ -1010,7 +1010,7 @@ function RomanticCalendarPicker({
   )
 }
 
-// ── SCREEN 4 — QUESTIONS ───────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SCREEN 4 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â QUESTIONS ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function S4({
   onNext,
@@ -1055,7 +1055,7 @@ function S4({
     if (!filled) {
       shake()
       setErr(true)
-      setErrMessage("Please answer all secret questions ❤️")
+      setErrMessage("Please answer all secret questions ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â")
       return
     }
 
@@ -1069,7 +1069,7 @@ function S4({
         } else {
           shake()
           setErr(true)
-          setErrMessage(res.message || "Incorrect answer(s). Try once more ❤️")
+          setErrMessage(res.message || "Incorrect answer(s). Try once more ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â")
         }
       } catch {
         shake()
@@ -1105,7 +1105,7 @@ function S4({
               fontSize: "clamp(1.3rem, 3.5vw, 2rem)",
             }}
           >
-            Answer Our Special Questions ❤️
+            Answer Our Special Questions ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â
           </h2>
           <p
             className="text-xs text-center mb-8"
@@ -1180,13 +1180,13 @@ function S4({
               className="mt-5 text-center text-sm animate-fade-up"
               style={{ color: "#ffa0c0", fontFamily: "'DM Sans', sans-serif" }}
             >
-              {errMessage || "Almost... Try once more ❤️"}
+              {errMessage || "Almost... Try once more ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â"}
             </p>
           )}
 
           <div className="mt-8">
             <Btn onClick={submit} full disabled={isVerifying}>
-              {isVerifying ? "Verifying Answers... ❤️" : "Unlock Gift ❤️"}
+              {isVerifying ? "Verifying Answers... ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â" : "Unlock Gift ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â"}
             </Btn>
           </div>
         </Glass>
@@ -1195,7 +1195,7 @@ function S4({
   )
 }
 
-// ── SCREEN 5 — GIFT BOX ────────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SCREEN 5 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â GIFT BOX ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function S5({ onNext }: { onNext: () => void }) {
   const orbitAngles = [0, 60, 120, 180, 240, 300]
@@ -1225,7 +1225,7 @@ function S5({ onNext }: { onNext: () => void }) {
                 animationDuration: `${1.6 + (i % 3) * 0.4}s`,
               }}
             >
-              ✨
+              ÃƒÂ¢Ã…â€œÃ‚Â¨
             </div>
           ))}
 
@@ -1302,16 +1302,16 @@ function S5({ onNext }: { onNext: () => void }) {
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          Open it to see what I made for you ❤️
+          Open it to see what I made for you ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â
         </p>
 
-        <Btn onClick={onNext}>Open Gift ❤️</Btn>
+        <Btn onClick={onNext}>Open Gift ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â</Btn>
       </div>
     </div>
   )
 }
 
-// ── SCREEN 6 — SUSPENSE ────────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SCREEN 6 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â SUSPENSE ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function S6({ onNext, bgPhoto }: { onNext: () => void; bgPhoto?: string }) {
   return (
@@ -1334,7 +1334,7 @@ function S6({ onNext, bgPhoto }: { onNext: () => void; bgPhoto?: string }) {
       <Sparkles n={18} />
 
       <div className="cinematic-container relative z-10 flex flex-col items-center text-center animate-fade-up">
-        <div className="text-7xl mb-6 animate-pulse-heart">🌹</div>
+        <div className="text-7xl mb-6 animate-pulse-heart">ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â¹</div>
         <h2
           className="font-bold text-white mb-4 leading-snug"
           style={{
@@ -1355,13 +1355,13 @@ function S6({ onNext, bgPhoto }: { onNext: () => void; bgPhoto?: string }) {
           My complete surprise for you is about to unfold
         </p>
 
-        <Btn onClick={onNext}>Reveal Everything ❤️</Btn>
+        <Btn onClick={onNext}>Reveal Everything ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â</Btn>
       </div>
     </div>
   )
 }
 
-// ── SCREEN 7 SUB-COMPONENTS ────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SCREEN 7 SUB-COMPONENTS ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function Confetti() {
   const pieces = useRef(
@@ -1572,7 +1572,7 @@ function SpotifyPlayer({
   if (!isDirectAudio) {
     const activeId = extractSpotifyTrackId(trackId)
     return (
-      <div className="mb-6 rounded-2xl overflow-hidden shadow-2xl transition-all duration-300">
+      <div className="rounded-2xl overflow-hidden transition-all duration-300">
         <iframe
           src={`https://open.spotify.com/embed/track/${activeId}?utm_source=generator&theme=0`}
           width="100%"
@@ -1582,9 +1582,8 @@ function SpotifyPlayer({
           loading="lazy"
           className="w-full rounded-2xl"
           style={{
-            borderRadius: "16px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
-            border: "1px solid rgba(255,255,255,0.18)",
+            borderRadius: "14px",
+            border: "none",
             minHeight: "152px",
           }}
         />
@@ -1628,14 +1627,14 @@ function SpotifyPlayer({
               className="text-xs font-bold uppercase tracking-wider text-pink-300 truncate"
               style={{ fontFamily: "'DM Sans', sans-serif" }}
             >
-              🎵 Your Special Song (Full Track)
+              ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Âµ Your Special Song (Full Track)
             </span>
             <button
               onClick={toggleMute}
               className="text-xs text-white/70 hover:text-white transition-colors cursor-pointer"
               title={isMuted ? "Unmute" : "Mute"}
             >
-              {isMuted ? "🔇" : "🔊"}
+              {isMuted ? "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Â¡" : "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ…Â "}
             </button>
           </div>
 
@@ -1649,7 +1648,7 @@ function SpotifyPlayer({
                 boxShadow: "0 0 15px rgba(255,64,129,0.5)",
               }}
             >
-              {isPlaying ? "⏸" : "▶"}
+              {isPlaying ? "ÃƒÂ¢Ã‚ÂÃ‚Â¸" : "ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¶"}
             </button>
 
             <div className="flex-1 min-w-0">
@@ -1679,7 +1678,7 @@ function SparkleBurst() {
       id: i,
       x: (Math.random() - 0.5) * 130,
       y: (Math.random() - 0.5) * 110 - 30,
-      icon: ["✨", "❤️", "💖", "🌸", "💕"][i % 5],
+      icon: ["ÃƒÂ¢Ã…â€œÃ‚Â¨", "ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â", "ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã¢â‚¬â€œ", "ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â¸", "ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã¢â‚¬Â¢"][i % 5],
       scale: Math.random() * 0.5 + 0.75,
       delay: i * 0.07,
     })),
@@ -1732,7 +1731,7 @@ function MemoryBreak({ quoteIndex }: { quoteIndex: number }) {
           transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
           className="text-xl select-none"
         >
-          💖
+          ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã¢â‚¬â€œ
         </motion.span>
         <motion.div
           initial={{ width: 0 }}
@@ -1760,84 +1759,80 @@ function CinematicMemoryCard({
   photo: string
   index: number
 }) {
-  const isEven = index % 2 === 0
   const caption = ROMANTIC_CAPTIONS[index % ROMANTIC_CAPTIONS.length]
   const [hasEntered, setHasEntered] = useState(false)
 
   return (
     <motion.div
-      initial={{
-        opacity: 0,
-        y: 70,
-        scale: 0.9,
-        filter: "blur(14px)",
-        rotate: isEven ? -2.5 : 2.5,
-      }}
-      whileInView={{
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        filter: "blur(0px)",
-        rotate: 0,
-      }}
-      viewport={{ once: true, margin: "-60px" }}
+      initial={{ opacity: 0, y: 50, scale: 0.94, filter: "blur(12px)" }}
+      whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-40px" }}
       onViewportEnter={() => setHasEntered(true)}
-      transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-      className={`my-12 sm:my-16 relative flex flex-col ${
-        isEven ? "items-start lg:items-center" : "items-end lg:items-center"
-      }`}
+      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+      className="relative"
     >
       {hasEntered && <SparkleBurst />}
 
-      <div className="memory-card-inner group">
+      <div className="memory-card-inner group mx-auto">
         {/* Photo Card Container */}
         <motion.div
-          whileHover={{ scale: 1.03, rotate: isEven ? 1.5 : -1.5 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="relative overflow-hidden rounded-3xl p-2.5 shadow-2xl cursor-pointer transition-all duration-500 hover:shadow-pink-500/25"
+          whileHover={{ scale: 1.03, y: -4 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="relative overflow-hidden rounded-3xl p-2.5 shadow-2xl cursor-pointer transition-all duration-500"
           style={{
             background:
-              "linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,192,203,0.08))",
+              "linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,192,203,0.06))",
             backdropFilter: "blur(16px)",
-            border: "1px solid rgba(255,200,220,0.3)",
-            boxShadow: "0 20px 50px rgba(0,0,0,0.65)",
+            border: "1px solid rgba(255,200,220,0.25)",
+            boxShadow: "0 16px 48px rgba(0,0,0,0.6)",
           }}
         >
-          <div className="relative overflow-hidden rounded-2xl h-72 sm:h-80 lg:h-96 w-full">
+          <div className="relative overflow-hidden rounded-2xl h-64 sm:h-72 lg:h-80 w-full">
             <motion.img
               src={photo}
               alt={`Memory ${index + 1}`}
               loading="lazy"
               className="w-full h-full object-cover rounded-2xl"
-              initial={{ scale: 1.15 }}
-              animate={{ scale: [1.15, 1.05] }}
+              initial={{ scale: 1.1 }}
+              animate={{ scale: [1.1, 1.03] }}
               transition={{
-                duration: 7,
+                duration: 8,
                 repeat: Infinity,
                 repeatType: "reverse",
                 ease: "easeInOut",
               }}
             />
-            {/* Subtle Gradient Shadow Overlay */}
-            <div className="absolute inset-0 rounded-2xl pointer-events-none bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity duration-300" />
+            {/* Overlay */}
+            <div className="absolute inset-0 rounded-2xl pointer-events-none bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-70 group-hover:opacity-40 transition-opacity duration-400" />
+            {/* Hover glow ring */}
+            <div
+              className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+              style={{
+                boxShadow: "inset 0 0 30px rgba(232,120,154,0.2)",
+              }}
+            />
           </div>
 
           {/* Number Badge */}
-          <div className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase text-pink-200 bg-black/60 backdrop-blur-md border border-white/20">
-            Memory #{index + 1}
+          <div
+            className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase text-pink-200 backdrop-blur-md border border-white/15"
+            style={{ background: "rgba(0,0,0,0.55)" }}
+          >
+            #{index + 1}
           </div>
         </motion.div>
 
-        {/* Animated Glassmorphism Caption */}
+        {/* Caption */}
         <motion.div
-          initial={{ opacity: 0, y: 15 }}
+          initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.25 }}
-          className="mt-3 px-4 py-3 rounded-2xl backdrop-blur-md shadow-lg text-center"
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="mt-3 px-4 py-3 rounded-2xl text-center"
           style={{
-            background: "rgba(255, 255, 255, 0.08)",
-            border: "1px solid rgba(255, 200, 220, 0.2)",
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,200,220,0.15)",
+            backdropFilter: "blur(10px)",
           }}
         >
           <p
@@ -1870,85 +1865,142 @@ function FinalGrandMemory({ photo }: { photo: string }) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 90, scale: 0.88, filter: "blur(20px)" }}
-      whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+    <motion.section
+      initial={{ opacity: 0, y: 60, filter: "blur(16px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       viewport={{ once: true, margin: "-40px" }}
       onViewportEnter={handleEnter}
-      transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-      className="my-20 text-center relative"
+      transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+      className="finale-section"
+      style={{ borderTop: "1px solid rgba(255,200,220,0.07)" }}
     >
-      <motion.div
-        animate={{ scale: [1, 1.2, 1] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        className="text-4xl mb-3"
-      >
-        👑❤️✨
-      </motion.div>
+      <div className="finale-section-narrow">
+        {/* Section Label */}
+        <div className="text-center mb-8 md:mb-10">
+          <span
+            className="inline-block text-[10px] uppercase tracking-widest text-pink-300 font-bold px-4 py-1.5 rounded-full mb-4"
+            style={{
+              background: "rgba(232,120,154,0.12)",
+              border: "1px solid rgba(232,120,154,0.25)",
+            }}
+          >
+            ÃƒÂ¢Ã…â€œÃ‚Â¨ Our Greatest Chapter
+          </span>
+          <h2
+            className="font-bold text-white leading-tight"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: "clamp(1.5rem, 3.5vw, 2.5rem)",
+              textShadow: "0 0 40px rgba(255,180,200,0.4)",
+            }}
+          >
+            The Memory That Holds My Whole Heart
+          </h2>
+          <p
+            className="mt-3 text-sm md:text-base"
+            style={{
+              color: "rgba(255,200,220,0.6)",
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Every time I look at this, I fall in love all over again
+          </p>
+        </div>
 
-      <h3
-        className="font-bold text-pink-200 mb-1 drop-shadow-md"
-        style={{
-          fontFamily: "'Playfair Display', serif",
-          fontSize: "clamp(1.1rem, 2.5vw, 1.75rem)",
-        }}
-      >
-        Our Greatest Chapter Begins
-      </h3>
-      <p className="text-xs text-pink-300/70 mb-5 font-sans">
-        The memory that holds my whole heart forever
-      </p>
+        {/* Featured Photo Frame */}
+        <motion.div
+          whileHover={{ scale: 1.015 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="featured-memory-frame mx-auto relative cursor-pointer"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(255,215,0,0.18), rgba(232,120,154,0.28), rgba(196,181,253,0.18))",
+            padding: "3px",
+            boxShadow:
+              "0 0 60px rgba(255,105,180,0.3), 0 0 120px rgba(255,105,180,0.12), 0 30px 80px rgba(0,0,0,0.7)",
+          }}
+        >
+          {/* Glow overlay */}
+          <div
+            className="absolute inset-0 rounded-[inherit] pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255,215,0,0.08) 0%, transparent 50%, rgba(232,120,154,0.08) 100%)",
+              zIndex: 1,
+            }}
+          />
 
-      {/* Main Spotlight Image */}
-      <motion.div
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.5 }}
-        className="relative max-w-full mx-auto rounded-3xl p-3 shadow-2xl overflow-hidden cursor-pointer"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,105,180,0.35))",
-          backdropFilter: "blur(20px)",
-          border: "2px solid rgba(255,220,240,0.5)",
-          boxShadow:
-            "0 0 60px rgba(255,105,180,0.45), 0 30px 70px rgba(0,0,0,0.8)",
-        }}
-      >
-        <div className="relative overflow-hidden rounded-2xl h-80 sm:h-96 lg:h-[28rem] w-full">
+          {/* Image */}
           <motion.img
             src={photo}
-            alt="Final Memory Spotlight"
+            alt="Featured Memory"
             loading="lazy"
-            className="w-full h-full object-cover rounded-2xl"
-            initial={{ scale: 1.2 }}
-            animate={{ scale: [1.2, 1.05] }}
+            className="featured-memory-img"
+            style={{
+              borderRadius: "inherit",
+              position: "relative",
+              zIndex: 0,
+            }}
+            initial={{ scale: 1.1 }}
+            animate={{ scale: [1.1, 1.02] }}
             transition={{
-              duration: 10,
+              duration: 12,
               repeat: Infinity,
               repeatType: "reverse",
               ease: "easeInOut",
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
-        </div>
-      </motion.div>
 
-      {/* Final Romantic Glow Caption */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.9, delay: 0.4 }}
-        className="mt-4 p-4 rounded-2xl backdrop-blur-xl border border-pink-400/30 text-center shadow-xl max-w-xs sm:max-w-sm lg:max-w-lg mx-auto"
-        style={{ background: "rgba(20, 0, 35, 0.65)" }}
-      >
-        <p
-          className="text-xs sm:text-sm font-serif italic text-pink-100"
-          style={{ fontFamily: "'Playfair Display', serif" }}
+          {/* Bottom gradient overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 50%)",
+              zIndex: 2,
+              borderRadius: "inherit",
+            }}
+          />
+
+          {/* Crown badge */}
+          <div
+            className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase text-pink-100 z-10"
+            style={{
+              background: "rgba(0,0,0,0.55)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(255,215,0,0.4)",
+            }}
+          >
+            Ã°Å¸â€˜â€˜ Featured Memory
+          </div>
+        </motion.div>
+
+        {/* Elegant Caption */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, delay: 0.35 }}
+          className="mt-6 md:mt-8 text-center mx-auto max-w-2xl"
         >
-          “You are my today, my tomorrow, and my entire forever.” ❤️
-        </p>
-      </motion.div>
-    </motion.div>
+          <p
+            className="text-sm md:text-base lg:text-lg italic leading-relaxed"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              color: "rgba(255,210,225,0.9)",
+            }}
+          >
+            "You are my today, my tomorrow, and my entire forever." Ã¢ÂÂ¤Ã¯Â¸Â
+          </p>
+          <p
+            className="mt-3 text-xs"
+            style={{ color: "rgba(255,200,220,0.45)", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            The day our whole world changed
+          </p>
+        </motion.div>
+      </div>
+    </motion.section>
   )
 }
 
@@ -1956,58 +2008,77 @@ function Slideshow({ photos }: { photos?: string[] }) {
   const photoList = photos && photos.length > 0 ? photos : DEFAULT_PHOTOS
 
   return (
-    <div className="relative my-10">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8 }}
-        className="text-center mb-10"
-      >
-        <span className="text-[10px] uppercase tracking-widest text-pink-300 font-bold px-3 py-1 rounded-full bg-pink-500/15 border border-pink-400/30">
-          Our Romantic Journey ✨
-        </span>
-        <h2
-          className="font-bold text-white mt-3"
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: "clamp(1.3rem, 3vw, 2rem)",
-          }}
+    <section
+      className="finale-section"
+      style={{ borderTop: "1px solid rgba(255,200,220,0.07)" }}
+    >
+      <div className="finale-section-wide">
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9 }}
+          className="text-center mb-12 md:mb-16"
         >
-          Memories Unlocked ❤️
-        </h2>
-        <p className="text-xs text-pink-200/60 mt-1 font-sans">
-          Scroll down to relive our sweet moments together
-        </p>
-      </motion.div>
+          <span
+            className="inline-block text-[10px] uppercase tracking-widest text-pink-300 font-bold px-4 py-1.5 rounded-full mb-5"
+            style={{
+              background: "rgba(232,120,154,0.12)",
+              border: "1px solid rgba(232,120,154,0.25)",
+            }}
+          >
+            Our Love Story Ã¢Å“Â¨
+          </span>
+          <h2
+            className="font-bold text-white leading-tight"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: "clamp(1.6rem, 3.5vw, 2.6rem)",
+              textShadow: "0 0 40px rgba(255,180,200,0.4)",
+            }}
+          >
+            Every Moment With You Is Unforgettable Ã¢ÂÂ¤Ã¯Â¸Â
+          </h2>
+          <p
+            className="mt-4 text-sm md:text-base max-w-xl mx-auto"
+            style={{
+              color: "rgba(255,200,220,0.6)",
+              fontFamily: "'DM Sans', sans-serif",
+              lineHeight: 1.7,
+            }}
+          >
+            These are the memories I treasure most Ã¢â‚¬â€ each one a chapter in our love story
+          </p>
+        </motion.div>
 
-      {/* Timeline items */}
-      <div className="memory-grid relative">
-        {photoList.map((photo, i) => {
-          const isLast = i === photoList.length - 1
-          const isMemoryBreak = i > 0 && i % 3 === 0 && !isLast
+        {/* Memory Grid */}
+        <div className="memory-grid">
+          {photoList.map((photo, i) => {
+            const isLast = i === photoList.length - 1
+            const isMemoryBreak = i > 0 && i % 4 === 0 && !isLast
 
-          return (
-            <React.Fragment key={i}>
-              {isMemoryBreak && (
-                <div className="memory-break-full">
-                  <MemoryBreak quoteIndex={Math.floor(i / 3) - 1} />
-                </div>
-              )}
+            return (
+              <React.Fragment key={i}>
+                {isMemoryBreak && (
+                  <div className="memory-break-full">
+                    <MemoryBreak quoteIndex={Math.floor(i / 4) - 1} />
+                  </div>
+                )}
 
-              {isLast ? (
-                <div className="memory-final-full">
-                  <FinalGrandMemory photo={photo} />
-                </div>
-              ) : (
-                <CinematicMemoryCard photo={photo} index={i} />
-              )}
-            </React.Fragment>
-          )
-        })}
+                {isLast ? (
+                  <div className="memory-final-full">
+                    <FinalGrandMemory photo={photo} />
+                  </div>
+                ) : (
+                  <CinematicMemoryCard photo={photo} index={i} />
+                )}
+              </React.Fragment>
+            )
+          })}
+        </div>
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -2028,7 +2099,7 @@ function LoveLetter({ letter }: { letter?: string }) {
           obs.disconnect()
         }
       },
-      { threshold: 0.2 },
+      { threshold: 0.15 },
     )
     obs.observe(el)
     return () => obs.disconnect()
@@ -2039,38 +2110,133 @@ function LoveLetter({ letter }: { letter?: string }) {
     const t = setTimeout(() => {
       pos.current++
       setText(content.slice(0, pos.current))
-    }, 20)
+    }, 18)
     return () => clearTimeout(t)
   }, [on, text, content])
 
   return (
-    <div ref={ref} className="mb-8">
-      <Glass className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-xl">💌</span>
+    <section
+      className="finale-section"
+      style={{ borderTop: "1px solid rgba(255,200,220,0.07)" }}
+    >
+      <div className="finale-section-narrow">
+        {/* Section heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.85 }}
+          className="text-center mb-10 md:mb-12"
+        >
           <span
-            className="text-white text-sm font-semibold"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}
+            className="inline-block text-[10px] uppercase tracking-widest text-pink-300 font-bold px-4 py-1.5 rounded-full mb-5"
+            style={{
+              background: "rgba(232,120,154,0.12)",
+              border: "1px solid rgba(232,120,154,0.25)",
+            }}
           >
-            My Letter From The Heart
+            Ã°Å¸â€™Å’ From My Heart To Yours
           </span>
-        </div>
-        <div
-          className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap"
+          <h2
+            className="font-bold text-white leading-tight"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: "clamp(1.5rem, 3.5vw, 2.4rem)",
+              textShadow: "0 0 40px rgba(255,180,200,0.4)",
+            }}
+          >
+            Words I Could Never Say Out Loud
+          </h2>
+          <p
+            className="mt-3 text-sm md:text-base"
+            style={{
+              color: "rgba(255,200,220,0.6)",
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            A letter written only for you, with everything I feel
+          </p>
+        </motion.div>
+
+        {/* Letter Card */}
+        <motion.div
+          ref={ref}
+          initial={{ opacity: 0, y: 32 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, delay: 0.1 }}
+          className="love-letter-card"
           style={{
-            color: "rgba(255,210,225,0.9)",
-            fontFamily: "'Playfair Display', serif",
-            fontStyle: "italic",
-            minHeight: "100px",
+            background: "rgba(255,255,255,0.05)",
+            backdropFilter: "blur(28px)",
+            WebkitBackdropFilter: "blur(28px)",
+            border: "1px solid rgba(255,200,220,0.18)",
+            borderRadius: "24px",
+            boxShadow:
+              "0 12px 60px rgba(0,0,0,0.4), 0 0 80px rgba(232,120,154,0.06), inset 0 1px 0 rgba(255,255,255,0.08)",
+            padding: "clamp(1.5rem, 4vw, 2.5rem)",
           }}
         >
-          {text}
-          {pos.current < content.length && (
-            <span className="inline-block w-0.5 h-3.5 ml-0.5 rounded-full animate-blink-cursor align-text-bottom bg-pink-400" />
+          {/* Letter Header */}
+          <div className="flex items-center gap-3 mb-6 pb-5" style={{ borderBottom: "1px solid rgba(255,200,220,0.12)" }}>
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0"
+              style={{
+                background: "linear-gradient(135deg, rgba(232,120,154,0.2), rgba(196,67,138,0.2))",
+                border: "1px solid rgba(232,120,154,0.3)",
+              }}
+            >
+              Ã°Å¸â€™Å’
+            </div>
+            <div>
+              <p
+                className="text-sm font-semibold text-white"
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
+              >
+                My Letter From The Heart
+              </p>
+              <p className="text-xs" style={{ color: "rgba(255,200,220,0.5)" }}>
+                Written with all my love, only for you
+              </p>
+            </div>
+          </div>
+
+          {/* Letter Content */}
+          <div
+            className="whitespace-pre-wrap"
+            style={{
+              color: "rgba(255,210,225,0.92)",
+              fontFamily: "'Playfair Display', serif",
+              fontStyle: "italic",
+              fontSize: "clamp(0.9rem, 1.8vw, 1.05rem)",
+              lineHeight: 1.9,
+              minHeight: "80px",
+            }}
+          >
+            {text}
+            {pos.current < content.length && (
+              <span className="inline-block w-0.5 h-4 ml-0.5 rounded-full animate-blink-cursor align-text-bottom bg-pink-400" />
+            )}
+          </div>
+
+          {/* Letter Footer */}
+          {pos.current >= content.length && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1 }}
+              className="mt-6 pt-5 flex items-center justify-center gap-2"
+              style={{ borderTop: "1px solid rgba(255,200,220,0.1)" }}
+            >
+              <span className="text-xs" style={{ color: "rgba(255,200,220,0.45)", fontFamily: "'DM Sans', sans-serif" }}>
+                Forever yours
+              </span>
+              <span className="text-sm animate-pulse-heart">Ã¢ÂÂ¤Ã¯Â¸Â</span>
+            </motion.div>
           )}
-        </div>
-      </Glass>
-    </div>
+        </motion.div>
+      </div>
+    </section>
   )
 }
 
@@ -2079,7 +2245,7 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
   const [prog, setProg] = useState(0)
   const audioObjRef = useRef<HTMLAudioElement | null>(null)
   const bars = useRef(
-    Array.from({ length: 32 }, () => Math.random() * 26 + 6),
+    Array.from({ length: 48 }, () => Math.random() * 36 + 8),
   ).current
 
   useEffect(() => {
@@ -2134,130 +2300,177 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
     }
   }, [play])
 
+
   return (
-    <div className="mb-8">
-      <Glass className="p-6">
-        <p
-          className="text-center text-sm mb-5"
+    <section
+      className="finale-section"
+      style={{ borderTop: "1px solid rgba(255,200,220,0.07)" }}
+    >
+      <div className="finale-section-narrow">
+        {/* Section Heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.85 }}
+          className="text-center mb-10 md:mb-12"
+        >
+          <span
+            className="inline-block text-[10px] uppercase tracking-widest text-pink-300 font-bold px-4 py-1.5 rounded-full mb-5"
+            style={{
+              background: "rgba(232,120,154,0.12)",
+              border: "1px solid rgba(232,120,154,0.25)",
+            }}
+          >
+            Voice Message
+          </span>
+          <h2
+            className="font-bold text-white leading-tight"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: "clamp(1.5rem, 3.5vw, 2.4rem)",
+              textShadow: "0 0 40px rgba(255,180,200,0.4)",
+            }}
+          >
+            A Message Straight From My Heart
+          </h2>
+          <p
+            className="mt-3 text-sm md:text-base"
+            style={{
+              color: "rgba(255,200,220,0.6)",
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Press play to hear what I could never find words to write
+          </p>
+        </motion.div>
+
+        {/* Premium Voice Player */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, delay: 0.1 }}
+          className="voice-player-card"
           style={{
-            color: "rgba(255,200,220,0.62)",
-            fontFamily: "'DM Sans', sans-serif",
+            background: "linear-gradient(135deg, rgba(28,8,42,0.96), rgba(72,12,60,0.96))",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            border: "1px solid rgba(255,182,193,0.22)",
+            borderRadius: "24px",
+            boxShadow: play
+              ? "0 0 50px rgba(255,105,180,0.25), 0 20px 60px rgba(0,0,0,0.5)"
+              : "0 20px 60px rgba(0,0,0,0.5)",
+            padding: "clamp(1.5rem, 4vw, 2.5rem)",
+            transition: "box-shadow 0.4s ease",
           }}
         >
-          My voice note straight from my heart ❤️
-        </p>
+          {/* Player Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
+                style={{
+                  background: "linear-gradient(135deg, rgba(232,120,154,0.25), rgba(196,67,138,0.25))",
+                  border: "1px solid rgba(232,120,154,0.35)",
+                }}
+              >
+                {String.fromCodePoint(0x1F3A4)}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                  Voice Message For You
+                </p>
+                <p className="text-xs" style={{ color: "rgba(255,200,220,0.5)" }}>
+                  {play ? "Playing now..." : "Tap to listen"}
+                </p>
+              </div>
+            </div>
+            {/* Reel accents */}
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-5 h-5 rounded-full border-2 border-pink-400/60 flex items-center justify-center ${play ? "animate-spin" : ""}`}
+                style={{ animationDuration: "3s" }}
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-pink-300" />
+              </div>
+              <div className="h-0.5 w-8 bg-gradient-to-r from-pink-500 to-purple-400 rounded-full" />
+              <div
+                className={`w-5 h-5 rounded-full border-2 border-pink-400/60 flex items-center justify-center ${play ? "animate-spin" : ""}`}
+                style={{ animationDuration: "3s" }}
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-pink-300" />
+              </div>
+            </div>
+          </div>
 
-        <div className="flex justify-center mb-5">
-          <button
-            onClick={() => setPlay((p) => !p)}
-            className="relative w-36 h-24 rounded-2xl cursor-pointer hover:scale-105 transition-all duration-300 p-3 flex flex-col justify-between overflow-hidden shadow-2xl"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(35,10,45,0.95), rgba(85,15,70,0.95))",
-              border: "1.5px solid rgba(255,182,193,0.4)",
-              boxShadow: play
-                ? "0 0 30px rgba(255,105,180,0.65)"
-                : "0 8px 25px rgba(0,0,0,0.5)",
-            }}
+          {/* Waveform */}
+          <div className="flex items-end gap-0.5 justify-center mb-6" style={{ height: "64px" }}>
+            {bars.map((h, i) => (
+              <div
+                key={i}
+                className="rounded-full flex-shrink-0"
+                style={{
+                  width: "3px",
+                  height: play ? `${Math.min(h, 56)}px` : "4px",
+                  background: `linear-gradient(to top, rgba(201,67,138,${play ? 0.8 : 0.3}), rgba(255,200,220,${play ? 1 : 0.4}))`,
+                  animation: play
+                    ? `waveform-bar-lg ${0.28 + (i % 7) * 0.06}s ease-in-out ${i * 0.015}s infinite alternate`
+                    : "none",
+                  transition: "height 0.3s ease, background 0.3s ease",
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Progress Bar */}
+          <div
+            className="h-1.5 rounded-full overflow-hidden mb-6"
+            style={{ background: "rgba(255,255,255,0.08)" }}
           >
-            {/* Cassette Header Label */}
-            <div className="flex justify-between items-center px-1">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-pink-300 font-mono">
-                📼 MY VOICE NOTE FOR YOU
-              </span>
-              <span className="text-[10px] text-pink-200 font-medium">
-                {play ? "🔊 PLAYING" : "▶ PLAY"}
-              </span>
-            </div>
-
-            {/* Cassette Tape Reels Window */}
-            <div className="my-1 py-1.5 px-3 rounded-xl bg-black/70 border border-pink-400/30 flex items-center justify-between">
-              {/* Left Reel */}
-              <div
-                className={`w-7 h-7 rounded-full border-2 border-pink-400 flex items-center justify-center ${
-                  play ? "animate-spin" : ""
-                }`}
-                style={{ animationDuration: "2.5s" }}
-              >
-                <div className="w-2.5 h-2.5 rounded-full bg-pink-200 border border-pink-500" />
-              </div>
-
-              {/* Tape Window Ribbon */}
-              <div className="h-1.5 flex-1 mx-2 bg-gradient-to-r from-pink-500 via-purple-400 to-pink-500 rounded-full" />
-
-              {/* Right Reel */}
-              <div
-                className={`w-7 h-7 rounded-full border-2 border-pink-400 flex items-center justify-center ${
-                  play ? "animate-spin" : ""
-                }`}
-                style={{ animationDuration: "2.5s" }}
-              >
-                <div className="w-2.5 h-2.5 rounded-full bg-pink-200 border border-pink-500" />
-              </div>
-            </div>
-
-            {/* Cassette Bottom Screws / Details */}
-            <div className="flex justify-between items-center px-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
-              <span className="text-[8px] font-mono text-pink-300/60 uppercase">
-                HIGH FIDELITY STEREO
-              </span>
-              <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
-            </div>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-px justify-center h-10 mb-3">
-          {bars.map((h, i) => (
             <div
-              key={i}
-              className="rounded-full"
+              className="h-full rounded-full"
               style={{
-                width: "3px",
-                height: play ? `${h}px` : "3px",
-                background:
-                  "linear-gradient(to top, rgba(232,120,154,0.5), rgba(255,200,220,0.92))",
-                animation: play
-                  ? `waveform-bar ${0.32 + (i % 7) * 0.07}s ease-in-out ${i * 0.018}s infinite alternate`
-                  : "none",
-                transition: "height 0.28s ease",
+                width: `${prog}%`,
+                background: "linear-gradient(90deg, #e8789a, #c9438a)",
+                transition: "width 0.08s linear",
+                boxShadow: "0 0 8px rgba(232,120,154,0.6)",
               }}
             />
-          ))}
-        </div>
+          </div>
 
-        <div
-          className="h-1 rounded-full overflow-hidden mb-5"
-          style={{ background: "rgba(255,255,255,0.08)" }}
-        >
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${prog}%`,
-              background: "linear-gradient(90deg, #e8789a, #c9438a)",
-              transition: "width 0.08s linear",
-            }}
-          />
-        </div>
+          {/* Large Play Button */}
+          <div className="flex justify-center">
+            <button
+              onClick={() => setPlay((p) => !p)}
+              className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 select-none"
+              style={{
+                background: "linear-gradient(135deg, #e8789a, #c9438a, #9e2070)",
+                boxShadow: play
+                  ? "0 0 40px rgba(232,120,154,0.8), 0 8px 30px rgba(156,32,112,0.5)"
+                  : "0 6px 28px rgba(232,120,154,0.55), 0 3px 12px rgba(0,0,0,0.4)",
+                border: "2px solid rgba(255,255,255,0.12)",
+                transition: "box-shadow 0.3s ease",
+              }}
+            >
+              {play ? "\u23F8" : "\u25B6"}
+            </button>
+          </div>
 
-        <div className="flex justify-center">
-          <button
-            onClick={() => setPlay((p) => !p)}
-            className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
-            style={{
-              background: "linear-gradient(135deg, #e8789a, #c9438a)",
-              boxShadow: "0 4px 22px rgba(232,120,154,0.65)",
-            }}
+          <p
+            className="text-center text-xs mt-5"
+            style={{ color: "rgba(255,200,220,0.45)", fontFamily: "'DM Sans', sans-serif" }}
           >
-            {play ? "⏸" : "▶"}
-          </button>
-        </div>
-      </Glass>
-    </div>
+            {play ? "Listening to my heart speak... \u2764\uFE0F" : "My voice note, straight from my heart \u2764\uFE0F"}
+          </p>
+        </motion.div>
+      </div>
+    </section>
   )
 }
 
-// ── SCREEN 7 — FINALE ──────────────────────────────────────────────────────
+
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SCREEN 7 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â FINALE ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function S7({
   onReplay,
@@ -2289,47 +2502,280 @@ function S7({
       <Sparkles n={35} />
       <GlowOrbs />
 
-      <div className="finale-container relative z-10 py-10">
-        <SpotifyPlayer trackId={trackId} />
+      {/* â”€â”€ HERO SECTION â”€â”€ */}
+      <section className="relative z-10 text-center" style={{ paddingTop: "clamp(5rem, 12vw, 8rem)", paddingBottom: "clamp(3rem, 8vw, 5rem)" }}>
+        <div className="finale-section-narrow">
+          {/* Glow ring */}
+          <div
+            className="absolute left-1/2 top-1/2 pointer-events-none animate-glow-ring"
+            style={{
+              width: "clamp(280px, 60vw, 600px)",
+              height: "clamp(280px, 60vw, 600px)",
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(232,120,154,0.1) 0%, rgba(196,67,138,0.05) 50%, transparent 75%)",
+              zIndex: 0,
+            }}
+          />
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.88, y: 24 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.12, 1], rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+              className="text-5xl md:text-6xl mb-6 inline-block"
+              style={{ filter: "drop-shadow(0 0 30px rgba(255,80,140,0.7))" }}
+            >
+              ðŸŒ¹
+            </motion.div>
+
+            <h1
+              className="font-bold text-white leading-tight mb-5"
+              style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: "clamp(2rem, 5.5vw, 4.5rem)",
+                textShadow: "0 0 60px rgba(255,180,200,0.5), 0 0 120px rgba(255,100,160,0.2)",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              A Surprise Made Only For You
+            </h1>
+
+            <p
+              className="text-base md:text-lg max-w-xl mx-auto"
+              style={{
+                color: "rgba(255,200,220,0.65)",
+                fontFamily: "'DM Sans', sans-serif",
+                lineHeight: 1.7,
+              }}
+            >
+              Every memory, every word, every note â€” crafted with love, just for you
+            </p>
+
+            {/* Scroll indicator */}
+            <motion.div
+              className="mt-10 flex flex-col items-center gap-2 animate-scroll-bounce"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+            >
+              <span className="text-xs uppercase tracking-widest" style={{ color: "rgba(255,200,220,0.4)", fontFamily: "'DM Sans', sans-serif" }}>
+                Scroll to experience
+              </span>
+              <div
+                className="w-5 h-8 rounded-full border flex items-start justify-center pt-1.5"
+                style={{ borderColor: "rgba(255,200,220,0.2)" }}
+              >
+                <div className="w-1 h-2 rounded-full" style={{ background: "rgba(232,120,154,0.7)" }} />
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* â”€â”€ CONTENT SECTIONS â”€â”€ */}
+      <div className="relative z-10">
+        {/* Our Love Story â€” Memory Gallery */}
         <Slideshow photos={photos} />
+
+        {/* Love Letter */}
         <LoveLetter letter={letter} />
+
+        {/* Voice Message */}
         <VoiceNote voiceNoteUrl={voiceNoteUrl} />
 
-        {/* Grand Finale */}
-        <div className="text-center py-10">
-          <div className="text-6xl mb-5 animate-pulse-heart">❤️</div>
-          <h1
-            className="font-bold text-white mb-3 leading-tight"
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: "clamp(1.8rem, 5vw, 3rem)",
-              textShadow: "0 0 44px rgba(255,180,200,0.65)",
-            }}
-          >
-            Happy Girlfriend Day ❤️
-          </h1>
-          <p
-            className="text-sm mb-12"
-            style={{
-              color: "rgba(255,200,220,0.55)",
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-          >
-            I love you more than words can say, forever and always ❤️
-          </p>
+        {/* Our Song */}
+        <section
+          className="finale-section"
+          style={{ borderTop: "1px solid rgba(255,200,220,0.07)" }}
+        >
+          <div className="finale-section-narrow">
+            <motion.div
+              initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.85 }}
+              className="text-center mb-10 md:mb-12"
+            >
+              <span
+                className="inline-block text-[10px] uppercase tracking-widest text-pink-300 font-bold px-4 py-1.5 rounded-full mb-5"
+                style={{
+                  background: "rgba(232,120,154,0.12)",
+                  border: "1px solid rgba(232,120,154,0.25)",
+                }}
+              >
+                ðŸŽµ Our Song
+              </span>
+              <h2
+                className="font-bold text-white leading-tight"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: "clamp(1.5rem, 3.5vw, 2.4rem)",
+                  textShadow: "0 0 40px rgba(255,180,200,0.4)",
+                }}
+              >
+                The Song That Reminds Me of Us
+              </h2>
+              <p
+                className="mt-3 text-sm md:text-base"
+                style={{
+                  color: "rgba(255,200,220,0.6)",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Every lyric, every note â€” I think of you
+              </p>
+            </motion.div>
 
-          <div className="flex flex-col gap-4">
-            <Btn onClick={onReplay} full>
-              🔄 Replay Surprise
-            </Btn>
+            <motion.div
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9, delay: 0.1 }}
+              className="music-card"
+              style={{
+                background: "linear-gradient(135deg, rgba(20,6,32,0.95), rgba(55,10,48,0.95))",
+                backdropFilter: "blur(24px)",
+                WebkitBackdropFilter: "blur(24px)",
+                border: "1px solid rgba(255,182,193,0.18)",
+                borderRadius: "24px",
+                boxShadow: "0 0 60px rgba(232,120,154,0.08), 0 20px 60px rgba(0,0,0,0.5)",
+                padding: "clamp(1.25rem, 3vw, 2rem)",
+              }}
+            >
+              <SpotifyPlayer trackId={trackId} />
+            </motion.div>
           </div>
-        </div>
+        </section>
+
+        {/* â”€â”€ FINAL PROMISE SECTION â”€â”€ */}
+        <section
+          className="finale-section"
+          style={{ borderTop: "1px solid rgba(255,200,220,0.07)" }}
+        >
+          <div className="finale-section-narrow text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.92 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className="text-6xl md:text-7xl mb-8 inline-block animate-finale-heart">
+                â¤ï¸
+              </div>
+
+              <h2
+                className="font-bold text-white leading-tight mb-6 animate-promise-glow"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: "clamp(1.8rem, 4.5vw, 3.5rem)",
+                }}
+              >
+                Thank You For Being My Forever
+              </h2>
+
+              <p
+                className="text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-4"
+                style={{
+                  color: "rgba(255,210,225,0.8)",
+                  fontFamily: "'Playfair Display', serif",
+                  fontStyle: "italic",
+                  lineHeight: 1.85,
+                }}
+              >
+                You are my greatest adventure, my softest landing, and my whole heart. Everything beautiful in my life leads back to you.
+              </p>
+
+              <p
+                className="text-sm md:text-base mb-12"
+                style={{
+                  color: "rgba(255,200,220,0.5)",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                I love you more than words can say, forever and always â¤ï¸
+              </p>
+
+              <div className="flex items-center justify-center gap-4 mb-12">
+                <div className="h-px flex-1 max-w-24" style={{ background: "linear-gradient(to right, transparent, rgba(255,180,200,0.3))" }} />
+                <motion.span
+                  animate={{ scale: [1, 1.3, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="text-lg"
+                >
+                  âœ¨
+                </motion.span>
+                <div className="h-px flex-1 max-w-24" style={{ background: "linear-gradient(to left, transparent, rgba(255,180,200,0.3))" }} />
+              </div>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.2, delay: 0.4 }}
+                className="text-lg md:text-xl font-semibold mb-10"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontStyle: "italic",
+                  color: "rgba(255,180,200,0.7)",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                Our Story Will Continue...
+              </motion.p>
+
+              <Btn onClick={onReplay}>
+                ðŸ”„ Replay Surprise
+              </Btn>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* â”€â”€ ELEGANT FOOTER â”€â”€ */}
+        <footer
+          className="text-center relative z-10"
+          style={{
+            paddingBlock: "2.5rem",
+            borderTop: "1px solid rgba(255,200,220,0.06)",
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1 }}
+          >
+            <p
+              className="text-sm"
+              style={{
+                color: "rgba(255,200,220,0.4)",
+                fontFamily: "'Playfair Display', serif",
+                fontStyle: "italic",
+              }}
+            >
+              Made with â¤ï¸ only for you
+            </p>
+            <p
+              className="text-xs mt-2"
+              style={{
+                color: "rgba(255,200,220,0.2)",
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Your Love Story &copy; Forever
+            </p>
+          </motion.div>
+        </footer>
       </div>
     </div>
   )
 }
 
-// ── WITHDRAW MODAL ─────────────────────────────────────────────────────────
+
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ WITHDRAW MODAL ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function WithdrawModal({
   isOpen,
@@ -2393,7 +2839,7 @@ function WithdrawModal({
           }}
         >
           <div className="text-center mb-5">
-            <div className="text-3xl mb-1">🏦</div>
+            <div className="text-3xl mb-1">ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¦</div>
             <h3
               className="text-xl font-bold text-white"
               style={{ fontFamily: "'Playfair Display', serif" }}
@@ -2493,7 +2939,7 @@ function WithdrawModal({
 
             {error && (
               <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
-                ⚠️ {error}
+                ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â {error}
               </p>
             )}
 
@@ -2519,7 +2965,7 @@ function WithdrawModal({
   )
 }
 
-// ── HAMBURGER MENU ─────────────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ HAMBURGER MENU ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function HamburgerMenu({
   onOpenReferrals,
@@ -2614,7 +3060,7 @@ function HamburgerMenu({
                 }}
                 className="w-full px-3.5 py-3 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-3 transition-colors cursor-pointer"
               >
-                <span className="text-base">🎁</span> My Referrals
+                <span className="text-base">ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â</span> My Referrals
               </button>
 
               <button
@@ -2626,7 +3072,7 @@ function HamburgerMenu({
                 }}
                 className="w-full px-3.5 py-3 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-3 transition-colors cursor-pointer"
               >
-                <span className="text-base">💖</span> Create Surprise
+                <span className="text-base">ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã¢â‚¬â€œ</span> Create Surprise
               </button>
 
               <button
@@ -2638,7 +3084,7 @@ function HamburgerMenu({
                 }}
                 className="w-full px-3.5 py-3 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-3 transition-colors cursor-pointer"
               >
-                <span className="text-base">👀</span> Preview Flow
+                <span className="text-base">ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â€šÂ¬</span> Preview Flow
               </button>
 
 
@@ -2650,7 +3096,7 @@ function HamburgerMenu({
   )
 }
 
-// ── REFERRALS LOCKED MODAL ─────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ REFERRALS LOCKED MODAL ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function ReferralsLockedModal({
   isOpen,
@@ -2692,7 +3138,7 @@ function ReferralsLockedModal({
           }}
         >
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40 flex items-center justify-center text-3xl shadow-lg animate-pulse">
-            🔒
+            ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢
           </div>
 
           <h3
@@ -2708,7 +3154,7 @@ function ReferralsLockedModal({
           >
             To unlock your{" "}
             <strong className="text-pink-300">Referral Dashboard</strong> and
-            start earning <strong className="text-emerald-400">₹10</strong> for
+            start earning <strong className="text-emerald-400">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹10</strong> for
             every friend who purchases, first create a gift or sign in!
           </p>
 
@@ -2722,7 +3168,7 @@ function ReferralsLockedModal({
               }}
               className="w-full py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 shadow-lg shadow-pink-500/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
             >
-              Create Gift For Her ❤️
+              Create Gift For Her ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â
             </button>
 
             <button
@@ -2743,7 +3189,7 @@ function ReferralsLockedModal({
   )
 }
 
-// ── REFERRAL POPUP MODAL ───────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ REFERRAL POPUP MODAL ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function ReferralPopupModal({
   isOpen,
@@ -2790,7 +3236,7 @@ function ReferralPopupModal({
         >
           {/* Top Icon Badge */}
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40 flex items-center justify-center text-3xl shadow-lg animate-pulse-heart">
-            🎁
+            ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â
           </div>
 
           <h3
@@ -2831,7 +3277,7 @@ function ReferralPopupModal({
               />
               {errorMsg && (
                 <p className="text-xs text-red-400 font-semibold mt-2 animate-fade-up">
-                  ⚠️ {errorMsg}
+                  ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â {errorMsg}
                 </p>
               )}
             </div>
@@ -2849,7 +3295,7 @@ function ReferralPopupModal({
                 onClick={() => onApply(code)}
                 className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 shadow-lg shadow-pink-500/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
               >
-                Apply Code ✨
+                Apply Code ÃƒÂ¢Ã…â€œÃ‚Â¨
               </button>
             </div>
           </div>
@@ -2888,7 +3334,7 @@ function base64ToFile(dataurl: string, filename: string): File {
   }
 }
 
-// ── DASHBOARD ──────────────────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ DASHBOARD ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 function Dashboard({
   onBack,
@@ -3243,7 +3689,7 @@ function Dashboard({
 
   const handleGenerateLink = async () => {
     if (!gfName.trim() || !bfName.trim()) {
-      setErrorMsg("Please enter both Girlfriend and Boyfriend names ❤️")
+      setErrorMsg("Please enter both Girlfriend and Boyfriend names ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â")
       return
     }
     setErrorMsg("")
@@ -3443,7 +3889,7 @@ function Dashboard({
               color: "#1a0035",
             }}
           >
-            Create a Surprise ❤️
+            Create a Surprise ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â
           </h1>
         </div>
       </div>
@@ -3457,7 +3903,7 @@ function Dashboard({
               filter: "drop-shadow(0 0 18px rgba(232,120,154,0.5))",
             }}
           >
-            💝
+            ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â
           </div>
           <h2
             style={{
@@ -3486,7 +3932,7 @@ function Dashboard({
 
         {/* 1. Names */}
         <div style={card}>
-          <div style={secTitle}>💑 Your Love Story</div>
+          <div style={secTitle}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã¢â‚¬Ëœ Your Love Story</div>
           <div style={secSub}>Tell us who this surprise is for</div>
           <div
             style={{ display: "flex", flexDirection: "column", gap: "14px" }}
@@ -3518,7 +3964,7 @@ function Dashboard({
 
         {/* 2. Photos */}
         <div style={card}>
-          <div style={secTitle}>📸 Your Memories</div>
+          <div style={secTitle}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¸ Your Memories</div>
           <div style={secSub}>Upload up to 5 special photos together</div>
 
           <div
@@ -3543,7 +3989,7 @@ function Dashboard({
                 : "rgba(255,240,246,0.7)",
             }}
           >
-            <div style={{ fontSize: "28px", marginBottom: "6px" }}>📷</div>
+            <div style={{ fontSize: "28px", marginBottom: "6px" }}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â·</div>
             <p
               style={{
                 fontFamily: "'DM Sans', sans-serif",
@@ -3599,7 +4045,7 @@ function Dashboard({
                     className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-white text-xs flex items-center justify-center cursor-pointer font-bold"
                     style={{ background: "#e8789a", lineHeight: 1 }}
                   >
-                    ×
+                    ÃƒÆ’Ã¢â‚¬â€
                   </button>
                 </div>
               ))}
@@ -3609,9 +4055,9 @@ function Dashboard({
 
         {/* 3. Love Letter */}
         <div style={card}>
-          <div style={secTitle}>💌 Your Love Letter</div>
+          <div style={secTitle}>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã…â€™ Your Love Letter</div>
           <div style={secSub}>
-            Write from your heart — she will treasure this forever
+            Write from your heart ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â she will treasure this forever
           </div>
           <textarea
             value={letter}
@@ -3646,7 +4092,7 @@ function Dashboard({
 
         {/* 4. Voice Note */}
         <div style={card}>
-          <div style={secTitle}>🎙️ Voice Note</div>
+          <div style={secTitle}>ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â€žÂ¢ÃƒÂ¯Ã‚Â¸Ã‚Â Voice Note</div>
           <div style={secSub}>
             Directly record your voice or upload an audio file
           </div>
@@ -3660,7 +4106,7 @@ function Dashboard({
               }}
             >
               <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center text-xl">
-                🎵
+                ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Âµ
               </div>
               <div className="flex-1">
                 <p
@@ -3671,7 +4117,7 @@ function Dashboard({
                     fontWeight: "700",
                   }}
                 >
-                  Voice note recorded ✓
+                  Voice note recorded ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“
                 </p>
                 <p
                   style={{
@@ -3693,7 +4139,7 @@ function Dashboard({
                 }}
                 className="px-3 py-1.5 rounded-full text-xs font-bold text-pink-700 hover:bg-pink-200/50 cursor-pointer"
               >
-                🔄 Re-record
+                ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ Re-record
               </button>
             </div>
           ) : isRecording ? (
@@ -3724,7 +4170,7 @@ function Dashboard({
                   fontFamily: "'DM Sans', sans-serif",
                 }}
               >
-                Speak from your heart ❤️
+                Speak from your heart ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â
               </p>
               <button
                 type="button"
@@ -3736,7 +4182,7 @@ function Dashboard({
                   boxShadow: "0 4px 18px rgba(232,120,154,0.5)",
                 }}
               >
-                ⏹️ Stop & Save Voice Note
+                ÃƒÂ¢Ã‚ÂÃ‚Â¹ÃƒÂ¯Ã‚Â¸Ã‚Â Stop & Save Voice Note
               </button>
             </div>
           ) : (
@@ -3751,7 +4197,7 @@ function Dashboard({
                   boxShadow: "0 4px 18px rgba(232,120,154,0.12)",
                 }}
               >
-                <div style={{ fontSize: "32px", marginBottom: "6px" }}>🎙️</div>
+                <div style={{ fontSize: "32px", marginBottom: "6px" }}>ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â€žÂ¢ÃƒÂ¯Ã‚Â¸Ã‚Â</div>
                 <p
                   style={{
                     fontFamily: "'DM Sans', sans-serif",
@@ -3771,7 +4217,7 @@ function Dashboard({
                     marginTop: "2px",
                   }}
                 >
-                  Speak your message for her ❤️
+                  Speak your message for her ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â
                 </p>
               </button>
               {/* Native mobile mic fallback input */}
@@ -3794,7 +4240,7 @@ function Dashboard({
 
         {/* 5. Her Special Song (MP3 Upload Only) */}
         <div style={card}>
-          <div style={secTitle}>🎵 Her Special Song (MP3 Upload)</div>
+          <div style={secTitle}>ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Âµ Her Special Song (MP3 Upload)</div>
           <div style={secSub}>
             Upload an MP3 song file so the full song plays when she opens the
             gift!
@@ -3828,7 +4274,7 @@ function Dashboard({
                   }
                 }}
               />
-              <div className="text-3xl mb-2">🎶</div>
+              <div className="text-3xl mb-2">ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¶</div>
               <div className="text-sm font-bold text-[#7a0f50]">
                 {musicFile
                   ? `Uploaded: ${musicFile.name}`
@@ -3836,7 +4282,7 @@ function Dashboard({
               </div>
               <div className="text-xs text-pink-700/70 mt-1">
                 {musicFile
-                  ? `Size: ${(musicFile.size / (1024 * 1024)).toFixed(2)} MB • Click to change`
+                  ? `Size: ${(musicFile.size / (1024 * 1024)).toFixed(2)} MB ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Click to change`
                   : "Supports MP3, M4A, WAV audio files (100% full song playback)"}
               </div>
             </div>
@@ -3855,7 +4301,7 @@ function Dashboard({
                   }}
                   className="text-xs text-pink-600 hover:text-pink-800 underline font-medium cursor-pointer"
                 >
-                  🗑️ Remove Uploaded Song
+                  ÃƒÂ°Ã…Â¸Ã¢â‚¬â€Ã¢â‚¬ËœÃƒÂ¯Ã‚Â¸Ã‚Â Remove Uploaded Song
                 </button>
               </div>
             )}
@@ -3886,7 +4332,7 @@ function Dashboard({
 
         {/* 6. Secret Questions */}
         <div style={card}>
-          <div style={secTitle}>🔐 Secret Questions</div>
+          <div style={secTitle}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Secret Questions</div>
           <div style={secSub}>
             Customize the questions and exact answers she must reply to unlock
             the surprise
@@ -3905,12 +4351,12 @@ function Dashboard({
                 letterSpacing: "0.05em",
               }}
             >
-              💡 Need Ideas? Tap a Preset:
+              ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ Need Ideas? Tap a Preset:
             </p>
             <div className="flex flex-wrap gap-2">
               {[
                 {
-                  label: "💕 Classic Firsts",
+                  label: "ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã¢â‚¬Â¢ Classic Firsts",
                   items: [
                     { question: "When did we first meet?", answer: "" },
                     { question: "What nickname do I call you?", answer: "" },
@@ -3918,7 +4364,7 @@ function Dashboard({
                   ],
                 },
                 {
-                  label: "🎵 Shared Favorites",
+                  label: "ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Âµ Shared Favorites",
                   items: [
                     {
                       question: "What is our special couple song?",
@@ -3935,7 +4381,7 @@ function Dashboard({
                   ],
                 },
                 {
-                  label: "✨ Cute Inside Jokes",
+                  label: "ÃƒÂ¢Ã…â€œÃ‚Â¨ Cute Inside Jokes",
                   items: [
                     {
                       question:
@@ -3994,7 +4440,7 @@ function Dashboard({
                       }
                       className="text-xs text-pink-600 hover:text-pink-800 font-bold cursor-pointer"
                     >
-                      × Remove
+                      ÃƒÆ’Ã¢â‚¬â€ Remove
                     </button>
                   )}
                 </div>
@@ -4088,7 +4534,7 @@ function Dashboard({
             className="mb-4 text-center text-sm font-semibold animate-fade-up"
             style={{ color: "#d91f54", fontFamily: "'DM Sans', sans-serif" }}
           >
-            ⚠️ {errorMsg}
+            ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â {errorMsg}
           </p>
         )}
 
@@ -4103,12 +4549,12 @@ function Dashboard({
           }}
         >
           <div className="text-center">
-            <div className="text-4xl mb-2">🎁</div>
+            <div className="text-4xl mb-2">ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â</div>
             <h2
               className="text-xl sm:text-2xl font-bold mb-2 leading-tight"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              Create the Most Emotional Gift She'll Never Forget ❤️
+              Create the Most Emotional Gift She'll Never Forget ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â
             </h2>
             <p
               className="text-xs sm:text-sm text-pink-200/70 mb-6"
@@ -4128,13 +4574,13 @@ function Dashboard({
                 >
                   <div className="flex items-baseline justify-center gap-3">
                     <span className="text-2xl line-through text-pink-300/50 font-serif font-bold">
-                      ₹99
+                      ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹99
                     </span>
                     <span
                       className="text-5xl sm:text-6xl font-bold text-pink-100 drop-shadow-md"
                       style={{ fontFamily: "'Playfair Display', serif" }}
                     >
-                      ₹49
+                      ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹49
                     </span>
                     <span className="text-xs text-pink-200/60 font-sans">
                       one-time
@@ -4147,7 +4593,7 @@ function Dashboard({
                     animate={{ y: 0, opacity: 1 }}
                     className="mt-2.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 flex items-center gap-1.5 shadow-lg"
                   >
-                    <span>🎉</span> Referral Discount Applied • You Saved ₹50 ❤️
+                    <span>ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬Â°</span> Referral Discount Applied ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ You Saved ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹50 ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â
                   </motion.div>
                 </motion.div>
               ) : (
@@ -4157,14 +4603,14 @@ function Dashboard({
                       className="text-5xl sm:text-6xl font-bold text-pink-100 drop-shadow-md"
                       style={{ fontFamily: "'Playfair Display', serif" }}
                     >
-                      ₹99
+                      ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹99
                     </span>
                     <span className="text-xs text-pink-200/60 font-sans">
                       one-time
                     </span>
                   </div>
                   <p className="text-[11px] text-pink-300/70 mt-1.5 font-medium">
-                    💡 Use a referral code to unlock 50% OFF (Pay ₹49)
+                    ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ Use a referral code to unlock 50% OFF (Pay ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹49)
                   </p>
                 </div>
               )}
@@ -4173,12 +4619,12 @@ function Dashboard({
             {/* Feature List */}
             <div className="my-6 space-y-3 text-left max-w-xs mx-auto">
               {[
-                { icon: "❤️", text: "Personalized Love Experience" },
-                { icon: "📸", text: "Upload up to 5 Special Photos" },
-                { icon: "🎵", text: "Add Your Personal Voice Message" },
-                { icon: "💌", text: "Write a Beautiful Love Letter" },
-                { icon: "✨", text: "Premium Romantic Animations" },
-                { icon: "🔗", text: "Forever Shareable Private Link" },
+                { icon: "ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â", text: "Personalized Love Experience" },
+                { icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¸", text: "Upload up to 5 Special Photos" },
+                { icon: "ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Âµ", text: "Add Your Personal Voice Message" },
+                { icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã…â€™", text: "Write a Beautiful Love Letter" },
+                { icon: "ÃƒÂ¢Ã…â€œÃ‚Â¨", text: "Premium Romantic Animations" },
+                { icon: "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â€", text: "Forever Shareable Private Link" },
               ].map((f, i) => (
                 <div key={i} className="flex items-center gap-2.5">
                   <span className="text-pink-300 text-sm">{f.icon}</span>
@@ -4197,7 +4643,7 @@ function Dashboard({
                   className="text-[11px] leading-relaxed text-pink-200/80"
                   style={{ fontFamily: "'DM Sans', sans-serif" }}
                 >
-                  🔒 <strong>Your memories stay private.</strong> Photos, voice
+                  ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢ <strong>Your memories stay private.</strong> Photos, voice
                   notes, love letters and personal details are securely
                   processed and are not permanently stored on our platform,
                   ensuring complete privacy.
@@ -4207,7 +4653,7 @@ function Dashboard({
 
             {/* Trust Badge */}
             <div className="my-4 inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold text-pink-200 bg-white/5 border border-white/10">
-              🔒 One-Time Payment • No Subscription • Complete Privacy
+              ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢ One-Time Payment ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ No Subscription ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Complete Privacy
             </div>
 
             {/* Pay Button / Generated Link */}
@@ -4227,8 +4673,8 @@ function Dashboard({
                 }}
               >
                 {isSubmitting
-                  ? "Uploading & Saving... ❤️"
-                  : `Pay ₹${finalPrice} & Generate Link ❤️`}
+                  ? "Uploading & Saving... ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â"
+                  : `Pay ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹${finalPrice} & Generate Link ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â`}
               </button>
             ) : (
               <div className="mt-4">
@@ -4248,7 +4694,7 @@ function Dashboard({
                   onClick={() => copyToClipboard(link)}
                   className="w-full mt-3 py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-600 font-bold text-white text-sm cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
-                  {copied ? "✓ Copied to Clipboard!" : "📋 Copy Link"}
+                  {copied ? "ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Copied to Clipboard!" : "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ Copy Link"}
                 </button>
               </div>
             )}
@@ -4267,17 +4713,17 @@ function Dashboard({
           {isReferralApplied ? (
             <div className="flex flex-col items-center gap-1.5">
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300">
-                <span>🎉</span> Referral Code Applied:{" "}
+                <span>ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬Â°</span> Referral Code Applied:{" "}
                 <span className="font-mono">{appliedReferralCode}</span>
               </div>
               <p className="text-xs font-bold text-pink-700">
-                50% OFF Activated ❤️ (You Save ₹50)
+                50% OFF Activated ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â (You Save ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹50)
               </p>
             </div>
           ) : (
             <div className="space-y-3">
               <p className="text-xs font-bold text-[#7a0f50]">
-                🎁 Have a Referral Code?
+                ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â Have a Referral Code?
               </p>
               <div className="flex gap-2 max-w-xs mx-auto">
                 <input
@@ -4308,7 +4754,7 @@ function Dashboard({
               </div>
               {referralErrorMsg && (
                 <p className="text-xs text-red-500 font-semibold">
-                  ⚠️ {referralErrorMsg}
+                  ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â {referralErrorMsg}
                 </p>
               )}
             </div>
@@ -4330,7 +4776,7 @@ function Dashboard({
             fontWeight: "500",
           }}
         >
-          👀 Preview Girlfriend's Surprise Flow
+          ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â€šÂ¬ Preview Girlfriend's Surprise Flow
         </button>
         </div> {/* end dashboard-grid-full */}
       </div>
@@ -4338,7 +4784,7 @@ function Dashboard({
   )
 }
 
-// ── APP ────────────────────────────────────────────────────────────────────
+// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ APP ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
 export default function App() {
   const [spotifyTrackId, setSpotifyTrackId] = useState("4cOdK2wGLETKBW3PvgPWqT")
@@ -4430,7 +4876,7 @@ export default function App() {
     if (typeof window !== "undefined") {
       const search = window.location.search
       const path = window.location.pathname
-      // Secret token gate — admin accessible ONLY via ?token=cg_admin_secret_7x9k2m
+      // Secret token gate ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â admin accessible ONLY via ?token=cg_admin_secret_7x9k2m
       const secretToken = new URLSearchParams(search).get("token")
       const ADMIN_SECRET = "cg_admin_secret_7x9k2m"
       if (secretToken === ADMIN_SECRET || path.includes("setup-super-admin")) {
