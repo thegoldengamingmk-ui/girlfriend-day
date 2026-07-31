@@ -434,7 +434,7 @@ function Btn({
       }}
       className={`${
         full ? "w-full" : ""
-      } px-8 py-4 rounded-full font-medium text-base transition-all duration-300 ${
+      } px-8 py-4 rounded-full font-medium transition-all duration-300 ${
         disabled
           ? "opacity-60 cursor-not-allowed"
           : "hover:scale-[1.04] active:scale-[0.97] cursor-pointer"
@@ -446,6 +446,7 @@ function Btn({
               color: "#ffc8d6",
               background: "transparent",
               fontFamily: "'DM Sans', sans-serif",
+              fontSize: "clamp(0.875rem, 1.8vw, 1.05rem)",
             }
           : {
               background:
@@ -454,6 +455,7 @@ function Btn({
                 "0 6px 24px rgba(232,120,154,0.5), 0 0 55px rgba(200,67,138,0.18)",
               color: "white",
               fontFamily: "'DM Sans', sans-serif",
+              fontSize: "clamp(0.875rem, 1.8vw, 1.05rem)",
               border: "1px solid rgba(255,255,255,0.15)",
             }
       }
@@ -507,10 +509,11 @@ function S1({
       <Sparkles n={36} />
       <GlowOrbs />
 
-      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-xs mx-auto animate-fade-up">
+      <div className="cinematic-container relative z-10 flex flex-col items-center text-center animate-fade-up">
         <div
-          className="mb-8 text-8xl animate-pulse-heart"
+          className="mb-8 animate-pulse-heart select-none"
           style={{
+            fontSize: "clamp(4rem, 12vw, 8rem)",
             filter:
               "drop-shadow(0 0 32px rgba(255,80,140,0.85)) drop-shadow(0 0 75px rgba(255,80,140,0.45))",
           }}
@@ -519,9 +522,10 @@ function S1({
         </div>
 
         <h1
-          className="text-[2rem] font-bold text-white mb-4 leading-tight"
+          className="font-bold text-white mb-4 leading-tight"
           style={{
             fontFamily: "'Playfair Display', serif",
+            fontSize: "clamp(1.6rem, 4.5vw, 3rem)",
             textShadow: "0 0 40px rgba(255,180,200,0.55)",
           }}
         >
@@ -531,8 +535,11 @@ function S1({
         </h1>
 
         <p
-          className="text-pink-200 text-base mb-10 opacity-75"
-          style={{ fontFamily: "'DM Sans', sans-serif" }}
+          className="text-pink-200 mb-10 opacity-75"
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: "clamp(0.9rem, 2vw, 1.15rem)",
+          }}
         >
           I put all my love into this surprise for you.
         </p>
@@ -618,7 +625,7 @@ function S2({ onNext }: { onNext: () => void }) {
       <FloatingHearts n={15} />
       <Sparkles n={20} />
 
-      <div className="relative z-10 flex flex-col items-center max-w-xs w-full animate-fade-up">
+      <div className="cinematic-container relative z-10 flex flex-col items-center animate-fade-up">
         {/* Progress Ring */}
         <div className="relative w-36 h-36 mb-10 flex items-center justify-center">
           <svg
@@ -711,12 +718,15 @@ function S3({ onNext }: { onNext: () => void }) {
       <Sparkles n={20} />
       <GlowOrbs />
 
-      <div className="relative z-10 max-w-xs w-full animate-fade-up">
+      <div className="cinematic-container relative z-10 animate-fade-up">
         <Glass className="p-8 text-center">
           <div className="text-6xl mb-5">🔒</div>
           <h2
-            className="text-2xl font-bold text-white mb-4 leading-snug"
-            style={{ fontFamily: "'Playfair Display', serif" }}
+            className="font-bold text-white mb-4 leading-snug"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: "clamp(1.3rem, 3.5vw, 2rem)",
+            }}
           >
             Only you can unlock my heart.
           </h2>
@@ -1085,12 +1095,15 @@ function S4({
 
       <div
         ref={cardRef}
-        className="relative z-10 max-w-xs w-full animate-fade-up"
+        className="cinematic-container relative z-10 animate-fade-up"
       >
         <Glass className="p-8">
           <h2
-            className="text-2xl font-bold text-white mb-1 text-center"
-            style={{ fontFamily: "'Playfair Display', serif" }}
+            className="font-bold text-white mb-1 text-center"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: "clamp(1.3rem, 3.5vw, 2rem)",
+            }}
           >
             Answer Our Special Questions ❤️
           </h2>
@@ -1196,7 +1209,7 @@ function S5({ onNext }: { onNext: () => void }) {
       <Sparkles n={30} />
       <GlowOrbs />
 
-      <div className="relative z-10 flex flex-col items-center text-center max-w-xs mx-auto animate-fade-up">
+      <div className="cinematic-container relative z-10 flex flex-col items-center text-center animate-fade-up">
         {/* Gift Box */}
         <div className="relative mb-10 animate-gift-float">
           {/* Orbit sparkles */}
@@ -1272,9 +1285,10 @@ function S5({ onNext }: { onNext: () => void }) {
         </div>
 
         <h2
-          className="text-3xl font-bold text-white mb-4 leading-tight"
+          className="font-bold text-white mb-4 leading-tight"
           style={{
             fontFamily: "'Playfair Display', serif",
+            fontSize: "clamp(1.5rem, 4vw, 2.2rem)",
             textShadow: "0 0 40px rgba(255,180,200,0.6)",
           }}
         >
@@ -1319,12 +1333,13 @@ function S6({ onNext, bgPhoto }: { onNext: () => void; bgPhoto?: string }) {
       <FloatingHearts n={12} />
       <Sparkles n={18} />
 
-      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-xs mx-auto animate-fade-up">
+      <div className="cinematic-container relative z-10 flex flex-col items-center text-center animate-fade-up">
         <div className="text-7xl mb-6 animate-pulse-heart">🌹</div>
         <h2
-          className="text-3xl font-bold text-white mb-4 leading-snug"
+          className="font-bold text-white mb-4 leading-snug"
           style={{
             fontFamily: "'Playfair Display', serif",
+            fontSize: "clamp(1.5rem, 4vw, 2.2rem)",
             textShadow: "0 0 44px rgba(255,180,200,0.7)",
           }}
         >
@@ -1570,6 +1585,7 @@ function SpotifyPlayer({
             borderRadius: "16px",
             boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
             border: "1px solid rgba(255,255,255,0.18)",
+            minHeight: "152px",
           }}
         />
       </div>
@@ -1728,7 +1744,7 @@ function MemoryBreak({ quoteIndex }: { quoteIndex: number }) {
       </div>
 
       <p
-        className="text-sm sm:text-base italic font-serif leading-relaxed text-pink-100/90 max-w-xs sm:max-w-md mx-auto drop-shadow-md"
+        className="text-sm sm:text-base lg:text-lg italic font-serif leading-relaxed text-pink-100/90 max-w-xs sm:max-w-md lg:max-w-2xl mx-auto drop-shadow-md"
         style={{ fontFamily: "'Playfair Display', serif" }}
       >
         {quote}
@@ -1768,12 +1784,12 @@ function CinematicMemoryCard({
       onViewportEnter={() => setHasEntered(true)}
       transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
       className={`my-12 sm:my-16 relative flex flex-col ${
-        isEven ? "items-start" : "items-end"
+        isEven ? "items-start lg:items-center" : "items-end lg:items-center"
       }`}
     >
       {hasEntered && <SparkleBurst />}
 
-      <div className="w-full max-w-[290px] sm:max-w-[340px] group">
+      <div className="memory-card-inner group">
         {/* Photo Card Container */}
         <motion.div
           whileHover={{ scale: 1.03, rotate: isEven ? 1.5 : -1.5 }}
@@ -1787,7 +1803,7 @@ function CinematicMemoryCard({
             boxShadow: "0 20px 50px rgba(0,0,0,0.65)",
           }}
         >
-          <div className="relative overflow-hidden rounded-2xl h-72 sm:h-80 w-full">
+          <div className="relative overflow-hidden rounded-2xl h-72 sm:h-80 lg:h-96 w-full">
             <motion.img
               src={photo}
               alt={`Memory ${index + 1}`}
@@ -1871,8 +1887,11 @@ function FinalGrandMemory({ photo }: { photo: string }) {
       </motion.div>
 
       <h3
-        className="text-xl sm:text-2xl font-bold text-pink-200 mb-1 drop-shadow-md"
-        style={{ fontFamily: "'Playfair Display', serif" }}
+        className="font-bold text-pink-200 mb-1 drop-shadow-md"
+        style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: "clamp(1.1rem, 2.5vw, 1.75rem)",
+        }}
       >
         Our Greatest Chapter Begins
       </h3>
@@ -1894,7 +1913,7 @@ function FinalGrandMemory({ photo }: { photo: string }) {
             "0 0 60px rgba(255,105,180,0.45), 0 30px 70px rgba(0,0,0,0.8)",
         }}
       >
-        <div className="relative overflow-hidden rounded-2xl h-80 sm:h-96 w-full">
+        <div className="relative overflow-hidden rounded-2xl h-80 sm:h-96 lg:h-[28rem] w-full">
           <motion.img
             src={photo}
             alt="Final Memory Spotlight"
@@ -1919,7 +1938,7 @@ function FinalGrandMemory({ photo }: { photo: string }) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.9, delay: 0.4 }}
-        className="mt-4 p-4 rounded-2xl backdrop-blur-xl border border-pink-400/30 text-center shadow-xl max-w-xs sm:max-w-sm mx-auto"
+        className="mt-4 p-4 rounded-2xl backdrop-blur-xl border border-pink-400/30 text-center shadow-xl max-w-xs sm:max-w-sm lg:max-w-lg mx-auto"
         style={{ background: "rgba(20, 0, 35, 0.65)" }}
       >
         <p
@@ -1950,8 +1969,11 @@ function Slideshow({ photos }: { photos?: string[] }) {
           Our Romantic Journey ✨
         </span>
         <h2
-          className="text-2xl font-bold text-white mt-3"
-          style={{ fontFamily: "'Playfair Display', serif" }}
+          className="font-bold text-white mt-3"
+          style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: "clamp(1.3rem, 3vw, 2rem)",
+          }}
         >
           Memories Unlocked ❤️
         </h2>
@@ -1961,7 +1983,7 @@ function Slideshow({ photos }: { photos?: string[] }) {
       </motion.div>
 
       {/* Timeline items */}
-      <div className="relative">
+      <div className="memory-grid relative">
         {photoList.map((photo, i) => {
           const isLast = i === photoList.length - 1
           const isMemoryBreak = i > 0 && i % 3 === 0 && !isLast
@@ -1969,11 +1991,15 @@ function Slideshow({ photos }: { photos?: string[] }) {
           return (
             <React.Fragment key={i}>
               {isMemoryBreak && (
-                <MemoryBreak quoteIndex={Math.floor(i / 3) - 1} />
+                <div className="memory-break-full">
+                  <MemoryBreak quoteIndex={Math.floor(i / 3) - 1} />
+                </div>
               )}
 
               {isLast ? (
-                <FinalGrandMemory photo={photo} />
+                <div className="memory-final-full">
+                  <FinalGrandMemory photo={photo} />
+                </div>
               ) : (
                 <CinematicMemoryCard photo={photo} index={i} />
               )}
@@ -2030,7 +2056,7 @@ function LoveLetter({ letter }: { letter?: string }) {
           </span>
         </div>
         <div
-          className="text-sm leading-relaxed whitespace-pre-wrap"
+          className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap"
           style={{
             color: "rgba(255,210,225,0.9)",
             fontFamily: "'Playfair Display', serif",
@@ -2263,7 +2289,7 @@ function S7({
       <Sparkles n={35} />
       <GlowOrbs />
 
-      <div className="relative z-10 max-w-sm mx-auto px-4 py-10">
+      <div className="finale-container relative z-10 py-10">
         <SpotifyPlayer trackId={trackId} />
         <Slideshow photos={photos} />
         <LoveLetter letter={letter} />
@@ -2276,7 +2302,7 @@ function S7({
             className="font-bold text-white mb-3 leading-tight"
             style={{
               fontFamily: "'Playfair Display', serif",
-              fontSize: "clamp(2rem, 8vw, 2.6rem)",
+              fontSize: "clamp(1.8rem, 5vw, 3rem)",
               textShadow: "0 0 44px rgba(255,180,200,0.65)",
             }}
           >
@@ -3332,7 +3358,7 @@ function Dashboard({
   const card: React.CSSProperties = {
     background: "#ffffff",
     borderRadius: "24px",
-    padding: "22px",
+    padding: "clamp(18px, 3vw, 28px)",
     boxShadow: "0 4px 28px rgba(200,80,140,0.1), 0 1px 4px rgba(0,0,0,0.06)",
     border: "1px solid rgba(232,120,154,0.22)",
     marginBottom: "16px",
@@ -3345,7 +3371,7 @@ function Dashboard({
     border: "1.5px solid rgba(200,67,138,0.28)",
     outline: "none",
     fontFamily: "'DM Sans', sans-serif",
-    fontSize: "14px",
+    fontSize: "clamp(13px, 1.5vw, 15px)",
     color: "#0f0022",
     background: "#ffffff",
     transition: "border-color 0.2s, box-shadow 0.2s",
@@ -3364,7 +3390,7 @@ function Dashboard({
 
   const secTitle: React.CSSProperties = {
     fontFamily: "'Playfair Display', serif",
-    fontSize: "19px",
+    fontSize: "clamp(1rem, 2.2vw, 1.35rem)",
     fontWeight: "700",
     color: "#1a0035",
     marginBottom: "3px",
@@ -3372,7 +3398,7 @@ function Dashboard({
 
   const secSub: React.CSSProperties = {
     fontFamily: "'DM Sans', sans-serif",
-    fontSize: "13px",
+    fontSize: "clamp(0.75rem, 1.5vw, 0.9rem)",
     color: "#6b1245",
     fontWeight: "500",
     marginBottom: "16px",
@@ -3408,11 +3434,11 @@ function Dashboard({
           borderBottom: "1px solid rgba(232,120,154,0.18)",
         }}
       >
-        <div className="max-w-sm mx-auto px-4 py-4 flex items-center justify-center">
+        <div className="dashboard-container py-4 flex items-center justify-center">
           <h1
             style={{
               fontFamily: "'Playfair Display', serif",
-              fontSize: "18px",
+              fontSize: "clamp(1rem, 2.5vw, 1.4rem)",
               fontWeight: "700",
               color: "#1a0035",
             }}
@@ -3422,18 +3448,21 @@ function Dashboard({
         </div>
       </div>
 
-      <div className="max-w-sm mx-auto px-4 py-6">
+      <div className="dashboard-container py-6">
         <div className="text-center mb-8">
           <div
-            className="text-5xl mb-3 animate-pulse-heart inline-block"
-            style={{ filter: "drop-shadow(0 0 18px rgba(232,120,154,0.5))" }}
+            className="mb-3 animate-pulse-heart inline-block"
+            style={{
+              fontSize: "clamp(2.5rem, 6vw, 4rem)",
+              filter: "drop-shadow(0 0 18px rgba(232,120,154,0.5))",
+            }}
           >
             💝
           </div>
           <h2
             style={{
               fontFamily: "'Playfair Display', serif",
-              fontSize: "22px",
+              fontSize: "clamp(1.2rem, 3vw, 1.75rem)",
               fontWeight: "700",
               color: "#1a0035",
               marginBottom: "6px",
@@ -3444,7 +3473,7 @@ function Dashboard({
           <p
             style={{
               fontFamily: "'DM Sans', sans-serif",
-              fontSize: "13px",
+              fontSize: "clamp(0.8rem, 1.8vw, 1rem)",
               color: "#7a0f50",
               fontWeight: "500",
             }}
@@ -3452,6 +3481,8 @@ function Dashboard({
             A luxury digital gift made with love
           </p>
         </div>
+
+        <div className="dashboard-grid">
 
         {/* 1. Names */}
         <div style={card}>
@@ -3848,6 +3879,10 @@ function Dashboard({
             )}
           </div>
         </div>
+        </div> {/* end dashboard-grid */}
+
+        {/* Full-width below: Secret Questions, Pricing, etc */}
+        <div className="dashboard-grid-full">
 
         {/* 6. Secret Questions */}
         <div style={card}>
@@ -4297,6 +4332,7 @@ function Dashboard({
         >
           👀 Preview Girlfriend's Surprise Flow
         </button>
+        </div> {/* end dashboard-grid-full */}
       </div>
     </div>
   )
