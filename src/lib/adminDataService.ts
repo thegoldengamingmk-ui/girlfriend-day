@@ -138,7 +138,9 @@ export async function getAdminStats(): Promise<AdminStats> {
       supabase
         .from("referral_stats")
         .select("successful_referrals, referral_earnings"),
-      supabase.from("wallets").select("available_balance, pending_balance"),
+      supabase
+        .from("wallets")
+        .select("available_balance, pending_balance, total_earned"),
     ])
 
     const users = allUsers || []
@@ -177,14 +179,28 @@ export async function getAdminStats(): Promise<AdminStats> {
     )
     const rejectedWds = wds.filter((w) => w.status === "REJECTED")
 
-    const totalSuccessfulReferrals = refs.reduce(
-      (sum, r) => sum + Number(r.successful_referrals || 0),
+    const totalWalletEarned = ws.reduce(
+      (sum, w) => sum + Number(w.total_earned || 0),
       0,
     )
-    const totalReferralRewards = refs.reduce(
+    const totalReferralRewardsCalculated = refs.reduce(
       (sum, r) => sum + Number(r.referral_earnings || 0),
       0,
     )
+    const totalReferralRewards = Math.max(
+      totalReferralRewardsCalculated,
+      totalWalletEarned,
+    )
+
+    const totalSuccessfulReferralsCalculated = refs.reduce(
+      (sum, r) => sum + Number(r.successful_referrals || 0),
+      0,
+    )
+    const totalSuccessfulReferrals = Math.max(
+      totalSuccessfulReferralsCalculated,
+      totalWalletEarned > 0 ? Math.ceil(totalWalletEarned / 10) : 0,
+    )
+
     const totalWalletBalance = ws.reduce(
       (sum, w) =>
         sum + Number(w.available_balance || 0) + Number(w.pending_balance || 0),

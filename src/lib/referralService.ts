@@ -156,6 +156,15 @@ export async function getOrCreateReferralProfile(
 
   const transactions = await getUserTransactions(canonical.id)
 
+  const totalEarnings = Math.max(
+    canonical.wallet.totalEarned,
+    canonical.referralStats.referralEarnings,
+  )
+  const walletBalance = Math.max(
+    canonical.wallet.availableBalance,
+    totalEarnings - canonical.wallet.totalWithdrawn,
+  )
+
   return {
     id: canonical.id,
     firebaseUid: canonical.firebaseUid,
@@ -165,11 +174,11 @@ export async function getOrCreateReferralProfile(
     phone: "",
     referralCode: canonical.referralCode,
     referralLink: canonical.referralLink,
-    walletBalance: canonical.wallet.availableBalance,
+    walletBalance: walletBalance >= 0 ? walletBalance : 0,
     successfulReferrals: canonical.referralStats.successfulReferrals,
     pendingReferrals: canonical.referralStats.pendingReferrals,
     totalReferrals: canonical.referralStats.totalReferrals,
-    totalEarnings: canonical.wallet.totalEarned,
+    totalEarnings,
     pendingWithdrawal: canonical.wallet.pendingBalance,
     createdAt: canonical.createdAt,
     lastLogin: canonical.lastLogin,

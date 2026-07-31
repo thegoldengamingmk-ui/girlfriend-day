@@ -368,7 +368,14 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
     ? new Date(dbUserRecord.last_login).toLocaleString()
     : new Date().toLocaleString()
 
-  // Fetch referral stats
+  // Candidate User IDs for cross-table matching
+  const candidateUserIds = Array.from(
+    new Set(
+      [userId, dbUserRecord.user_id, firebaseUid].filter(Boolean) as string[],
+    ),
+  )
+
+  // 1. Fetch referral stats across all candidate user IDs
   let referralStats = {
     totalReferrals: 0,
     successfulReferrals: 0,
@@ -380,20 +387,31 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
     const { data: refStats } = await supabase
       .from("referral_stats")
       .select("*")
-      .eq("user_id", userId)
+      .in("user_id", candidateUserIds)
 
     if (refStats && refStats.length > 0) {
-      const s = refStats[0]
-      referralStats = {
-        totalReferrals: Number(s.total_referrals || 0),
-        successfulReferrals: Number(s.successful_referrals || 0),
-        pendingReferrals: Number(s.pending_referrals || 0),
-        referralEarnings: Number(s.referral_earnings || 0),
-      }
+      refStats.forEach((s) => {
+        referralStats.totalReferrals = Math.max(
+          referralStats.totalReferrals,
+          Number(s.total_referrals || 0),
+        )
+        referralStats.successfulReferrals = Math.max(
+          referralStats.successfulReferrals,
+          Number(s.successful_referrals || 0),
+        )
+        referralStats.pendingReferrals = Math.max(
+          referralStats.pendingReferrals,
+          Number(s.pending_referrals || 0),
+        )
+        referralStats.referralEarnings = Math.max(
+          referralStats.referralEarnings,
+          Number(s.referral_earnings || 0),
+        )
+      })
     }
   } catch {}
 
-  // Fetch wallet
+  // 2. Fetch wallet record across candidate user IDs
   let wallet = {
     availableBalance: referralStats.referralEarnings,
     pendingBalance: 0,
@@ -405,17 +423,163 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
     const { data: walletData } = await supabase
       .from("wallets")
       .select("*")
-      .eq("user_id", userId)
+      .in("user_id", candidateUserIds)
 
     if (walletData && walletData.length > 0) {
-      const w = walletData[0]
-      wallet = {
-        availableBalance: Number(
-          w.available_balance || referralStats.referralEarnings,
-        ),
-        pendingBalance: Number(w.pending_balance || 0),
-        totalEarned: Number(w.total_earned || referralStats.referralEarnings),
-        totalWithdrawn: Number(w.total_withdrawn || 0),
+      walletData.forEach((w) => {
+        wallet.availableBalance = Math.max(
+          wallet.availableBalance,
+          Number(w.available_balance || 0),
+        )
+        wallet.pendingBalance = Math.max(
+          wallet.pendingBalance,
+          Number(w.pending_balance || 0),
+        )
+        wallet.totalEarned = Math.max(
+          wallet.totalEarned,
+          Number(w.total_earned || 0),
+        )
+        wallet.totalWithdrawn = Math.max(
+          wallet.totalWithdrawn,
+          Number(w.total_withdrawn || 0),
+        )
+      })
+    }
+  } catch {}
+
+  // 3. RECONCILIATION: Check financial transaction ledger for completed Referral Rewards
+  try {
+    const { data: txns } = await supabase
+      .from("transactions")
+      .select("amount, transaction_type, status")
+      .in("user_id", candidateUserIds)
+      .eq("status", "Completed")
+
+    if (txns && txns.length > 0) {
+      let ledgerEarnings = 0
+      let ledgerCount = 0
+
+      txns.forEach((t) => {
+        if (
+          t.transaction_type === "Referral Reward" ||
+          t.transaction_type === "Referral Bonus"
+        ) {
+          ledgerEarnings += Number(t.amount || 0)
+          ledgerCount += 1
+        }
+      })
+
+      if (ledgerEarnings > referralStats.referralEarnings) {
+        referralStats.referralEarnings = ledgerEarnings
+      }
+      if (ledgerCount > referralStats.successfulReferrals) {
+        referralStats.successfulReferrals = ledgerCount
+        referralStats.totalReferrals = Math.max(
+          referralStats.totalReferrals,
+          ledgerCount,
+        )
+      }
+    }
+  } catch (err) {
+    console.warn("[Ledger Reconciliation Notice]:", err)
+  }
+
+  // 4. RECONCILIATION: Check referrals table for approved referrals
+  try {
+    const { data: refList } = await supabase
+      .from("referrals")
+      .select("commission_amount, status")
+      .in("referrer_user_id", candidateUserIds)
+
+    if (refList && refList.length > 0) {
+      const approvedRefs = refList.filter(
+        (r) => r.status === "APPROVED" || r.status === "COMPLETED",
+      )
+      const approvedCount = approvedRefs.length
+      const approvedEarnings = approvedRefs.reduce(
+        (sum, r) => sum + Number(r.commission_amount || 0),
+        0,
+      )
+
+      if (approvedCount > referralStats.successfulReferrals) {
+        referralStats.successfulReferrals = approvedCount
+        referralStats.totalReferrals = Math.max(
+          referralStats.totalReferrals,
+          approvedCount,
+        )
+      }
+      if (approvedEarnings > referralStats.referralEarnings) {
+        referralStats.referralEarnings = approvedEarnings
+      }
+    }
+  } catch (err) {
+    console.warn("[Referrals Table Reconciliation Notice]:", err)
+  }
+
+  // Synchronize wallet balances with highest reconciled earnings
+  wallet.totalEarned = Math.max(
+    wallet.totalEarned,
+    referralStats.referralEarnings,
+  )
+  wallet.availableBalance = Math.max(
+    wallet.availableBalance,
+    wallet.totalEarned - wallet.totalWithdrawn,
+  )
+
+  // 5. SELF-HEALING: Persist reconciled values to Supabase referral_stats and wallets
+  try {
+    for (const uid of candidateUserIds) {
+      const { data: existingRS } = await supabase
+        .from("referral_stats")
+        .select("*")
+        .eq("user_id", uid)
+
+      if (existingRS && existingRS.length > 0) {
+        await supabase
+          .from("referral_stats")
+          .update({
+            total_referrals: referralStats.totalReferrals,
+            successful_referrals: referralStats.successfulReferrals,
+            referral_earnings: referralStats.referralEarnings,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", uid)
+      } else {
+        await supabase.from("referral_stats").insert([
+          {
+            user_id: uid,
+            total_referrals: referralStats.totalReferrals,
+            successful_referrals: referralStats.successfulReferrals,
+            pending_referrals: referralStats.pendingReferrals,
+            referral_earnings: referralStats.referralEarnings,
+          },
+        ])
+      }
+
+      const { data: existingW } = await supabase
+        .from("wallets")
+        .select("*")
+        .eq("user_id", uid)
+
+      if (existingW && existingW.length > 0) {
+        await supabase
+          .from("wallets")
+          .update({
+            available_balance: wallet.availableBalance,
+            total_earned: wallet.totalEarned,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", uid)
+      } else {
+        await supabase.from("wallets").insert([
+          {
+            user_id: uid,
+            available_balance: wallet.availableBalance,
+            pending_balance: wallet.pendingBalance,
+            total_earned: wallet.totalEarned,
+            total_withdrawn: wallet.totalWithdrawn,
+          },
+        ])
       }
     }
   } catch {}
@@ -757,34 +921,45 @@ export async function validateAndApplyReferralCode(
       .update({ referred_by: trueReferrerUserId })
       .eq("id", referredUserId)
 
-    // 7. Update referral_stats
-    const { data: statsData } = await supabase
-      .from("referral_stats")
-      .select("*")
-      .eq("user_id", referrer.id)
-    if (statsData && statsData.length > 0) {
-      const currentStats = statsData[0]
-      await supabase
+    // 7. Update referral_stats across all referrer candidate IDs
+    const referrerIds = Array.from(
+      new Set(
+        [trueReferrerUserId, referrer.id, referrer.user_id].filter(
+          Boolean,
+        ) as string[],
+      ),
+    )
+
+    for (const rid of referrerIds) {
+      const { data: statsData } = await supabase
         .from("referral_stats")
-        .update({
-          total_referrals: Number(currentStats.total_referrals || 0) + 1,
-          successful_referrals:
-            Number(currentStats.successful_referrals || 0) + 1,
-          referral_earnings:
-            Number(currentStats.referral_earnings || 0) + commission,
-          updated_at: nowIso,
-        })
-        .eq("user_id", referrer.id)
-    } else {
-      await supabase.from("referral_stats").insert([
-        {
-          user_id: referrer.id,
-          total_referrals: 1,
-          successful_referrals: 1,
-          pending_referrals: 0,
-          referral_earnings: commission,
-        },
-      ])
+        .select("*")
+        .eq("user_id", rid)
+
+      if (statsData && statsData.length > 0) {
+        const currentStats = statsData[0]
+        await supabase
+          .from("referral_stats")
+          .update({
+            total_referrals: Number(currentStats.total_referrals || 0) + 1,
+            successful_referrals:
+              Number(currentStats.successful_referrals || 0) + 1,
+            referral_earnings:
+              Number(currentStats.referral_earnings || 0) + commission,
+            updated_at: nowIso,
+          })
+          .eq("user_id", rid)
+      } else {
+        await supabase.from("referral_stats").insert([
+          {
+            user_id: rid,
+            total_referrals: 1,
+            successful_referrals: 1,
+            pending_referrals: 0,
+            referral_earnings: commission,
+          },
+        ])
+      }
     }
     console.log(
       "[Referral Stats Updated] Referrer stats incremented for:",
