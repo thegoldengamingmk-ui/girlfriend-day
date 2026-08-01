@@ -245,3 +245,153 @@ export async function getUserCreatedSurprises(
 
   return []
 }
+
+/**
+ * Fetches complete surprise details (including secret questions & answers) for editing.
+ */
+export async function getSurpriseForEdit(slug: string): Promise<{
+  slug: string
+  boyfriend_name: string
+  girlfriend_name: string
+  letter: string
+  spotify_url: string
+  voice_note_url: string | null
+  photos: string[]
+  questions: { question: string; answer: string }[]
+} | null> {
+  if (!slug) return null
+
+  try {
+    const adminClient = getSupabaseAdmin()
+    const { data: surpriseData, error } = await adminClient
+      .from("surprises")
+      .select(`
+        *,
+        photos:photos(*),
+        questions:questions(id, question, answer)
+      `)
+      .eq("slug", slug)
+      .single()
+
+    if (error || !surpriseData) {
+      console.warn("Failed to fetch surprise for edit:", error)
+      return null
+    }
+
+    const sortedPhotos = Array.isArray(surpriseData.photos)
+      ? [...surpriseData.photos].sort(
+          (a, b) => (a.position || 0) - (b.position || 0),
+        )
+      : []
+
+    return {
+      slug: surpriseData.slug,
+      boyfriend_name: surpriseData.boyfriend_name,
+      girlfriend_name: surpriseData.girlfriend_name,
+      letter: surpriseData.letter,
+      spotify_url: surpriseData.spotify_url,
+      voice_note_url: surpriseData.voice_note_url || null,
+      photos: sortedPhotos.map((p: any) => p.photo_url),
+      questions: Array.isArray(surpriseData.questions)
+        ? surpriseData.questions.map((q: any) => ({
+            question: q.question || "",
+            answer: q.answer || "",
+          }))
+        : [],
+    }
+  } catch (err) {
+    console.error("getSurpriseForEdit error:", err)
+    return null
+  }
+}
+
+/**
+ * Updates an existing surprise entry in Supabase DB with new photos, letter, and secret questions.
+ */
+export async function updateSurprise(
+  slug: string,
+  input: CreateSurpriseInput,
+): Promise<void> {
+  if (!slug) throw new Error("Slug is required for update")
+
+  const adminClient = getSupabaseAdmin()
+
+  // 1. Fetch surprise ID
+  const { data: surprise, error: fetchErr } = await adminClient
+    .from("surprises")
+    .select("id")
+    .eq("slug", slug)
+    .single()
+
+  if (fetchErr || !surprise) {
+    throw new Error("Surprise record not found for update")
+  }
+
+  const surpriseId = surprise.id
+
+  // 2. Update surprise record
+  const updatePayload: any = {
+    boyfriend_name: input.boyfriend_name,
+    girlfriend_name: input.girlfriend_name,
+    letter: input.letter,
+    spotify_url: input.spotify_url,
+    voice_note_url: input.voice_note_url || null,
+  }
+
+  const { error: updateErr } = await adminClient
+    .from("surprises")
+    .update(updatePayload)
+    .eq("id", surpriseId)
+
+  if (updateErr) {
+    console.error("Error updating surprise DB:", updateErr)
+    throw new Error(`Failed to update surprise: ${updateErr.message}`)
+  }
+
+  // 3. Update Photos: Delete existing photos and insert new photos
+  await adminClient.from("photos").delete().eq("surprise_id", surpriseId)
+
+  if (input.photos && input.photos.length > 0) {
+    const photoRecords = input.photos.map((url, idx) => ({
+      surprise_id: surpriseId,
+      photo_url: url,
+      position: idx,
+    }))
+
+    const { error: photosError } = await adminClient
+      .from("photos")
+      .insert(photoRecords)
+
+    if (photosError) {
+      console.error("Error updating photos in DB:", photosError)
+    }
+  }
+
+  // 4. Update Secret Questions: Delete existing questions and insert new valid questions
+  await adminClient.from("questions").delete().eq("surprise_id", surpriseId)
+
+  if (input.questions && input.questions.length > 0) {
+    const validQuestions = input.questions.filter(
+      (q) => q.question.trim() && q.answer.trim(),
+    )
+
+    if (validQuestions.length > 0) {
+      const questionRecords = validQuestions.map((q) => ({
+        surprise_id: surpriseId,
+        question: q.question.trim(),
+        answer: q.answer.trim(),
+      }))
+
+      const { error: questionsError } = await adminClient
+        .from("questions")
+        .insert(questionRecords)
+
+      if (questionsError) {
+        console.error("Error updating questions in DB:", questionsError)
+      }
+    }
+  }
+
+  // Invalidate in-memory cache so client receives updated content immediately
+  surpriseCache.delete(slug)
+}

@@ -15,6 +15,7 @@ interface ReferralDashboardModalProps {
   userProfile: UserReferralProfile | null
   onClose: () => void
   onLogout: () => void
+  onEditSurprise?: (slug: string) => void
 }
 
 export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
@@ -22,6 +23,7 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
   userProfile: initialProfile,
   onClose,
   onLogout,
+  onEditSurprise,
 }) => {
   const [profile, setProfile] = useState<UserReferralProfile | null>(
     initialProfile,
@@ -444,6 +446,18 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
                         >
                           👁️ Preview
                         </a>
+                        {onEditSurprise && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onClose()
+                              onEditSurprise(item.slug)
+                            }}
+                            className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-[11px] transition-all cursor-pointer shadow"
+                          >
+                            ✏️ Edit
+                          </button>
+                        )}
                       </div>
                     </div>
                   )

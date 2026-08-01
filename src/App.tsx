@@ -14,6 +14,8 @@ import {
   getSurpriseBySlug,
   verifyQuestions,
   getUserCreatedSurprises,
+  getSurpriseForEdit,
+  updateSurprise,
 } from "./lib/surpriseService"
 import {
   signUpUserWithEmail,
@@ -2979,6 +2981,9 @@ function Dashboard({
     return null
   }, [])
 
+  const [editingSlug, setEditingSlug] = useState<string | null>(null)
+  const [isLoadingEditData, setIsLoadingEditData] = useState(false)
+
   const [gfName, setGfName] = useState(initialDraft?.gfName || "")
   const [bfName, setBfName] = useState(initialDraft?.bfName || "")
   const [photos, setPhotos] = useState<string[]>(initialDraft?.photoBase64s || [])
@@ -2991,6 +2996,54 @@ function Dashboard({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const recordTimerRef = useRef<any>(null)
+
+  const handleStartEdit = async (targetSlug: string) => {
+    playButtonSound()
+    setIsLoadingEditData(true)
+    setErrorMsg("")
+    try {
+      const data = await getSurpriseForEdit(targetSlug)
+      if (data) {
+        setEditingSlug(targetSlug)
+        setGfName(data.girlfriend_name)
+        setBfName(data.boyfriend_name)
+        setLetter(data.letter)
+        setPhotos(data.photos)
+        setPhotoFiles([])
+        setSpotifyQ(data.spotify_url)
+        setSpotifyTrackId(data.spotify_url)
+        setVoiceNote(!!data.voice_note_url)
+        setVoiceNoteFile(null)
+        if (data.questions && data.questions.length > 0) {
+          setSecretQuestions(data.questions)
+        }
+        setLink(`${window.location.origin}/s/${targetSlug}`)
+        window.scrollTo({ top: 550, behavior: "smooth" })
+      } else {
+        setErrorMsg("Failed to load details for editing.")
+      }
+    } catch (err: any) {
+      setErrorMsg("Failed to load surprise details: " + (err.message || ""))
+    } finally {
+      setIsLoadingEditData(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    playButtonSound()
+    setEditingSlug(null)
+    setLink("")
+    setGfName("")
+    setBfName("")
+    setLetter("")
+    setPhotos([])
+    setPhotoFiles([])
+    setVoiceNote(false)
+    setVoiceNoteFile(null)
+    setMusicFile(null)
+    setSpotifyQ("")
+    setErrorMsg("")
+  }
 
   const nativeMicInputRef = useRef<HTMLInputElement>(null)
 
@@ -3341,6 +3394,73 @@ function Dashboard({
 
     setErrorMsg("")
 
+    if (editingSlug) {
+      // ── EDIT / UPDATE EXISTING SURPRISE FLOW (NO PAYMENT REQUIRED) ──────
+      setIsSubmitting(true)
+      try {
+        const [photoUploadResults, musicPublicUrl, voiceNotePublicUrl] =
+          await Promise.all([
+            Promise.all(photoFiles.map((file) => uploadPhoto(file))),
+            musicFile ? uploadMusicTrack(musicFile) : Promise.resolve(""),
+            voiceNoteFile
+              ? uploadVoiceNote(voiceNoteFile)
+              : Promise.resolve(""),
+          ])
+
+        // Keep existing photo URLs plus newly uploaded photo URLs
+        const existingPhotoUrls = photos.filter((p) => p.startsWith("http"))
+        const uploadedPhotoUrls = [...existingPhotoUrls, ...photoUploadResults]
+
+        const questionRecords = secretQuestions
+          .filter((q) => q.question.trim() && q.answer.trim())
+          .map((q) => ({
+            question: q.question.trim(),
+            answer: q.answer.trim(),
+          }))
+
+        const finalSpotifyUrl =
+          musicPublicUrl ||
+          spotifyQ.trim() ||
+          spotifyTrackId.trim() ||
+          "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
+
+        await updateSurprise(editingSlug, {
+          girlfriend_name: gfName.trim(),
+          boyfriend_name: bfName.trim(),
+          photos: uploadedPhotoUrls,
+          letter: letter.trim() || "",
+          spotify_url: finalSpotifyUrl,
+          voice_note_url: voiceNotePublicUrl || undefined,
+          questions: questionRecords,
+        })
+
+        const fullShareLink = `${window.location.origin}/s/${editingSlug}`
+        setLink(fullShareLink)
+
+        // Update in createdSurprises state & localStorage
+        setCreatedSurprises((prev) =>
+          prev.map((item) =>
+            item.slug === editingSlug
+              ? {
+                  ...item,
+                  girlfriendName: gfName.trim(),
+                  boyfriendName: bfName.trim(),
+                }
+              : item,
+          ),
+        )
+
+        setErrorMsg("")
+        setIsSubmitting(false)
+        setEditingSlug(null)
+      } catch (err: any) {
+        console.error("Failed to update surprise:", err)
+        setErrorMsg(err.message || "Failed to update surprise.")
+        setIsSubmitting(false)
+      }
+      return
+    }
+
     // Launch Razorpay Checkout Modal (Test Key: rzp_test_TJJpml3f29qMoT)
     await launchRazorpayCheckout({
       amount: finalPrice,
@@ -3638,6 +3758,16 @@ function Dashboard({
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <button
                       type="button"
+                      onClick={() => handleStartEdit(item.slug)}
+                      disabled={isLoadingEditData}
+                      className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 font-bold text-white text-xs cursor-pointer shadow hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                    >
+                      {editingSlug === item.slug
+                        ? "✏️ Editing..."
+                        : "✏️ Edit Details"}
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => copyToClipboard(item.link)}
                       className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 font-bold text-white text-xs cursor-pointer shadow hover:scale-105 active:scale-95 transition-all"
                     >
@@ -3658,38 +3788,57 @@ function Dashboard({
           </div>
         )}
 
-        <div className="text-center mb-8">
-          <div
-            className="mb-3 animate-pulse-heart inline-block"
-            style={{
-              fontSize: "clamp(2.5rem, 6vw, 4rem)",
-              filter: "drop-shadow(0 0 18px rgba(232,120,154,0.5))",
-            }}
-          >
-            💝
+        {editingSlug ? (
+          <div className="text-center mb-8 p-5 rounded-3xl bg-gradient-to-r from-purple-900/90 to-indigo-900/90 border-2 border-purple-400 text-white shadow-2xl animate-fade-up max-w-lg mx-auto backdrop-blur-md">
+            <div className="text-3xl mb-1">✏️</div>
+            <h2 className="font-serif font-bold text-xl text-purple-100">
+              Editing Website: <span className="font-mono text-amber-300">{editingSlug}</span>
+            </h2>
+            <p className="text-xs text-purple-200/80 mt-1 font-sans">
+              Modify any details below and click "Save & Update Website" to publish your changes live!
+            </p>
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="mt-3 px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-xs font-bold text-white border border-white/20 cursor-pointer transition-all shadow"
+            >
+              ✕ Cancel Editing & Create New Gift
+            </button>
           </div>
-          <h2
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: "clamp(1.2rem, 3vw, 1.75rem)",
-              fontWeight: "700",
-              color: "#1a0035",
-              marginBottom: "6px",
-            }}
-          >
-            Design Her Perfect Surprise
-          </h2>
-          <p
-            style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: "clamp(0.8rem, 1.8vw, 1rem)",
-              color: "#7a0f50",
-              fontWeight: "500",
-            }}
-          >
-            A luxury digital gift made with love
-          </p>
-        </div>
+        ) : (
+          <div className="text-center mb-8">
+            <div
+              className="mb-3 animate-pulse-heart inline-block"
+              style={{
+                fontSize: "clamp(2.5rem, 6vw, 4rem)",
+                filter: "drop-shadow(0 0 18px rgba(232,120,154,0.5))",
+              }}
+            >
+              💝
+            </div>
+            <h2
+              style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: "clamp(1.2rem, 3vw, 1.75rem)",
+                fontWeight: "700",
+                color: "#1a0035",
+                marginBottom: "6px",
+              }}
+            >
+              Design Her Perfect Surprise
+            </h2>
+            <p
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "clamp(0.8rem, 1.8vw, 1rem)",
+                color: "#7a0f50",
+                fontWeight: "500",
+              }}
+            >
+              A luxury digital gift made with love
+            </p>
+          </div>
+        )}
 
         <div className="dashboard-grid">
 
@@ -4419,26 +4568,34 @@ function Dashboard({
               🔒 One-Time Payment • No Subscription • Complete Privacy
             </div>
 
-            {/* Pay Button / Generated Link */}
-            {!link ? (
+            {/* Pay / Update Button / Generated Link */}
+            {!link || editingSlug ? (
               <>
                 <button
                   disabled={isSubmitting}
                   onClick={handleGenerateLink}
                   className="w-full mt-3 cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed py-4 rounded-2xl text-base font-bold text-white shadow-xl"
                   style={{
-                    background: isReferralApplied
-                      ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
-                      : "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
-                    boxShadow: isReferralApplied
-                      ? "0 8px 32px rgba(16,185,129,0.4)"
-                      : "0 8px 32px rgba(232,120,154,0.5)",
+                    background: editingSlug
+                      ? "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)"
+                      : isReferralApplied
+                        ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                        : "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
+                    boxShadow: editingSlug
+                      ? "0 8px 32px rgba(139,92,246,0.45)"
+                      : isReferralApplied
+                        ? "0 8px 32px rgba(16,185,129,0.4)"
+                        : "0 8px 32px rgba(232,120,154,0.5)",
                     fontFamily: "'DM Sans', sans-serif",
                   }}
                 >
                   {isSubmitting
-                    ? "Uploading & Saving... ❤️"
-                    : `Pay ₹${finalPrice} & Generate Link ❤️`}
+                    ? editingSlug
+                      ? "Saving Updates... ❤️"
+                      : "Uploading & Saving... ❤️"
+                    : editingSlug
+                      ? "💾 Save & Update Website ❤️"
+                      : `Pay ₹${finalPrice} & Generate Link ❤️`}
                 </button>
                 {errorMsg && (
                   <div className="mt-3 p-3 rounded-2xl bg-rose-950/90 border border-rose-500/50 text-rose-300 text-xs sm:text-sm font-bold text-center animate-fade-up shadow-lg flex items-center justify-center gap-2">
@@ -4859,6 +5016,10 @@ export default function App() {
           userProfile={userProfile}
           onClose={() => setShowReferralModal(false)}
           onLogout={handleLogout}
+          onEditSurprise={(slug) => {
+            setShowReferralModal(false)
+            go("dashboard")
+          }}
         />
       </Suspense>
 
