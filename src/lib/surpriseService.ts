@@ -282,7 +282,23 @@ export async function getSurpriseForEdit(slug: string): Promise<{
       .single()
 
     if (error || !surpriseData) {
-      console.warn("Failed to fetch surprise for edit:", error)
+      console.warn("Failed to fetch surprise for edit via relational query, trying public fallback:", error?.message)
+      const publicData = await getSurpriseBySlug(slug)
+      if (publicData) {
+        return {
+          slug: publicData.surprise.slug,
+          boyfriend_name: publicData.surprise.boyfriend_name || "",
+          girlfriend_name: publicData.surprise.girlfriend_name || "",
+          letter: publicData.surprise.letter || "",
+          spotify_url: publicData.surprise.spotify_url || "",
+          voice_note_url: publicData.surprise.voice_note_url || null,
+          photos: (publicData.photos || []).map((p: any) => p?.photo_url).filter(Boolean),
+          questions: (publicData.questions || []).map((q: any) => ({
+            question: q?.question || "",
+            answer: "",
+          })),
+        }
+      }
       return null
     }
 
@@ -293,22 +309,40 @@ export async function getSurpriseForEdit(slug: string): Promise<{
       : []
 
     return {
-      slug: surpriseData.slug,
-      boyfriend_name: surpriseData.boyfriend_name,
-      girlfriend_name: surpriseData.girlfriend_name,
-      letter: surpriseData.letter,
-      spotify_url: surpriseData.spotify_url,
+      slug: surpriseData.slug || slug,
+      boyfriend_name: surpriseData.boyfriend_name || "",
+      girlfriend_name: surpriseData.girlfriend_name || "",
+      letter: surpriseData.letter || "",
+      spotify_url: surpriseData.spotify_url || "",
       voice_note_url: surpriseData.voice_note_url || null,
-      photos: sortedPhotos.map((p: any) => p.photo_url),
+      photos: sortedPhotos.map((p: any) => p?.photo_url).filter(Boolean),
       questions: Array.isArray(surpriseData.questions)
         ? surpriseData.questions.map((q: any) => ({
-            question: q.question || "",
-            answer: q.answer || "",
+            question: q?.question || "",
+            answer: q?.answer || "",
           }))
         : [],
     }
   } catch (err) {
     console.error("getSurpriseForEdit error:", err)
+    try {
+      const publicData = await getSurpriseBySlug(slug)
+      if (publicData) {
+        return {
+          slug: publicData.surprise.slug,
+          boyfriend_name: publicData.surprise.boyfriend_name || "",
+          girlfriend_name: publicData.surprise.girlfriend_name || "",
+          letter: publicData.surprise.letter || "",
+          spotify_url: publicData.surprise.spotify_url || "",
+          voice_note_url: publicData.surprise.voice_note_url || null,
+          photos: (publicData.photos || []).map((p: any) => p?.photo_url).filter(Boolean),
+          questions: (publicData.questions || []).map((q: any) => ({
+            question: q?.question || "",
+            answer: "",
+          })),
+        }
+      }
+    } catch {}
     return null
   }
 }

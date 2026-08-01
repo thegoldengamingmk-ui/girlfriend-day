@@ -2903,6 +2903,7 @@ function Dashboard({
   setLink,
   userProfile,
   onSurpriseUpdated,
+  initialEditSlug,
 }: {
   onBack: () => void
   spotifyTrackId: string
@@ -2914,6 +2915,7 @@ function Dashboard({
   setLink: (link: string) => void
   userProfile?: UserReferralProfile | null
   onSurpriseUpdated?: (slug: string) => Promise<void>
+  initialEditSlug?: string | null
 }) {
   const [createdSurprises, setCreatedSurprises] = useState<SavedSurpriseItem[]>(() => {
     try {
@@ -2995,7 +2997,11 @@ function Dashboard({
 
   const [gfName, setGfName] = useState(initialDraft?.gfName || "")
   const [bfName, setBfName] = useState(initialDraft?.bfName || "")
-  const [photos, setPhotos] = useState<string[]>(initialDraft?.photoBase64s || [])
+  const [photos, setPhotos] = useState<string[]>(() =>
+    Array.isArray(initialDraft?.photoBase64s)
+      ? initialDraft.photoBase64s.filter(Boolean)
+      : [],
+  )
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
   const [letter, setLetter] = useState(initialDraft?.letter || "")
   const [voiceNote, setVoiceNote] = useState(!!initialDraft?.voiceNoteBase64)
@@ -3010,6 +3016,7 @@ function Dashboard({
   const [existingSpotifyUrl, setExistingSpotifyUrl] = useState<string | null>(null)
 
   const handleStartEdit = async (targetSlug: string) => {
+    if (!targetSlug) return
     playButtonSound()
     setIsLoadingEditData(true)
     setErrorMsg("")
@@ -3017,19 +3024,24 @@ function Dashboard({
       const data = await getSurpriseForEdit(targetSlug)
       if (data) {
         setEditingSlug(targetSlug)
-        setGfName(data.girlfriend_name)
-        setBfName(data.boyfriend_name)
-        setLetter(data.letter)
-        setPhotos(data.photos)
+        setGfName(data.girlfriend_name || "")
+        setBfName(data.boyfriend_name || "")
+        setLetter(data.letter || "")
+        setPhotos(Array.isArray(data.photos) ? data.photos.filter(Boolean) : [])
         setPhotoFiles([])
-        setSpotifyQ(data.spotify_url)
-        setSpotifyTrackId(data.spotify_url)
-        setExistingSpotifyUrl(data.spotify_url)
+        setSpotifyQ(data.spotify_url || "")
+        setSpotifyTrackId(data.spotify_url || "")
+        setExistingSpotifyUrl(data.spotify_url || null)
         setVoiceNote(!!data.voice_note_url)
         setVoiceNoteFile(null)
-        setExistingVoiceNoteUrl(data.voice_note_url)
-        if (data.questions && data.questions.length > 0) {
-          setSecretQuestions(data.questions)
+        setExistingVoiceNoteUrl(data.voice_note_url || null)
+        if (Array.isArray(data.questions) && data.questions.length > 0) {
+          setSecretQuestions(
+            data.questions.map((q) => ({
+              question: q?.question || "",
+              answer: q?.answer || "",
+            })),
+          )
         }
         setLink(`${window.location.origin}/s/${targetSlug}`)
         window.scrollTo({ top: 550, behavior: "smooth" })
@@ -3042,6 +3054,13 @@ function Dashboard({
       setIsLoadingEditData(false)
     }
   }
+
+  // Trigger initial edit load when initialEditSlug prop is passed
+  useEffect(() => {
+    if (initialEditSlug) {
+      handleStartEdit(initialEditSlug)
+    }
+  }, [initialEditSlug])
 
   const handleCancelEdit = () => {
     playButtonSound()
@@ -4755,9 +4774,10 @@ function Dashboard({
 
 // ── APP ────────────────────────────────────────────────────────────────────
 
-export default function App() {
+function App() {
   const [spotifyTrackId, setSpotifyTrackId] = useState("4cOdK2wGLETKBW3PvgPWqT")
   const [activeSlug, setActiveSlug] = useState<string>("")
+  const [pendingEditSlug, setPendingEditSlug] = useState<string | null>(null)
   const [surpriseData, setSurpriseData] =
     useState<SurpriseDetailResponse | null>(null)
   const [isLoadingSlug, setIsLoadingSlug] = useState(false)
@@ -5071,6 +5091,7 @@ export default function App() {
           onLogout={handleLogout}
           onEditSurprise={(slug) => {
             setShowReferralModal(false)
+            setPendingEditSlug(slug)
             go("dashboard")
           }}
         />
@@ -5089,7 +5110,10 @@ export default function App() {
       {screen === 1 && (
         <S1
           onNext={() => go(2)}
-          onDash={() => go("dashboard")}
+          onDash={() => {
+            if (activeSlug) setPendingEditSlug(activeSlug)
+            go("dashboard")
+          }}
           girlfriendName={surpriseData?.surprise.girlfriend_name}
         />
       )}
@@ -5112,7 +5136,10 @@ export default function App() {
       {screen === 7 && (
         <S7
           onReplay={() => go(1)}
-          onDash={() => go("dashboard")}
+          onDash={() => {
+            if (activeSlug) setPendingEditSlug(activeSlug)
+            go("dashboard")
+          }}
           trackId={spotifyTrackId}
           photos={photosList}
           letter={letterText}
@@ -5129,8 +5156,61 @@ export default function App() {
           setLink={setGeneratedLink}
           userProfile={userProfile}
           onSurpriseUpdated={handleSurpriseUpdated}
+          initialEditSlug={pendingEditSlug || (activeSlug || null)}
         />
       )}
     </div>
+  )
+}
+
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Uncaught UI Error boundary caught error:", error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-[#0d0020] text-pink-100">
+          <div className="text-5xl mb-4">💔</div>
+          <h2 className="text-xl font-bold font-serif mb-2">Something went wrong</h2>
+          <p className="text-xs text-pink-300/70 max-w-md mb-6 font-sans">
+            {this.state.error?.message || "An unexpected rendering issue occurred."}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              this.setState({ hasError: false, error: null })
+              window.location.href = window.location.origin
+            }}
+            className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-600 font-bold text-white text-xs shadow-xl cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+          >
+            🔄 Reload App & Return Home
+          </button>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
+export default function RootApp() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   )
 }
