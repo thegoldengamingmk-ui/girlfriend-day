@@ -3417,9 +3417,20 @@ function Dashboard({
               : Promise.resolve(""),
           ])
 
-        // Keep existing photo URLs plus newly uploaded photo URLs
-        const existingPhotoUrls = photos.filter((p) => p.startsWith("http"))
-        const uploadedPhotoUrls = [...existingPhotoUrls, ...photoUploadResults]
+        // Map photos array from state (max 5 items) replacing blob/data preview URLs with freshly uploaded URLs
+        let uploadIdx = 0
+        const finalPhotoUrls = photos
+          .map((p) => {
+            if (p.startsWith("http") && !p.startsWith("blob:")) {
+              return p
+            }
+            if (uploadIdx < photoUploadResults.length) {
+              return photoUploadResults[uploadIdx++]
+            }
+            return null
+          })
+          .filter((p): p is string => Boolean(p))
+          .slice(0, 5)
 
         const questionRecords = secretQuestions
           .filter((q) => q.question.trim() && q.answer.trim())
@@ -3443,7 +3454,7 @@ function Dashboard({
         await updateSurprise(editingSlug, {
           girlfriend_name: gfName.trim(),
           boyfriend_name: bfName.trim(),
-          photos: uploadedPhotoUrls,
+          photos: finalPhotoUrls,
           letter: letter.trim() || "",
           spotify_url: finalSpotifyUrl,
           voice_note_url: finalVoiceNoteUrl,
@@ -3502,12 +3513,19 @@ function Dashboard({
                   : Promise.resolve(""),
               ])
 
-            const uploadedPhotoUrls: string[] = [...photoUploadResults]
-            if (uploadedPhotoUrls.length === 0 && photos.length > 0) {
-              uploadedPhotoUrls.push(
-                ...photos.filter((p) => p.startsWith("http")),
-              )
-            }
+            let newUploadIdx = 0
+            const finalCreatePhotoUrls = photos
+              .map((p) => {
+                if (p.startsWith("http") && !p.startsWith("blob:")) {
+                  return p
+                }
+                if (newUploadIdx < photoUploadResults.length) {
+                  return photoUploadResults[newUploadIdx++]
+                }
+                return null
+              })
+              .filter((p): p is string => Boolean(p))
+              .slice(0, 5)
 
             const questionRecords = secretQuestions
               .filter((q) => q.question.trim() && q.answer.trim())
@@ -3527,7 +3545,7 @@ function Dashboard({
             const result = await createSurprise({
               girlfriend_name: gfName.trim(),
               boyfriend_name: bfName.trim(),
-              photos: uploadedPhotoUrls,
+              photos: finalCreatePhotoUrls,
               letter: letter.trim() || "",
               spotify_url: finalSpotifyUrl,
               voice_note_url: voiceNotePublicUrl || undefined,
