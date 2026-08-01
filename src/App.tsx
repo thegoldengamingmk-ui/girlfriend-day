@@ -3594,14 +3594,21 @@ function Dashboard({
               <button
                 type="button"
                 onClick={() => {
+                  playButtonSound()
                   setLink("")
                   setGfName("")
                   setBfName("")
                   setLetter("")
                   setPhotos([])
                   setPhotoFiles([])
+                  setVoiceNote(false)
+                  setVoiceNoteFile(null)
+                  setMusicFile(null)
+                  setSpotifyQ("")
+                  setErrorMsg("")
+                  window.scrollTo({ top: 500, behavior: "smooth" })
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-pink-700 bg-pink-100/90 hover:bg-pink-200 cursor-pointer transition-all border border-pink-200"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-pink-700 bg-pink-100/90 hover:bg-pink-200 cursor-pointer transition-all border border-pink-200 shadow-sm hover:scale-105 active:scale-95"
               >
                 ➕ Create Another Gift
               </button>
