@@ -1806,14 +1806,17 @@ function CinematicMemoryCard({
             </span>
           </div>
 
-          <div className="relative overflow-hidden rounded-2xl aspect-[4/3] sm:aspect-[16/10] w-full bg-black/40">
+          <div className="relative overflow-hidden rounded-2xl w-full bg-black/50 backdrop-blur-md border border-pink-500/20 min-h-[220px] sm:min-h-[300px] flex items-center justify-center p-2 sm:p-3">
+            <div
+              className="absolute inset-0 bg-cover bg-center blur-2xl opacity-35 scale-110 pointer-events-none"
+              style={{ backgroundImage: `url(${photo})` }}
+            />
             <img
               src={photo}
               alt={`Memory ${index + 1}`}
               loading="lazy"
-              className="w-full h-full object-cover rounded-2xl transition-transform duration-700 group-hover:scale-105"
+              className="relative z-10 max-w-full max-h-[65vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition-transform duration-700 group-hover:scale-[1.02]"
             />
-            <div className="absolute inset-0 rounded-2xl pointer-events-none bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-20 transition-opacity duration-300" />
           </div>
 
           {/* Animated Glassmorphism Caption */}
@@ -1898,14 +1901,17 @@ function FinalGrandMemory({ photo }: { photo: string }) {
             "0 0 60px rgba(255,105,180,0.35), 0 30px 70px rgba(0,0,0,0.8)",
         }}
       >
-        <div className="relative overflow-hidden rounded-2xl aspect-[4/3] sm:aspect-[16/10] w-full bg-black/40">
+        <div className="relative overflow-hidden rounded-2xl w-full bg-black/50 backdrop-blur-md border border-pink-500/30 min-h-[240px] sm:min-h-[340px] flex items-center justify-center p-2 sm:p-3">
+          <div
+            className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-110 pointer-events-none"
+            style={{ backgroundImage: `url(${photo})` }}
+          />
           <img
             src={photo}
             alt="Final Memory Spotlight"
             loading="lazy"
-            className="w-full h-full object-cover rounded-2xl transition-transform duration-700 hover:scale-105"
+            className="relative z-10 max-w-full max-h-[70vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition-transform duration-700 hover:scale-[1.02]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
         </div>
 
         {/* Final Romantic Glow Caption */}
@@ -3972,33 +3978,30 @@ function Dashboard({
           </div>
 
           {photos.length > 0 && (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: `repeat(${Math.min(photos.length, 5)}, 1fr)`,
-                gap: "8px",
-                marginTop: "12px",
-              }}
-            >
-              {photos.map((url, i) => (
-                <div key={i} className="relative" style={{ aspectRatio: "1" }}>
-                  <img
-                    src={url}
-                    alt=""
-                    className="w-full h-full object-cover rounded-xl"
-                  />
-                  <button
-                    onClick={() => {
-                      setPhotos((prev) => prev.filter((_, j) => j !== i))
-                      setPhotoFiles((prev) => prev.filter((_, j) => j !== i))
-                    }}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-white text-xs flex items-center justify-center cursor-pointer font-bold"
-                    style={{ background: "#e8789a", lineHeight: 1 }}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
+            <div className="mt-4 p-3 rounded-2xl bg-pink-500/5 border border-pink-200/40">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                {photos.map((url, i) => (
+                  <div key={i} className="relative aspect-square group">
+                    <img
+                      src={url}
+                      alt={`Uploaded photo ${i + 1}`}
+                      className="w-full h-full object-cover rounded-xl border border-pink-300/40 shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPhotos((prev) => prev.filter((_, j) => j !== i))
+                        setPhotoFiles((prev) => prev.filter((_, j) => j !== i))
+                      }}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full text-white text-xs flex items-center justify-center cursor-pointer font-bold bg-pink-600 hover:bg-rose-700 shadow-md transition-all hover:scale-110 active:scale-95 z-10"
+                      title="Remove photo"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
