@@ -13,6 +13,7 @@ import {
   createSurprise,
   getSurpriseBySlug,
   verifyQuestions,
+  getUserCreatedSurprises,
 } from "./lib/surpriseService"
 import {
   signUpUserWithEmail,
@@ -2890,6 +2891,16 @@ function base64ToFile(dataurl: string, filename: string): File {
 
 // ── DASHBOARD ──────────────────────────────────────────────────────────────
 
+const MY_CREATED_SURPRISES_KEY = "my_created_gift_surprises"
+
+interface SavedSurpriseItem {
+  slug: string
+  link: string
+  girlfriendName: string
+  boyfriendName: string
+  createdAt: string
+}
+
 function Dashboard({
   onBack,
   spotifyTrackId,
@@ -2907,6 +2918,69 @@ function Dashboard({
   setLink: (link: string) => void
   userProfile?: UserReferralProfile | null
 }) {
+  const [createdSurprises, setCreatedSurprises] = useState<SavedSurpriseItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(MY_CREATED_SURPRISES_KEY)
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+
+  // Fetch created surprises from database when user is authenticated
+  useEffect(() => {
+    const identifier = userProfile?.email || userProfile?.id
+    if (!identifier) return
+
+    getUserCreatedSurprises(identifier).then((dbSurprises) => {
+      if (dbSurprises && dbSurprises.length > 0) {
+        const origin =
+          typeof window !== "undefined"
+            ? window.location.origin
+            : "https://gift-surprise.com"
+
+        setCreatedSurprises((prev) => {
+          const dbItems: SavedSurpriseItem[] = dbSurprises.map((s) => ({
+            slug: s.slug,
+            link: `${origin}/s/${s.slug}`,
+            girlfriendName: s.girlfriend_name,
+            boyfriendName: s.boyfriend_name,
+            createdAt: s.created_at || new Date().toISOString(),
+          }))
+
+          const mergedMap = new Map<string, SavedSurpriseItem>()
+          dbItems.forEach((item) => mergedMap.set(item.slug, item))
+          prev.forEach((item) => {
+            if (!mergedMap.has(item.slug)) {
+              mergedMap.set(item.slug, item)
+            }
+          })
+
+          const merged = Array.from(mergedMap.values()).sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          )
+
+          try {
+            localStorage.setItem(
+              MY_CREATED_SURPRISES_KEY,
+              JSON.stringify(merged),
+            )
+          } catch {}
+
+          return merged
+        })
+      }
+    })
+  }, [userProfile?.email, userProfile?.id])
+
+  // Auto-restore link if link is empty but created surprises exist
+  useEffect(() => {
+    if (!link && createdSurprises.length > 0) {
+      setLink(createdSurprises[0].link)
+    }
+  }, [createdSurprises, link, setLink])
+
   const initialDraft = useMemo(() => {
     try {
       const saved = localStorage.getItem(DASHBOARD_DRAFT_KEY)
@@ -3297,11 +3371,35 @@ function Dashboard({
               spotify_url: finalSpotifyUrl,
               voice_note_url: voiceNotePublicUrl || undefined,
               questions: questionRecords,
+              creator_email: userProfile?.email || undefined,
+              creator_user_id: userProfile?.id || undefined,
             })
 
             const fullShareLink = `${window.location.origin}/s/${result}`
             setLink(fullShareLink)
             localStorage.removeItem(DASHBOARD_DRAFT_KEY)
+
+            const newSavedItem: SavedSurpriseItem = {
+              slug: result,
+              link: fullShareLink,
+              girlfriendName: gfName.trim(),
+              boyfriendName: bfName.trim(),
+              createdAt: new Date().toISOString(),
+            }
+
+            setCreatedSurprises((prev) => {
+              const updated = [newSavedItem, ...prev.filter((x) => x.slug !== result)]
+              try {
+                localStorage.setItem(
+                  MY_CREATED_SURPRISES_KEY,
+                  JSON.stringify(updated),
+                )
+              } catch (e) {
+                console.warn("Failed to persist created surprise:", e)
+              }
+              return updated
+            })
+
             setIsSubmitting(false)
           } catch (err: any) {
             console.error("Failed to save surprise:", err)
@@ -3449,6 +3547,89 @@ function Dashboard({
       </div>
 
       <div className="dashboard-container py-6">
+        {/* Persistent Created Gift Websites Card */}
+        {createdSurprises.length > 0 && (
+          <div
+            style={{
+              ...card,
+              background: "linear-gradient(135deg, #ffffff 0%, #fff0f5 100%)",
+              border: "2px solid #e8789a",
+              boxShadow: "0 8px 32px rgba(232,120,154,0.22)",
+            }}
+            className="mb-8 p-6 rounded-3xl"
+          >
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="text-3xl">💝</span>
+                <div>
+                  <h3 className="font-serif font-bold text-lg text-[#1a0035]">
+                    Your Created Gift Link{createdSurprises.length > 1 ? "s" : ""} ({createdSurprises.length})
+                  </h3>
+                  <p className="text-xs text-pink-700 font-medium">
+                    Your customized website link is active. Copy and share it anytime!
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setLink("")
+                  setGfName("")
+                  setBfName("")
+                  setLetter("")
+                  setPhotos([])
+                  setPhotoFiles([])
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-pink-700 bg-pink-100/90 hover:bg-pink-200 cursor-pointer transition-all border border-pink-200"
+              >
+                ➕ Create Another Gift
+              </button>
+            </div>
+
+            <div className="space-y-3 mt-4">
+              {createdSurprises.map((item, idx) => (
+                <div
+                  key={item.slug || idx}
+                  className="p-4 rounded-2xl bg-white/90 border border-pink-200/80 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-sm text-[#7a0f50]">
+                        {item.girlfriendName && item.boyfriendName
+                          ? `${item.girlfriendName} ❤️ ${item.boyfriendName}`
+                          : `Gift Website (${item.slug})`}
+                      </span>
+                      <span className="text-[10px] bg-pink-100 text-pink-800 font-bold px-2 py-0.5 rounded-full">
+                        ACTIVE LINK
+                      </span>
+                    </div>
+                    <p className="font-mono text-xs text-pink-600 truncate max-w-full">
+                      {item.link}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(item.link)}
+                      className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 font-bold text-white text-xs cursor-pointer shadow hover:scale-105 active:scale-95 transition-all"
+                    >
+                      {copied ? "✓ Copied!" : "📋 Copy Link"}
+                    </button>
+                    <a
+                      href={item.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 sm:flex-initial text-center px-3.5 py-2 rounded-xl bg-pink-50 border border-pink-200 text-pink-800 font-bold text-xs hover:bg-pink-100 transition-all"
+                    >
+                      👁️ Preview
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="text-center mb-8">
           <div
             className="mb-3 animate-pulse-heart inline-block"

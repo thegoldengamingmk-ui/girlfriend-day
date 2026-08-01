@@ -25,19 +25,26 @@ export async function createSurprise(
 ): Promise<string> {
   const slug = generateSlug()
 
+  const payload: any = {
+    slug,
+    boyfriend_name: input.boyfriend_name,
+    girlfriend_name: input.girlfriend_name,
+    letter: input.letter,
+    spotify_url: input.spotify_url,
+    voice_note_url: input.voice_note_url || null,
+  }
+
+  if (input.creator_email) {
+    payload.creator_email = input.creator_email
+  }
+  if (input.creator_user_id) {
+    payload.creator_user_id = input.creator_user_id
+  }
+
   // 1. Insert Surprise Record
   const { data: surpriseData, error: surpriseError } = await supabase
     .from("surprises")
-    .insert([
-      {
-        slug,
-        boyfriend_name: input.boyfriend_name,
-        girlfriend_name: input.girlfriend_name,
-        letter: input.letter,
-        spotify_url: input.spotify_url,
-        voice_note_url: input.voice_note_url || null,
-      },
-    ])
+    .insert([payload])
     .select("id")
     .single()
 
@@ -206,4 +213,35 @@ export async function verifyQuestions(
       ? "Answers verified successfully!"
       : "Incorrect answer(s). Please try again ❤️",
   }
+}
+
+/**
+ * Retrieves all gift surprises created by a user (by email or user_id) from Supabase.
+ */
+export async function getUserCreatedSurprises(
+  identifier: string,
+): Promise<{
+  slug: string
+  girlfriend_name: string
+  boyfriend_name: string
+  created_at: string
+}[]> {
+  if (!identifier) return []
+
+  try {
+    const cleanId = identifier.trim().toLowerCase()
+    const { data } = await supabase
+      .from("surprises")
+      .select("slug, girlfriend_name, boyfriend_name, created_at")
+      .or(`creator_email.eq.${cleanId},creator_user_id.eq.${identifier}`)
+      .order("created_at", { ascending: false })
+
+    if (data && data.length > 0) {
+      return data
+    }
+  } catch (err) {
+    console.warn("getUserCreatedSurprises notice:", err)
+  }
+
+  return []
 }

@@ -43,6 +43,8 @@ export interface CreateSurpriseInput {
   voice_note_url?: string
   photos: string[]
   questions: CreateQuestionInput[]
+  creator_email?: string
+  creator_user_id?: string
 }
 
 export interface SurpriseDetailResponse {
