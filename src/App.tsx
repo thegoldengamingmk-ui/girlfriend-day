@@ -16,6 +16,7 @@ import {
   getUserCreatedSurprises,
   getSurpriseForEdit,
   updateSurprise,
+  invalidateSurpriseCache,
 } from "./lib/surpriseService"
 import {
   signUpUserWithEmail,
@@ -2895,6 +2896,7 @@ function Dashboard({
   link,
   setLink,
   userProfile,
+  onSurpriseUpdated,
 }: {
   onBack: () => void
   spotifyTrackId: string
@@ -2905,6 +2907,7 @@ function Dashboard({
   link: string
   setLink: (link: string) => void
   userProfile?: UserReferralProfile | null
+  onSurpriseUpdated?: (slug: string) => Promise<void>
 }) {
   const [createdSurprises, setCreatedSurprises] = useState<SavedSurpriseItem[]>(() => {
     try {
@@ -2997,6 +3000,9 @@ function Dashboard({
   const audioChunksRef = useRef<Blob[]>([])
   const recordTimerRef = useRef<any>(null)
 
+  const [existingVoiceNoteUrl, setExistingVoiceNoteUrl] = useState<string | null>(null)
+  const [existingSpotifyUrl, setExistingSpotifyUrl] = useState<string | null>(null)
+
   const handleStartEdit = async (targetSlug: string) => {
     playButtonSound()
     setIsLoadingEditData(true)
@@ -3012,8 +3018,10 @@ function Dashboard({
         setPhotoFiles([])
         setSpotifyQ(data.spotify_url)
         setSpotifyTrackId(data.spotify_url)
+        setExistingSpotifyUrl(data.spotify_url)
         setVoiceNote(!!data.voice_note_url)
         setVoiceNoteFile(null)
+        setExistingVoiceNoteUrl(data.voice_note_url)
         if (data.questions && data.questions.length > 0) {
           setSecretQuestions(data.questions)
         }
@@ -3040,6 +3048,8 @@ function Dashboard({
     setPhotoFiles([])
     setVoiceNote(false)
     setVoiceNoteFile(null)
+    setExistingVoiceNoteUrl(null)
+    setExistingSpotifyUrl(null)
     setMusicFile(null)
     setSpotifyQ("")
     setErrorMsg("")
@@ -3418,9 +3428,15 @@ function Dashboard({
             answer: q.answer.trim(),
           }))
 
+        const finalVoiceNoteUrl =
+          voiceNotePublicUrl ||
+          (voiceNote ? existingVoiceNoteUrl : null) ||
+          undefined
+
         const finalSpotifyUrl =
           musicPublicUrl ||
-          spotifyQ.trim() ||
+          (spotifyQ && spotifyQ.startsWith("http") ? spotifyQ : null) ||
+          existingSpotifyUrl ||
           spotifyTrackId.trim() ||
           "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
 
@@ -3430,7 +3446,7 @@ function Dashboard({
           photos: uploadedPhotoUrls,
           letter: letter.trim() || "",
           spotify_url: finalSpotifyUrl,
-          voice_note_url: voiceNotePublicUrl || undefined,
+          voice_note_url: finalVoiceNoteUrl,
           questions: questionRecords,
         })
 
@@ -3449,6 +3465,10 @@ function Dashboard({
               : item,
           ),
         )
+
+        if (onSurpriseUpdated) {
+          await onSurpriseUpdated(editingSlug)
+        }
 
         setErrorMsg("")
         setIsSubmitting(false)
@@ -4964,6 +4984,18 @@ export default function App() {
     )
   }
 
+  const handleSurpriseUpdated = async (slug: string) => {
+    invalidateSurpriseCache(slug)
+    setActiveSlug(slug)
+    const freshData = await getSurpriseBySlug(slug)
+    if (freshData) {
+      setSurpriseData(freshData)
+      if (freshData.surprise.spotify_url) {
+        setSpotifyTrackId(freshData.surprise.spotify_url)
+      }
+    }
+  }
+
   return (
     <div>
       <HamburgerMenu
@@ -5075,6 +5107,7 @@ export default function App() {
           link={generatedLink}
           setLink={setGeneratedLink}
           userProfile={userProfile}
+          onSurpriseUpdated={handleSurpriseUpdated}
         />
       )}
     </div>

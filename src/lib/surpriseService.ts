@@ -108,6 +108,14 @@ const surpriseCache = new Map<
 >()
 const CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
 
+export function invalidateSurpriseCache(slug?: string) {
+  if (slug) {
+    surpriseCache.delete(slug)
+  } else {
+    surpriseCache.clear()
+  }
+}
+
 /**
  * Fetches a surprise by slug using a single consolidated relational query and in-memory cache.
  * Answers to secret questions are NOT returned for security.
