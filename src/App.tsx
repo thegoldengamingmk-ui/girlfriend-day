@@ -3302,10 +3302,43 @@ function Dashboard({
   }
 
   const handleGenerateLink = async () => {
-    if (!gfName.trim() || !bfName.trim()) {
-      setErrorMsg("Please enter both Girlfriend and Boyfriend names ❤️")
+    if (!gfName.trim()) {
+      setErrorMsg("Please enter Her Name before proceeding to payment ❤️")
       return
     }
+    if (!bfName.trim()) {
+      setErrorMsg("Please enter Your Name before proceeding to payment ❤️")
+      return
+    }
+    if (photos.length === 0 && photoFiles.length === 0) {
+      setErrorMsg("Please upload at least 1 photo before proceeding to payment 📸")
+      return
+    }
+    if (!letter.trim()) {
+      setErrorMsg("Please write a Love Letter before proceeding to payment 💌")
+      return
+    }
+
+    const validQuestions = secretQuestions.filter(
+      (q) => q.question.trim() && q.answer.trim(),
+    )
+    if (validQuestions.length === 0) {
+      setErrorMsg(
+        "Please answer at least 1 Secret Question before proceeding to payment 🔐",
+      )
+      return
+    }
+
+    const invalidQuestion = secretQuestions.find(
+      (q) => q.question.trim() && !q.answer.trim(),
+    )
+    if (invalidQuestion) {
+      setErrorMsg(
+        `Please enter an answer for: "${invalidQuestion.question}" 🔐`,
+      )
+      return
+    }
+
     setErrorMsg("")
 
     // Launch Razorpay Checkout Modal (Test Key: rzp_test_TJJpml3f29qMoT)
@@ -4381,24 +4414,32 @@ function Dashboard({
 
             {/* Pay Button / Generated Link */}
             {!link ? (
-              <button
-                disabled={isSubmitting}
-                onClick={handleGenerateLink}
-                className="w-full mt-3 cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed py-4 rounded-2xl text-base font-bold text-white shadow-xl"
-                style={{
-                  background: isReferralApplied
-                    ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
-                    : "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
-                  boxShadow: isReferralApplied
-                    ? "0 8px 32px rgba(16,185,129,0.4)"
-                    : "0 8px 32px rgba(232,120,154,0.5)",
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
-              >
-                {isSubmitting
-                  ? "Uploading & Saving... ❤️"
-                  : `Pay ₹${finalPrice} & Generate Link ❤️`}
-              </button>
+              <>
+                <button
+                  disabled={isSubmitting}
+                  onClick={handleGenerateLink}
+                  className="w-full mt-3 cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed py-4 rounded-2xl text-base font-bold text-white shadow-xl"
+                  style={{
+                    background: isReferralApplied
+                      ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                      : "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
+                    boxShadow: isReferralApplied
+                      ? "0 8px 32px rgba(16,185,129,0.4)"
+                      : "0 8px 32px rgba(232,120,154,0.5)",
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  {isSubmitting
+                    ? "Uploading & Saving... ❤️"
+                    : `Pay ₹${finalPrice} & Generate Link ❤️`}
+                </button>
+                {errorMsg && (
+                  <div className="mt-3 p-3 rounded-2xl bg-rose-950/90 border border-rose-500/50 text-rose-300 text-xs sm:text-sm font-bold text-center animate-fade-up shadow-lg flex items-center justify-center gap-2">
+                    <span>⚠️</span>
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="mt-4">
                 <div
