@@ -5,6 +5,7 @@
  */
 
 import { supabase } from "./supabase"
+import { isValidUuid } from "./userService"
 
 export type TransactionType = "Referral Reward" | "Referral Bonus" | "Admin Credit" | "Admin Debit" | "Withdrawal Request" | "Withdrawal Approved" | "Withdrawal Rejected" | "Premium Purchase" | "Refund" | "Bonus" | "Adjustment"
 
@@ -73,12 +74,12 @@ export async function executeWalletTransaction(params: {
     status = "Completed",
   } = params
 
-  if (!userId || userId === "guest") {
+  if (!userId || userId === "guest" || !isValidUuid(userId)) {
     return {
       success: false,
       transactionId: "",
       balanceAfter: 0,
-      message: "Invalid user ID provided.",
+      message: "Invalid or non-database user ID provided.",
     }
   }
 
@@ -278,7 +279,7 @@ export async function executeWalletTransaction(params: {
 export async function getUserTransactions(
   userId: string,
 ): Promise<WalletTransaction[]> {
-  if (!userId) return []
+  if (!userId || !isValidUuid(userId)) return []
 
   try {
     const { data: txnList } = await supabase
@@ -356,6 +357,10 @@ export async function getAllSystemTransactions(): Promise<any[]> {
 export async function verifyWalletIntegrity(
   userId: string,
 ): Promise<{ valid: boolean; calculatedBalance: number; actualBalance: number }> {
+  if (!userId || !isValidUuid(userId)) {
+    return { valid: true, calculatedBalance: 0, actualBalance: 0 }
+  }
+
   try {
     const { data: walletData } = await supabase
       .from("wallets")

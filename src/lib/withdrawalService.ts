@@ -6,6 +6,7 @@
 
 import { supabase } from "./supabase"
 import { executeWalletTransaction } from "./walletService"
+import { isValidUuid } from "./userService"
 
 export const WITHDRAWAL_CONFIG = {
   MIN_AMOUNT: 100, // ₹100 minimum withdrawal
@@ -76,10 +77,10 @@ export async function createWithdrawalRequest(
     paymentDetails = "",
   } = params
 
-  if (!userId || userId === "guest") {
+  if (!userId || userId === "guest" || !isValidUuid(userId)) {
     return {
       success: false,
-      message: "Please sign in to request a withdrawal.",
+      message: "Please sign in with a valid account to request a withdrawal.",
     }
   }
 

@@ -11,6 +11,7 @@ import {
   buildReferralLink,
   generateUniqueReferralCode,
   validateAndApplyReferralCode,
+  isValidUuid,
 } from "./userService"
 
 export async function signUpUserWithEmail(email: string, password: string) {
@@ -103,7 +104,7 @@ export async function recordUserLoginHistory(userId: string, email: string) {
 
     await supabase.from("user_login_history").insert([
       {
-        user_id: userId.includes("-") ? userId : undefined,
+        user_id: isValidUuid(userId) ? userId : undefined,
         email: email.trim().toLowerCase(),
         ip_address: "127.0.0.1",
         device: "Desktop/Mobile",

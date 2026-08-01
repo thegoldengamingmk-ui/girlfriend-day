@@ -7,6 +7,17 @@
 import { supabase } from "./supabase"
 import { executeWalletTransaction } from "./walletService"
 
+/**
+ * Utility to validate whether a string is a valid PostgreSQL UUID
+ * (8-4-4-4-12 hex characters format)
+ */
+export function isValidUuid(id: string | null | undefined): boolean {
+  if (!id || typeof id !== "string") return false
+  const uuidRegex =
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+  return uuidRegex.test(id.trim())
+}
+
 export interface CanonicalUser {
   id: string
   firebaseUid: string
@@ -368,10 +379,12 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
     ? new Date(dbUserRecord.last_login).toLocaleString()
     : new Date().toLocaleString()
 
-  // Candidate User IDs for cross-table matching
+  // Candidate User IDs for cross-table matching (strictly valid UUIDs only to avoid Postgres 22P02 syntax errors)
   const candidateUserIds = Array.from(
     new Set(
-      [userId, dbUserRecord.user_id, firebaseUid].filter(Boolean) as string[],
+      [userId, dbUserRecord.user_id, firebaseUid].filter((id) =>
+        isValidUuid(id),
+      ) as string[],
     ),
   )
 
@@ -383,33 +396,35 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
     referralEarnings: 0,
   }
 
-  try {
-    const { data: refStats } = await supabase
-      .from("referral_stats")
-      .select("*")
-      .in("user_id", candidateUserIds)
+  if (candidateUserIds.length > 0) {
+    try {
+      const { data: refStats } = await supabase
+        .from("referral_stats")
+        .select("*")
+        .in("user_id", candidateUserIds)
 
-    if (refStats && refStats.length > 0) {
-      refStats.forEach((s) => {
-        referralStats.totalReferrals = Math.max(
-          referralStats.totalReferrals,
-          Number(s.total_referrals || 0),
-        )
-        referralStats.successfulReferrals = Math.max(
-          referralStats.successfulReferrals,
-          Number(s.successful_referrals || 0),
-        )
-        referralStats.pendingReferrals = Math.max(
-          referralStats.pendingReferrals,
-          Number(s.pending_referrals || 0),
-        )
-        referralStats.referralEarnings = Math.max(
-          referralStats.referralEarnings,
-          Number(s.referral_earnings || 0),
-        )
-      })
-    }
-  } catch {}
+      if (refStats && refStats.length > 0) {
+        refStats.forEach((s) => {
+          referralStats.totalReferrals = Math.max(
+            referralStats.totalReferrals,
+            Number(s.total_referrals || 0),
+          )
+          referralStats.successfulReferrals = Math.max(
+            referralStats.successfulReferrals,
+            Number(s.successful_referrals || 0),
+          )
+          referralStats.pendingReferrals = Math.max(
+            referralStats.pendingReferrals,
+            Number(s.pending_referrals || 0),
+          )
+          referralStats.referralEarnings = Math.max(
+            referralStats.referralEarnings,
+            Number(s.referral_earnings || 0),
+          )
+        })
+      }
+    } catch {}
+  }
 
   // 2. Fetch wallet record across candidate user IDs
   let wallet = {
@@ -419,101 +434,107 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
     totalWithdrawn: 0,
   }
 
-  try {
-    const { data: walletData } = await supabase
-      .from("wallets")
-      .select("*")
-      .in("user_id", candidateUserIds)
+  if (candidateUserIds.length > 0) {
+    try {
+      const { data: walletData } = await supabase
+        .from("wallets")
+        .select("*")
+        .in("user_id", candidateUserIds)
 
-    if (walletData && walletData.length > 0) {
-      walletData.forEach((w) => {
-        wallet.availableBalance = Math.max(
-          wallet.availableBalance,
-          Number(w.available_balance || 0),
-        )
-        wallet.pendingBalance = Math.max(
-          wallet.pendingBalance,
-          Number(w.pending_balance || 0),
-        )
-        wallet.totalEarned = Math.max(
-          wallet.totalEarned,
-          Number(w.total_earned || 0),
-        )
-        wallet.totalWithdrawn = Math.max(
-          wallet.totalWithdrawn,
-          Number(w.total_withdrawn || 0),
-        )
-      })
-    }
-  } catch {}
+      if (walletData && walletData.length > 0) {
+        walletData.forEach((w) => {
+          wallet.availableBalance = Math.max(
+            wallet.availableBalance,
+            Number(w.available_balance || 0),
+          )
+          wallet.pendingBalance = Math.max(
+            wallet.pendingBalance,
+            Number(w.pending_balance || 0),
+          )
+          wallet.totalEarned = Math.max(
+            wallet.totalEarned,
+            Number(w.total_earned || 0),
+          )
+          wallet.totalWithdrawn = Math.max(
+            wallet.totalWithdrawn,
+            Number(w.total_withdrawn || 0),
+          )
+        })
+      }
+    } catch {}
+  }
 
   // 3. RECONCILIATION: Check financial transaction ledger for completed Referral Rewards
-  try {
-    const { data: txns } = await supabase
-      .from("transactions")
-      .select("amount, transaction_type, status")
-      .in("user_id", candidateUserIds)
-      .eq("status", "Completed")
+  if (candidateUserIds.length > 0) {
+    try {
+      const { data: txns } = await supabase
+        .from("transactions")
+        .select("amount, transaction_type, status")
+        .in("user_id", candidateUserIds)
+        .eq("status", "Completed")
 
-    if (txns && txns.length > 0) {
-      let ledgerEarnings = 0
-      let ledgerCount = 0
+      if (txns && txns.length > 0) {
+        let ledgerEarnings = 0
+        let ledgerCount = 0
 
-      txns.forEach((t) => {
-        if (
-          t.transaction_type === "Referral Reward" ||
-          t.transaction_type === "Referral Bonus"
-        ) {
-          ledgerEarnings += Number(t.amount || 0)
-          ledgerCount += 1
+        txns.forEach((t) => {
+          if (
+            t.transaction_type === "Referral Reward" ||
+            t.transaction_type === "Referral Bonus"
+          ) {
+            ledgerEarnings += Number(t.amount || 0)
+            ledgerCount += 1
+          }
+        })
+
+        if (ledgerEarnings > referralStats.referralEarnings) {
+          referralStats.referralEarnings = ledgerEarnings
         }
-      })
-
-      if (ledgerEarnings > referralStats.referralEarnings) {
-        referralStats.referralEarnings = ledgerEarnings
+        if (ledgerCount > referralStats.successfulReferrals) {
+          referralStats.successfulReferrals = ledgerCount
+          referralStats.totalReferrals = Math.max(
+            referralStats.totalReferrals,
+            ledgerCount,
+          )
+        }
       }
-      if (ledgerCount > referralStats.successfulReferrals) {
-        referralStats.successfulReferrals = ledgerCount
-        referralStats.totalReferrals = Math.max(
-          referralStats.totalReferrals,
-          ledgerCount,
-        )
-      }
+    } catch (err) {
+      console.warn("[Ledger Reconciliation Notice]:", err)
     }
-  } catch (err) {
-    console.warn("[Ledger Reconciliation Notice]:", err)
   }
 
   // 4. RECONCILIATION: Check referrals table for approved referrals
-  try {
-    const { data: refList } = await supabase
-      .from("referrals")
-      .select("commission_amount, status")
-      .in("referrer_user_id", candidateUserIds)
+  if (candidateUserIds.length > 0) {
+    try {
+      const { data: refList } = await supabase
+        .from("referrals")
+        .select("commission_amount, status")
+        .in("referrer_user_id", candidateUserIds)
 
-    if (refList && refList.length > 0) {
-      const approvedRefs = refList.filter(
-        (r) => r.status === "APPROVED" || r.status === "COMPLETED",
-      )
-      const approvedCount = approvedRefs.length
-      const approvedEarnings = approvedRefs.reduce(
-        (sum, r) => sum + Number(r.commission_amount || 0),
-        0,
-      )
-
-      if (approvedCount > referralStats.successfulReferrals) {
-        referralStats.successfulReferrals = approvedCount
-        referralStats.totalReferrals = Math.max(
-          referralStats.totalReferrals,
-          approvedCount,
+      if (refList && refList.length > 0) {
+        const approvedRefs = refList.filter(
+          (r) => r.status === "APPROVED" || r.status === "COMPLETED",
         )
+        const approvedCount = approvedRefs.length
+        const approvedEarnings = approvedRefs.reduce(
+          (sum, r) => sum + Number(r.commission_amount || 0),
+          0,
+        )
+
+        if (approvedCount > referralStats.successfulReferrals) {
+          referralStats.successfulReferrals = approvedCount
+          referralStats.totalReferrals = Math.max(
+            referralStats.totalReferrals,
+            approvedCount,
+          )
+        }
+        if (approvedEarnings > referralStats.referralEarnings) {
+          referralStats.referralEarnings = approvedEarnings
+        }
       }
-      if (approvedEarnings > referralStats.referralEarnings) {
-        referralStats.referralEarnings = approvedEarnings
-      }
+    } catch (err) {
+      console.warn("[Referrals Table Reconciliation Notice]:", err)
     }
-  } catch (err) {
-    console.warn("[Referrals Table Reconciliation Notice]:", err)
   }
 
   // Synchronize wallet balances with highest reconciled earnings
@@ -527,88 +548,92 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
   )
 
   // 5. SELF-HEALING: Persist reconciled values to Supabase referral_stats and wallets
-  try {
-    for (const uid of candidateUserIds) {
-      const { data: existingRS } = await supabase
-        .from("referral_stats")
-        .select("*")
-        .eq("user_id", uid)
-
-      if (existingRS && existingRS.length > 0) {
-        await supabase
+  if (candidateUserIds.length > 0) {
+    try {
+      for (const uid of candidateUserIds) {
+        const { data: existingRS } = await supabase
           .from("referral_stats")
-          .update({
-            total_referrals: referralStats.totalReferrals,
-            successful_referrals: referralStats.successfulReferrals,
-            referral_earnings: referralStats.referralEarnings,
-            updated_at: new Date().toISOString(),
-          })
+          .select("*")
           .eq("user_id", uid)
-      } else {
-        await supabase.from("referral_stats").insert([
-          {
-            user_id: uid,
-            total_referrals: referralStats.totalReferrals,
-            successful_referrals: referralStats.successfulReferrals,
-            pending_referrals: referralStats.pendingReferrals,
-            referral_earnings: referralStats.referralEarnings,
-          },
-        ])
-      }
 
-      const { data: existingW } = await supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", uid)
+        if (existingRS && existingRS.length > 0) {
+          await supabase
+            .from("referral_stats")
+            .update({
+              total_referrals: referralStats.totalReferrals,
+              successful_referrals: referralStats.successfulReferrals,
+              referral_earnings: referralStats.referralEarnings,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", uid)
+        } else {
+          await supabase.from("referral_stats").insert([
+            {
+              user_id: uid,
+              total_referrals: referralStats.totalReferrals,
+              successful_referrals: referralStats.successfulReferrals,
+              pending_referrals: referralStats.pendingReferrals,
+              referral_earnings: referralStats.referralEarnings,
+            },
+          ])
+        }
 
-      if (existingW && existingW.length > 0) {
-        await supabase
+        const { data: existingW } = await supabase
           .from("wallets")
-          .update({
-            available_balance: wallet.availableBalance,
-            total_earned: wallet.totalEarned,
-            updated_at: new Date().toISOString(),
-          })
+          .select("*")
           .eq("user_id", uid)
-      } else {
-        await supabase.from("wallets").insert([
-          {
-            user_id: uid,
-            available_balance: wallet.availableBalance,
-            pending_balance: wallet.pendingBalance,
-            total_earned: wallet.totalEarned,
-            total_withdrawn: wallet.totalWithdrawn,
-          },
-        ])
+
+        if (existingW && existingW.length > 0) {
+          await supabase
+            .from("wallets")
+            .update({
+              available_balance: wallet.availableBalance,
+              total_earned: wallet.totalEarned,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", uid)
+        } else {
+          await supabase.from("wallets").insert([
+            {
+              user_id: uid,
+              available_balance: wallet.availableBalance,
+              pending_balance: wallet.pendingBalance,
+              total_earned: wallet.totalEarned,
+              total_withdrawn: wallet.totalWithdrawn,
+            },
+          ])
+        }
       }
-    }
-  } catch {}
+    } catch {}
+  }
 
   // Fetch withdrawals
   const withdrawals: any[] = []
-  try {
-    const { data: wList } = await supabase
-      .from("withdrawals")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
+  if (isValidUuid(userId)) {
+    try {
+      const { data: wList } = await supabase
+        .from("withdrawals")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
 
-    if (wList && wList.length > 0) {
-      wList.forEach((w) => {
-        withdrawals.push({
-          id: w.id,
-          requestId: w.request_id || `REQ-${w.id.slice(0, 6)}`,
-          amount: Number(w.amount || 0),
-          paymentMethod: w.payment_method || "UPI",
-          upiId: w.upi_id || "N/A",
-          status: w.status || "PENDING",
-          date: w.created_at
-            ? new Date(w.created_at).toLocaleString()
-            : new Date().toLocaleString(),
+      if (wList && wList.length > 0) {
+        wList.forEach((w) => {
+          withdrawals.push({
+            id: w.id,
+            requestId: w.request_id || `REQ-${w.id.slice(0, 6)}`,
+            amount: Number(w.amount || 0),
+            paymentMethod: w.payment_method || "UPI",
+            upiId: w.upi_id || "N/A",
+            status: w.status || "PENDING",
+            date: w.created_at
+              ? new Date(w.created_at).toLocaleString()
+              : new Date().toLocaleString(),
+          })
         })
-      })
-    }
-  } catch {}
+      }
+    } catch {}
+  }
 
   const canonicalUser: CanonicalUser = {
     id: userId,
@@ -660,7 +685,7 @@ export async function syncFirebaseUserWithDatabase(firebaseUser: {
  * Ensures every authenticated user has a valid wallet, referral_stats, and profile record.
  */
 export async function runStartupIntegrityCheck(user: CanonicalUser) {
-  if (!user || !user.id) return
+  if (!user || !user.id || !isValidUuid(user.id)) return
 
   try {
     // 1. Integrity check: Wallets
@@ -750,12 +775,14 @@ export async function validateAndApplyReferralCode(
   try {
     // 2. Fetch referred user object to check if already used a code or if self-referral
     let referredUser: any = null
-    const { data: currentUserList } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", referredUserId)
-    if (currentUserList && currentUserList.length > 0) {
-      referredUser = currentUserList[0]
+    if (isValidUuid(referredUserId)) {
+      const { data: currentUserList } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", referredUserId)
+      if (currentUserList && currentUserList.length > 0) {
+        referredUser = currentUserList[0]
+      }
     }
 
     // Check if referred user already has a referrer linked
@@ -770,19 +797,21 @@ export async function validateAndApplyReferralCode(
       }
     }
 
-    const { data: existingRef } = await supabase
-      .from("referrals")
-      .select("*")
-      .eq("referred_user_id", referredUserId)
+    if (isValidUuid(referredUserId)) {
+      const { data: existingRef } = await supabase
+        .from("referrals")
+        .select("*")
+        .eq("referred_user_id", referredUserId)
 
-    if (existingRef && existingRef.length > 0) {
-      console.log(
-        "[Duplicate Referral Prevented] Referral record already exists for user:",
-        referredUserId,
-      )
-      return {
-        success: false,
-        message: "You have already applied a referral code.",
+      if (existingRef && existingRef.length > 0) {
+        console.log(
+          "[Duplicate Referral Prevented] Referral record already exists for user:",
+          referredUserId,
+        )
+        return {
+          success: false,
+          message: "You have already applied a referral code.",
+        }
       }
     }
 
@@ -866,16 +895,13 @@ export async function validateAndApplyReferralCode(
     // Resolve true referrer UUID primary key
     const trueReferrerUserId = referrer.user_id || referrer.id
 
-    // Check if referredUserId is a valid UUID (guest user check)
-    const isValidUuid =
-      referredUserId &&
-      referredUserId.length > 20 &&
-      referredUserId !== "guest" &&
-      !referredUserId.startsWith("usr_")
+    // Check if referredUserId and trueReferrerUserId are valid Postgres UUIDs
+    const isReferredUserUuid = isValidUuid(referredUserId)
+    const isReferrerUserUuid = isValidUuid(trueReferrerUserId)
 
-    if (!isValidUuid) {
+    if (!isReferredUserUuid || !isReferrerUserUuid) {
       console.log(
-        "[Guest Referral Validated] Code is valid for guest checkout! Deferring database insertion until sign-up.",
+        "[Guest/Non-UUID Referral Validated] Code is valid! Deferring database insertion until sign-up.",
       )
       return {
         success: true,
@@ -925,7 +951,7 @@ export async function validateAndApplyReferralCode(
     const referrerIds = Array.from(
       new Set(
         [trueReferrerUserId, referrer.id, referrer.user_id].filter(
-          Boolean,
+          (id) => isValidUuid(id),
         ) as string[],
       ),
     )

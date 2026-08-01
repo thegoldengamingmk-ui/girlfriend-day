@@ -1,4 +1,5 @@
 import { supabase } from "./supabase"
+import { isValidUuid } from "./userService"
 
 export interface AdminUserRecord {
   id: string
@@ -715,17 +716,21 @@ export async function toggleUserSubscription(
     : null
   const status = grant ? "PREMIUM" : "FREE"
   try {
-    await Promise.all([
-      supabase
-        .from("user_profiles")
-        .update({
-          subscription_status: status,
-          subscription_expiry: expiry,
-          updated_at: nowIso,
-        })
-        .eq("email", email.toLowerCase()),
-      supabase.from("users").update({ updated_at: nowIso }).eq("id", userId),
-    ])
+    await supabase
+      .from("user_profiles")
+      .update({
+        subscription_status: status,
+        subscription_expiry: expiry,
+        updated_at: nowIso,
+      })
+      .eq("email", email.toLowerCase())
+
+    if (isValidUuid(userId)) {
+      await supabase
+        .from("users")
+        .update({ updated_at: nowIso })
+        .eq("id", userId)
+    }
   } catch (err) {
     console.warn("[toggleUserSubscription error]:", err)
   }

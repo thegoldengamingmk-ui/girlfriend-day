@@ -7,8 +7,8 @@
  */
 
 import { supabase } from "./supabase"
-
 import { executeWalletTransaction } from "./walletService"
+import { isValidUuid } from "./userService"
 
 export const RAZORPAY_KEY_ID =
   (typeof import.meta !== "undefined" &&
@@ -256,56 +256,49 @@ export async function verifyAndProcessRazorpayPayment(params: {
 
     // 4. Create Financial Transaction Ledger Entry
 
-    if (userId && userId.length > 20 && userId !== "guest") {
-      await executeWalletTransaction({
-        userId,
-
-        type: "Premium Purchase",
-
-        amount: Number(amount || 0),
-
-        referenceType: "payment",
-
-        referenceId: razorpayPaymentId,
-
-        description: `Premium Surprise Package Purchase (Razorpay ID: ${razorpayPaymentId})`,
-
-        status: "Completed",
-      })
-
-      // 5. Activate Premium in users & user_profiles tables
-
-      await supabase
-
-        .from("users")
-
-        .update({
-          status: "active",
-
-          updated_at: nowIso,
+    if (userId && userId !== "guest") {
+      if (isValidUuid(userId)) {
+        await executeWalletTransaction({
+          userId,
+          type: "Premium Purchase",
+          amount: Number(amount || 0),
+          referenceType: "payment",
+          referenceId: razorpayPaymentId,
+          description: `Premium Surprise Package Purchase (Razorpay ID: ${razorpayPaymentId})`,
+          status: "Completed",
         })
 
-        .eq("id", userId)
+        // 5. Activate Premium in users & user_profiles tables
+        await supabase
+          .from("users")
+          .update({
+            status: "active",
+            updated_at: nowIso,
+          })
+          .eq("id", userId)
+      } else {
+        await supabase
+          .from("users")
+          .update({
+            status: "active",
+            updated_at: nowIso,
+          })
+          .eq("firebase_uid", userId)
+      }
 
       if (userEmail) {
         await supabase
-
           .from("user_profiles")
-
           .update({
             subscription_status: "PREMIUM",
-
             subscription_expiry: expiryIso,
-
             updated_at: nowIso,
           })
-
           .eq("email", userEmail.trim().toLowerCase())
       }
 
       console.log(
         "[Premium Activated] Successfully activated Premium subscription for user:",
-
         userId,
       )
     }
