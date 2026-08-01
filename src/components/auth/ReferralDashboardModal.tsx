@@ -8,6 +8,7 @@ import {
 import { createWithdrawalRequest } from "../../lib/withdrawalService"
 import { emailService } from "../../lib/emailService"
 import { verifyEmailCode } from "../../lib/authService"
+import { getUserCreatedSurprises } from "../../lib/surpriseService"
 
 interface ReferralDashboardModalProps {
   isOpen: boolean
@@ -25,6 +26,12 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
   const [profile, setProfile] = useState<UserReferralProfile | null>(
     initialProfile,
   )
+  const [userSurprises, setUserSurprises] = useState<{
+    slug: string
+    girlfriend_name: string
+    boyfriend_name: string
+    created_at: string
+  }[]>([])
   const [isLoadingProfile, setIsLoadingProfile] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
@@ -75,12 +82,15 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
     setProfile(initialProfile)
   }, [initialProfile])
 
-  // Sync latest profile data when modal opens
+  // Sync latest profile data & created gift website links when modal opens
   useEffect(() => {
     if (isOpen && initialProfile?.id && initialProfile?.email) {
       refreshData()
+      getUserCreatedSurprises(initialProfile.email).then((surprises) => {
+        setUserSurprises(surprises || [])
+      })
     }
-  }, [isOpen])
+  }, [isOpen, initialProfile?.email])
 
   const refreshData = async () => {
     if (!initialProfile) return
@@ -379,6 +389,68 @@ export const ReferralDashboardModal: React.FC<ReferralDashboardModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Created Gift Websites Section */}
+          {userSurprises.length > 0 && (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-pink-900/50 to-purple-900/50 border border-pink-400/35 mb-5 shadow-lg">
+              <h3 className="text-xs uppercase font-bold tracking-wider text-pink-200 mb-3 flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <span className="text-base">💝</span>
+                  <span>Your Created Gift Website Link(s)</span>
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/30 text-pink-200 border border-pink-400/30 font-bold">
+                  {userSurprises.length} Active
+                </span>
+              </h3>
+              <div className="space-y-2.5">
+                {userSurprises.map((item) => {
+                  const shareUrl = `${window.location.origin}/s/${item.slug}`
+                  return (
+                    <div
+                      key={item.slug}
+                      className="p-3 rounded-xl bg-black/40 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-xs text-pink-200 truncate flex items-center gap-2">
+                          <span>
+                            {item.girlfriend_name && item.boyfriend_name
+                              ? `${item.girlfriend_name} ❤️ ${item.boyfriend_name}`
+                              : `Gift Website (${item.slug})`}
+                          </span>
+                        </div>
+                        <div className="font-mono text-[11px] text-pink-400 truncate mt-0.5">
+                          {shareUrl}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (navigator.clipboard) {
+                              navigator.clipboard.writeText(shareUrl)
+                              setToastMsg("Gift Link Copied! 📋")
+                              setTimeout(() => setToastMsg(""), 2500)
+                            }
+                          }}
+                          className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 font-bold text-white text-[11px] cursor-pointer shadow transition-all"
+                        >
+                          📋 Copy Link
+                        </button>
+                        <a
+                          href={shareUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 sm:flex-initial text-center px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-[11px] transition-all border border-white/15"
+                        >
+                          👁️ Preview
+                        </a>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Referral Code & Referral Link Box */}
           <div className="p-4 rounded-2xl bg-white/5 border border-pink-400/20 mb-5 space-y-3">
