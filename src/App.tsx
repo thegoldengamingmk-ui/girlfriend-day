@@ -673,11 +673,11 @@ function S2({ onNext }: { onNext: () => void }) {
         </div>
 
         {/* Checklist */}
-        <div className="space-y-4 w-full">
+        <div className="space-y-4 w-full flex flex-col items-center justify-center">
           {steps.map((s, i) => (
             <div
               key={i}
-              className="flex items-center gap-3 transition-all duration-600"
+              className="flex items-center justify-center gap-3 transition-all duration-600 text-center"
               style={{ opacity: checks.has(i) ? 1 : 0.22 }}
             >
               <div
@@ -694,7 +694,7 @@ function S2({ onNext }: { onNext: () => void }) {
                 {checks.has(i) ? "✓" : ""}
               </div>
               <span
-                className="text-pink-100 text-sm"
+                className="text-pink-100 text-sm text-center font-medium"
                 style={{ fontFamily: "'DM Sans', sans-serif" }}
               >
                 {s}
