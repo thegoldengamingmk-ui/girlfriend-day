@@ -514,6 +514,9 @@ function S1({
   onDash: () => void
   girlfriendName?: string
 }) {
+  useEffect(() => {
+    window.dispatchEvent(new Event("resume-bgm"))
+  }, [])
   return (
     <div
       className="relative flex flex-col items-center justify-center overflow-hidden"
@@ -1476,6 +1479,7 @@ function SpotifyPlayer({
     const handlePlayUploaded = () => {
       if (audioRef.current) {
         window.dispatchEvent(new Event("pause-bgm"))
+        audioRef.current.muted = false
         audioRef.current
           .play()
           .then(() => {
@@ -1510,7 +1514,7 @@ function SpotifyPlayer({
         })
 
       const handleUserGesture = () => {
-        if (audioRef.current && audioRef.current.paused) {
+        if (audioRef.current && (audioRef.current.paused || audioRef.current.muted)) {
           window.dispatchEvent(new Event("pause-bgm"))
           audioRef.current.muted = false
           audioRef.current
@@ -1547,14 +1551,18 @@ function SpotifyPlayer({
     const audio = audioRef.current
     if (!audio) return
 
-    if (isPlaying) {
+    if (isPlaying && !isMuted) {
       audio.pause()
       setIsPlaying(false)
     } else {
       window.dispatchEvent(new Event("pause-bgm"))
+      audio.muted = false
       audio
         .play()
-        .then(() => setIsPlaying(true))
+        .then(() => {
+          setIsMuted(false)
+          setIsPlaying(true)
+        })
         .catch((err) => console.error("Audio playback error:", err))
     }
   }
