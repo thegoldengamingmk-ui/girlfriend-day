@@ -1761,92 +1761,73 @@ function CinematicMemoryCard({
   photo: string
   index: number
 }) {
-  const isEven = index % 2 === 0
   const caption = ROMANTIC_CAPTIONS[index % ROMANTIC_CAPTIONS.length]
   const [hasEntered, setHasEntered] = useState(false)
 
   return (
     <motion.div
-      initial={{
-        opacity: 0,
-        y: 70,
-        scale: 0.9,
-        filter: "blur(14px)",
-        rotate: isEven ? -2.5 : 2.5,
-      }}
-      whileInView={{
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        filter: "blur(0px)",
-        rotate: 0,
-      }}
-      viewport={{ once: true, margin: "-60px" }}
+      initial={{ opacity: 0, y: 50, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-40px" }}
       onViewportEnter={() => setHasEntered(true)}
-      transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-      className={`my-12 sm:my-16 relative flex flex-col ${
-        isEven ? "items-start lg:items-center" : "items-end lg:items-center"
-      }`}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="my-4 relative flex flex-col items-center justify-center w-full max-w-xl mx-auto"
     >
       {hasEntered && <SparkleBurst />}
 
-      <div className="memory-card-inner group">
+      <div className="memory-card-inner group w-full">
         {/* Photo Card Container */}
         <motion.div
-          whileHover={{ scale: 1.03, rotate: isEven ? 1.5 : -1.5 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="relative overflow-hidden rounded-3xl p-2.5 shadow-2xl cursor-pointer transition-all duration-500 hover:shadow-pink-500/25"
+          whileHover={{ y: -4, scale: 1.015 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="relative overflow-hidden rounded-3xl p-3 sm:p-4 shadow-2xl cursor-pointer transition-all duration-500 hover:shadow-pink-500/30 w-full"
           style={{
             background:
-              "linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,192,203,0.08))",
-            backdropFilter: "blur(16px)",
-            border: "1px solid rgba(255,200,220,0.3)",
-            boxShadow: "0 20px 50px rgba(0,0,0,0.65)",
+              "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,192,203,0.06))",
+            backdropFilter: "blur(20px)",
+            border: "1.5px solid rgba(255,200,220,0.3)",
+            boxShadow:
+              "0 20px 50px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.2)",
           }}
         >
-          <div className="relative overflow-hidden rounded-2xl h-72 sm:h-80 lg:h-96 w-full">
-            <motion.img
+          {/* Photo Header / Badge */}
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-pink-400 animate-pulse" />
+              <span className="text-[11px] font-bold tracking-wider uppercase text-pink-200/90 font-mono">
+                MEMORY #{index + 1}
+              </span>
+            </div>
+            <span className="text-xs text-pink-300/60 font-serif italic">
+              Sweet Moment
+            </span>
+          </div>
+
+          <div className="relative overflow-hidden rounded-2xl aspect-[4/3] sm:aspect-[16/10] w-full bg-black/40">
+            <img
               src={photo}
               alt={`Memory ${index + 1}`}
               loading="lazy"
-              className="w-full h-full object-cover rounded-2xl"
-              initial={{ scale: 1.15 }}
-              animate={{ scale: [1.15, 1.05] }}
-              transition={{
-                duration: 7,
-                repeat: Infinity,
-                repeatType: "reverse",
-                ease: "easeInOut",
-              }}
+              className="w-full h-full object-cover rounded-2xl transition-transform duration-700 group-hover:scale-105"
             />
-            {/* Subtle Gradient Shadow Overlay */}
-            <div className="absolute inset-0 rounded-2xl pointer-events-none bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity duration-300" />
+            <div className="absolute inset-0 rounded-2xl pointer-events-none bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-20 transition-opacity duration-300" />
           </div>
 
-          {/* Number Badge */}
-          <div className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase text-pink-200 bg-black/60 backdrop-blur-md border border-white/20">
-            Memory #{index + 1}
-          </div>
-        </motion.div>
-
-        {/* Animated Glassmorphism Caption */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.25 }}
-          className="mt-3 px-4 py-3 rounded-2xl backdrop-blur-md shadow-lg text-center"
-          style={{
-            background: "rgba(255, 255, 255, 0.08)",
-            border: "1px solid rgba(255, 200, 220, 0.2)",
-          }}
-        >
-          <p
-            className="text-xs sm:text-sm font-medium text-pink-100 leading-snug"
-            style={{ fontFamily: "'Playfair Display', serif" }}
+          {/* Animated Glassmorphism Caption */}
+          <div
+            className="mt-3.5 px-4 py-3 rounded-2xl backdrop-blur-md text-center w-full"
+            style={{
+              background: "rgba(20, 0, 35, 0.45)",
+              border: "1px solid rgba(255, 200, 220, 0.2)",
+            }}
           >
-            {caption}
-          </p>
+            <p
+              className="text-xs sm:text-sm font-medium text-pink-100 leading-snug"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              {caption}
+            </p>
+          </div>
         </motion.div>
       </div>
     </motion.div>
@@ -1872,12 +1853,12 @@ function FinalGrandMemory({ photo }: { photo: string }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 90, scale: 0.88, filter: "blur(20px)" }}
-      whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+      initial={{ opacity: 0, y: 60, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: "-40px" }}
       onViewportEnter={handleEnter}
-      transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-      className="my-20 text-center relative"
+      transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+      className="my-10 text-center relative w-full max-w-xl mx-auto"
     >
       <motion.div
         animate={{ scale: [1, 1.2, 1] }}
@@ -1891,7 +1872,7 @@ function FinalGrandMemory({ photo }: { photo: string }) {
         className="font-bold text-pink-200 mb-1 drop-shadow-md"
         style={{
           fontFamily: "'Playfair Display', serif",
-          fontSize: "clamp(1.1rem, 2.5vw, 1.75rem)",
+          fontSize: "clamp(1.2rem, 3vw, 1.85rem)",
         }}
       >
         Our Greatest Chapter Begins
@@ -1900,54 +1881,42 @@ function FinalGrandMemory({ photo }: { photo: string }) {
         The memory that holds my whole heart forever
       </p>
 
-      {/* Main Spotlight Image */}
+      {/* Main Spotlight Image Container */}
       <motion.div
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.5 }}
-        className="relative max-w-full mx-auto rounded-3xl p-3 shadow-2xl overflow-hidden cursor-pointer"
+        whileHover={{ y: -4, scale: 1.015 }}
+        transition={{ duration: 0.4 }}
+        className="relative w-full rounded-3xl p-3 sm:p-4 shadow-2xl overflow-hidden cursor-pointer"
         style={{
           background:
-            "linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,105,180,0.35))",
+            "linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,105,180,0.3))",
           backdropFilter: "blur(20px)",
-          border: "2px solid rgba(255,220,240,0.5)",
+          border: "2px solid rgba(255,220,240,0.45)",
           boxShadow:
-            "0 0 60px rgba(255,105,180,0.45), 0 30px 70px rgba(0,0,0,0.8)",
+            "0 0 60px rgba(255,105,180,0.35), 0 30px 70px rgba(0,0,0,0.8)",
         }}
       >
-        <div className="relative overflow-hidden rounded-2xl h-80 sm:h-96 lg:h-[28rem] w-full">
-          <motion.img
+        <div className="relative overflow-hidden rounded-2xl aspect-[4/3] sm:aspect-[16/10] w-full bg-black/40">
+          <img
             src={photo}
             alt="Final Memory Spotlight"
             loading="lazy"
-            className="w-full h-full object-cover rounded-2xl"
-            initial={{ scale: 1.2 }}
-            animate={{ scale: [1.2, 1.05] }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              repeatType: "reverse",
-              ease: "easeInOut",
-            }}
+            className="w-full h-full object-cover rounded-2xl transition-transform duration-700 hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
         </div>
-      </motion.div>
 
-      {/* Final Romantic Glow Caption */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.9, delay: 0.4 }}
-        className="mt-4 p-4 rounded-2xl backdrop-blur-xl border border-pink-400/30 text-center shadow-xl max-w-xs sm:max-w-sm lg:max-w-lg mx-auto"
-        style={{ background: "rgba(20, 0, 35, 0.65)" }}
-      >
-        <p
-          className="text-xs sm:text-sm font-serif italic text-pink-100"
-          style={{ fontFamily: "'Playfair Display', serif" }}
+        {/* Final Romantic Glow Caption */}
+        <div
+          className="mt-3.5 p-3.5 rounded-2xl backdrop-blur-xl border border-pink-400/30 text-center shadow-xl"
+          style={{ background: "rgba(20, 0, 35, 0.65)" }}
         >
-          “You are my today, my tomorrow, and my entire forever.” ❤️
-        </p>
+          <p
+            className="text-xs sm:text-sm font-serif italic text-pink-100"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            “You are my today, my tomorrow, and my entire forever.” ❤️
+          </p>
+        </div>
       </motion.div>
     </motion.div>
   )
@@ -2045,21 +2014,26 @@ function LoveLetter({ letter }: { letter?: string }) {
   }, [on, text, content])
 
   return (
-    <div ref={ref} className="mb-8">
-      <Glass className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-xl">💌</span>
-          <span
-            className="text-white text-sm font-semibold"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}
-          >
-            My Letter From The Heart
+    <div ref={ref} className="mb-12 max-w-2xl mx-auto">
+      <Glass className="p-7 sm:p-8 relative overflow-hidden border border-pink-400/30 shadow-2xl">
+        <div className="flex items-center justify-between mb-5 pb-3 border-b border-pink-500/20">
+          <div className="flex items-center gap-2.5">
+            <span className="text-2xl">💌</span>
+            <h3
+              className="text-white text-base sm:text-lg font-bold"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              My Letter From The Heart
+            </h3>
+          </div>
+          <span className="text-[10px] uppercase font-mono tracking-widest text-pink-300 bg-pink-500/20 px-2.5 py-1 rounded-full border border-pink-400/30">
+            PERSONAL NOTE
           </span>
         </div>
         <div
           className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap"
           style={{
-            color: "rgba(255,210,225,0.9)",
+            color: "rgba(255,225,235,0.95)",
             fontFamily: "'Playfair Display', serif",
             fontStyle: "italic",
             minHeight: "100px",
@@ -2067,7 +2041,7 @@ function LoveLetter({ letter }: { letter?: string }) {
         >
           {text}
           {pos.current < content.length && (
-            <span className="inline-block w-0.5 h-3.5 ml-0.5 rounded-full animate-blink-cursor align-text-bottom bg-pink-400" />
+            <span className="inline-block w-0.5 h-4 ml-0.5 rounded-full animate-blink-cursor align-text-bottom bg-pink-400" />
           )}
         </div>
       </Glass>
@@ -2078,32 +2052,49 @@ function LoveLetter({ letter }: { letter?: string }) {
 function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
   const [play, setPlay] = useState(false)
   const [prog, setProg] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [currentTime, setCurrentTime] = useState(0)
   const audioObjRef = useRef<HTMLAudioElement | null>(null)
   const bars = useRef(
-    Array.from({ length: 32 }, () => Math.random() * 26 + 6),
+    Array.from({ length: 36 }, () => Math.random() * 26 + 6),
   ).current
+
+  const formatTime = (secs: number) => {
+    if (isNaN(secs) || secs <= 0) return "0:00"
+    const m = Math.floor(secs / 60)
+    const s = Math.floor(secs % 60)
+    return `${m}:${s < 10 ? "0" : ""}${s}`
+  }
 
   useEffect(() => {
     if (voiceNoteUrl) {
-      audioObjRef.current = new Audio(voiceNoteUrl)
-      const audio = audioObjRef.current
+      const audio = new Audio(voiceNoteUrl)
+      audioObjRef.current = audio
 
       const updateProgress = () => {
+        setCurrentTime(audio.currentTime)
         if (audio.duration) {
+          setDuration(audio.duration)
           setProg((audio.currentTime / audio.duration) * 100)
         }
+      }
+      const handleLoaded = () => {
+        if (audio.duration) setDuration(audio.duration)
       }
       const handleEnded = () => {
         setPlay(false)
         setProg(0)
+        setCurrentTime(0)
         window.dispatchEvent(new Event("play-uploaded-song"))
       }
 
+      audio.addEventListener("loadedmetadata", handleLoaded)
       audio.addEventListener("timeupdate", updateProgress)
       audio.addEventListener("ended", handleEnded)
 
       return () => {
         audio.pause()
+        audio.removeEventListener("loadedmetadata", handleLoaded)
         audio.removeEventListener("timeupdate", updateProgress)
         audio.removeEventListener("ended", handleEnded)
       }
@@ -2125,7 +2116,7 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
               window.dispatchEvent(new Event("play-uploaded-song"))
               return 0
             }
-            return p + 0.38
+            return p + 0.5
           })
         }, 80)
         return () => clearInterval(t)
@@ -2136,124 +2127,115 @@ function VoiceNote({ voiceNoteUrl }: { voiceNoteUrl?: string }) {
   }, [play])
 
   return (
-    <div className="mb-8">
-      <Glass className="p-6">
-        <p
-          className="text-center text-sm mb-5"
-          style={{
-            color: "rgba(255,200,220,0.62)",
-            fontFamily: "'DM Sans', sans-serif",
-          }}
-        >
-          My voice note straight from my heart ❤️
-        </p>
+    <div className="mb-12 max-w-xl mx-auto">
+      <div
+        className="p-6 sm:p-7 rounded-3xl backdrop-blur-2xl shadow-2xl relative overflow-hidden text-white"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(30, 8, 50, 0.9), rgba(70, 15, 60, 0.9))",
+          border: "1.5px solid rgba(255, 180, 210, 0.35)",
+          boxShadow: play
+            ? "0 20px 50px rgba(232, 120, 154, 0.35), 0 0 30px rgba(255,105,180,0.2)"
+            : "0 15px 40px rgba(0,0,0,0.5)",
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 mb-5 pb-4 border-b border-pink-500/20">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500/30 to-purple-500/30 border border-pink-400/40 flex items-center justify-center text-lg shadow-inner">
+              🎙️
+            </div>
+            <div>
+              <h4
+                className="font-bold text-sm text-pink-100"
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
+              >
+                Personal Voice Message
+              </h4>
+              <p className="text-[11px] text-pink-300/70 font-medium">
+                Spoken straight from the heart ❤️
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-mono font-bold tracking-wider px-2.5 py-1 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-200">
+            {play ? "PLAYING AUDIO" : "VOICE NOTE"}
+          </span>
+        </div>
 
-        <div className="flex justify-center mb-5">
+        {/* Central Audio Control Row */}
+        <div className="flex items-center gap-4 sm:gap-5 my-4">
+          {/* Play/Pause Main Button */}
           <button
+            type="button"
             onClick={() => setPlay((p) => !p)}
-            className="relative w-36 h-24 rounded-2xl cursor-pointer hover:scale-105 transition-all duration-300 p-3 flex flex-col justify-between overflow-hidden shadow-2xl"
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white text-xl sm:text-2xl cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 flex-shrink-0 shadow-xl"
             style={{
-              background:
-                "linear-gradient(135deg, rgba(35,10,45,0.95), rgba(85,15,70,0.95))",
-              border: "1.5px solid rgba(255,182,193,0.4)",
+              background: play
+                ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                : "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
               boxShadow: play
-                ? "0 0 30px rgba(255,105,180,0.65)"
-                : "0 8px 25px rgba(0,0,0,0.5)",
-            }}
-          >
-            {/* Cassette Header Label */}
-            <div className="flex justify-between items-center px-1">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-pink-300 font-mono">
-                📼 MY VOICE NOTE FOR YOU
-              </span>
-              <span className="text-[10px] text-pink-200 font-medium">
-                {play ? "🔊 PLAYING" : "▶ PLAY"}
-              </span>
-            </div>
-
-            {/* Cassette Tape Reels Window */}
-            <div className="my-1 py-1.5 px-3 rounded-xl bg-black/70 border border-pink-400/30 flex items-center justify-between">
-              {/* Left Reel */}
-              <div
-                className={`w-7 h-7 rounded-full border-2 border-pink-400 flex items-center justify-center ${
-                  play ? "animate-spin" : ""
-                }`}
-                style={{ animationDuration: "2.5s" }}
-              >
-                <div className="w-2.5 h-2.5 rounded-full bg-pink-200 border border-pink-500" />
-              </div>
-
-              {/* Tape Window Ribbon */}
-              <div className="h-1.5 flex-1 mx-2 bg-gradient-to-r from-pink-500 via-purple-400 to-pink-500 rounded-full" />
-
-              {/* Right Reel */}
-              <div
-                className={`w-7 h-7 rounded-full border-2 border-pink-400 flex items-center justify-center ${
-                  play ? "animate-spin" : ""
-                }`}
-                style={{ animationDuration: "2.5s" }}
-              >
-                <div className="w-2.5 h-2.5 rounded-full bg-pink-200 border border-pink-500" />
-              </div>
-            </div>
-
-            {/* Cassette Bottom Screws / Details */}
-            <div className="flex justify-between items-center px-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
-              <span className="text-[8px] font-mono text-pink-300/60 uppercase">
-                HIGH FIDELITY STEREO
-              </span>
-              <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
-            </div>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-px justify-center h-10 mb-3">
-          {bars.map((h, i) => (
-            <div
-              key={i}
-              className="rounded-full"
-              style={{
-                width: "3px",
-                height: play ? `${h}px` : "3px",
-                background:
-                  "linear-gradient(to top, rgba(232,120,154,0.5), rgba(255,200,220,0.92))",
-                animation: play
-                  ? `waveform-bar ${0.32 + (i % 7) * 0.07}s ease-in-out ${i * 0.018}s infinite alternate`
-                  : "none",
-                transition: "height 0.28s ease",
-              }}
-            />
-          ))}
-        </div>
-
-        <div
-          className="h-1 rounded-full overflow-hidden mb-5"
-          style={{ background: "rgba(255,255,255,0.08)" }}
-        >
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${prog}%`,
-              background: "linear-gradient(90deg, #e8789a, #c9438a)",
-              transition: "width 0.08s linear",
-            }}
-          />
-        </div>
-
-        <div className="flex justify-center">
-          <button
-            onClick={() => setPlay((p) => !p)}
-            className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
-            style={{
-              background: "linear-gradient(135deg, #e8789a, #c9438a)",
-              boxShadow: "0 4px 22px rgba(232,120,154,0.65)",
+                ? "0 0 25px rgba(16, 185, 129, 0.6)"
+                : "0 0 25px rgba(232, 120, 154, 0.6)",
             }}
           >
             {play ? "⏸" : "▶"}
           </button>
+
+          {/* Dynamic Waveform Visualizer */}
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="flex items-center gap-[3px] h-10 justify-between">
+              {bars.map((h, i) => {
+                const isActive = (i / bars.length) * 100 <= prog
+                return (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-full transition-all duration-200"
+                    style={{
+                      height: play ? `${h}px` : "6px",
+                      background: isActive
+                        ? "linear-gradient(to top, #ffc8d6, #e8789a)"
+                        : "rgba(255, 255, 255, 0.15)",
+                      animation: play
+                        ? `waveform-bar ${0.35 + (i % 5) * 0.08}s ease-in-out ${i * 0.02}s infinite alternate`
+                        : "none",
+                    }}
+                  />
+                )
+              })}
+            </div>
+
+            {/* Time Stamp Indicators */}
+            <div className="flex justify-between items-center text-[11px] font-mono text-pink-300/80 mt-2 font-medium">
+              <span>{formatTime(currentTime)}</span>
+              <span>{duration > 0 ? formatTime(duration) : "0:00"}</span>
+            </div>
+          </div>
         </div>
-      </Glass>
+
+        {/* Progress Track */}
+        <div
+          className="h-1.5 w-full rounded-full overflow-hidden mt-3 cursor-pointer"
+          style={{ background: "rgba(255, 255, 255, 0.1)" }}
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect()
+            const clickX = e.clientX - rect.left
+            const newPct = (clickX / rect.width) * 100
+            setProg(newPct)
+            if (audioObjRef.current && audioObjRef.current.duration) {
+              audioObjRef.current.currentTime =
+                (newPct / 100) * audioObjRef.current.duration
+            }
+          }}
+        >
+          <div
+            className="h-full rounded-full transition-all duration-75"
+            style={{
+              width: `${prog}%`,
+              background: "linear-gradient(90deg, #ffc8d6, #e8789a)",
+            }}
+          />
+        </div>
+      </div>
     </div>
   )
 }
@@ -2291,13 +2273,15 @@ function S7({
       <GlowOrbs />
 
       <div className="finale-container relative z-10 py-10">
-        <SpotifyPlayer trackId={trackId} />
+        <div className="max-w-xl mx-auto">
+          <SpotifyPlayer trackId={trackId} />
+        </div>
         <Slideshow photos={photos} />
         <LoveLetter letter={letter} />
         <VoiceNote voiceNoteUrl={voiceNoteUrl} />
 
         {/* Grand Finale */}
-        <div className="text-center py-10">
+        <div className="text-center py-10 max-w-2xl mx-auto">
           <div className="text-6xl mb-5 animate-pulse-heart">❤️</div>
           <h1
             className="font-bold text-white mb-3 leading-tight"
@@ -2319,7 +2303,7 @@ function S7({
             I love you more than words can say, forever and always ❤️
           </p>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 max-w-sm mx-auto">
             <Btn onClick={onReplay} full>
               🔄 Replay Surprise
             </Btn>

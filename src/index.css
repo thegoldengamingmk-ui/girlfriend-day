@@ -152,43 +152,26 @@ img {
 }
 
 /* ─────────────────────────────────────────────────
-   MEMORY CARD GRID (Desktop S7)
+   MEMORY CARD GRID (Single-Column Centered Timeline)
    ───────────────────────────────────────────────── */
 .memory-grid {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  max-width: 42rem; /* 672px wide central story column */
+  margin-inline: auto;
 }
-@media (min-width: 1024px) {
-  .memory-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2.5rem;
-    align-items: start;
-  }
-  .memory-break-full {
-    grid-column: 1 / -1;
-  }
-  .memory-final-full {
-    grid-column: 1 / -1;
-  }
+.memory-break-full,
+.memory-final-full {
+  width: 100%;
 }
 
-/* ─────────────────────────────────────────────────
-   MEMORY CARD RESPONSIVE SIZES
-   ───────────────────────────────────────────────── */
 .memory-card-inner {
   width: 100%;
-  max-width: 290px;
-}
-@media (min-width: 768px) {
-  .memory-card-inner {
-    max-width: 360px;
-  }
-}
-@media (min-width: 1024px) {
-  /* In 2-col grid, cards fill their column */
-  .memory-card-inner {
-    max-width: 100%;
-  }
+  max-width: 100%;
 }
 
 /* ─────────────────────────────────────────────────
