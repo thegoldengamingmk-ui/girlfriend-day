@@ -2897,7 +2897,9 @@ function Dashboard({
   onBack: () => void
   spotifyTrackId: string
   setSpotifyTrackId: (id: string) => void
-  onRequestCreateAccount: (saveSurpriseFn: () => Promise<void>) => void
+  onRequestCreateAccount: (
+    saveSurpriseFn: (authProfile?: UserReferralProfile | null) => Promise<void>,
+  ) => void
   link: string
   setLink: (link: string) => void
   userProfile?: UserReferralProfile | null
@@ -3314,7 +3316,7 @@ function Dashboard({
       userName: userProfile?.name || bfName,
       onSuccess: async (paymentRes) => {
         console.log("[Razorpay Verified Payment]:", paymentRes)
-        onRequestCreateAccount(async () => {
+        onRequestCreateAccount(async (authProfile?: UserReferralProfile | null) => {
           setIsSubmitting(true)
           try {
             // Parallelize all photo, music, and voice note uploads for 80% faster processing speed
@@ -3347,6 +3349,8 @@ function Dashboard({
               spotifyTrackId.trim() ||
               "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
 
+            const activeProfile = authProfile || userProfile
+
             const result = await createSurprise({
               girlfriend_name: gfName.trim(),
               boyfriend_name: bfName.trim(),
@@ -3355,8 +3359,8 @@ function Dashboard({
               spotify_url: finalSpotifyUrl,
               voice_note_url: voiceNotePublicUrl || undefined,
               questions: questionRecords,
-              creator_email: userProfile?.email || undefined,
-              creator_user_id: userProfile?.id || undefined,
+              creator_email: activeProfile?.email || undefined,
+              creator_user_id: activeProfile?.id || undefined,
             })
 
             const fullShareLink = `${window.location.origin}/s/${result}`
@@ -4521,7 +4525,7 @@ export default function App() {
   const [showPostPaymentModal, setShowPostPaymentModal] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [pendingSaveSurpriseFn, setPendingSaveSurpriseFn] =
-    useState<(() => Promise<void>) | null>(null)
+    useState<((profile?: UserReferralProfile | null) => Promise<void>) | null>(null)
   const [generatedLink, setGeneratedLink] = useState("")
 
   // Restore persistent Firebase Auth session across browser refreshes & restarts
@@ -4542,9 +4546,17 @@ export default function App() {
     }
   }
 
-  const handleRequestCreateAccount = (saveSurpriseFn: () => Promise<void>) => {
-    setPendingSaveSurpriseFn(() => saveSurpriseFn)
-    setShowPostPaymentModal(true)
+  const handleRequestCreateAccount = (
+    saveSurpriseFn: (profile?: UserReferralProfile | null) => Promise<void>,
+  ) => {
+    if (userProfile) {
+      // User is already logged in with Google account — save surprise directly
+      saveSurpriseFn(userProfile)
+    } else {
+      // User is not logged in — open modal to sign in with Google so surprise is bound to account
+      setPendingSaveSurpriseFn(() => saveSurpriseFn)
+      setShowPostPaymentModal(true)
+    }
   }
 
   const handleAuthSuccess = async (profile: any) => {
@@ -4570,8 +4582,9 @@ export default function App() {
     }
 
     if (pendingSaveSurpriseFn) {
-      await pendingSaveSurpriseFn()
+      const fn = pendingSaveSurpriseFn
       setPendingSaveSurpriseFn(null)
+      await fn(profile)
     } else {
       setShowReferralModal(true)
     }

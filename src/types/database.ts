@@ -7,6 +7,8 @@ export interface Surprise {
   spotify_url: string
   voice_note_url: string
   created_at: string
+  creator_email?: string
+  creator_user_id?: string
 }
 
 export interface Photo {
