@@ -271,6 +271,7 @@ function RomanticBGMPlayer() {
   const [isPlaying, setIsPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const userMutedRef = useRef(false)
+  const isExplicitlyPausedRef = useRef(false)
 
   useEffect(() => {
     const audio = new Audio(
@@ -281,7 +282,7 @@ function RomanticBGMPlayer() {
     audioRef.current = audio
 
     const startBGM = () => {
-      if (userMutedRef.current) return
+      if (userMutedRef.current || isExplicitlyPausedRef.current) return
       audio
         .play()
         .then(() => {
@@ -307,7 +308,7 @@ function RomanticBGMPlayer() {
     startBGM()
 
     const handleGesture = () => {
-      if (userMutedRef.current) return
+      if (userMutedRef.current || isExplicitlyPausedRef.current) return
       const currentAudio = audioRef.current
       if (currentAudio && (currentAudio.paused || currentAudio.muted)) {
         currentAudio.muted = false
@@ -322,19 +323,26 @@ function RomanticBGMPlayer() {
     }
 
     const handlePauseBGM = () => {
+      isExplicitlyPausedRef.current = true
       const currentAudio = audioRef.current
-      if (currentAudio && !currentAudio.paused) {
+      if (currentAudio) {
         currentAudio.pause()
         setIsPlaying(false)
       }
     }
 
     const handleResumeBGM = () => {
+      isExplicitlyPausedRef.current = false
+      userMutedRef.current = false
       const currentAudio = audioRef.current
-      if (currentAudio && !userMutedRef.current) {
+      if (currentAudio) {
+        currentAudio.muted = false
         currentAudio
           .play()
-          .then(() => setIsPlaying(true))
+          .then(() => {
+            setIsPlaying(true)
+            setIsMuted(false)
+          })
           .catch(() => {})
       }
     }
@@ -369,12 +377,14 @@ function RomanticBGMPlayer() {
 
     if (isPlaying && !isMuted) {
       userMutedRef.current = true
+      isExplicitlyPausedRef.current = true
       audio.muted = true
       audio.pause()
       setIsMuted(true)
       setIsPlaying(false)
     } else {
       userMutedRef.current = false
+      isExplicitlyPausedRef.current = false
       audio.muted = false
       audio.play().then(() => {
         setIsMuted(false)
@@ -2268,7 +2278,7 @@ function S7({
 }) {
   useEffect(() => {
     window.dispatchEvent(new Event("pause-bgm"))
-    window.dispatchEvent(new Event("play-uploaded-song"))
+    window.dispatchEvent(new Event("pause-uploaded-song"))
   }, [])
 
   return (
@@ -4974,9 +4984,9 @@ function App() {
 
   const go = useCallback((to: Screen) => {
     if (to === 7) {
-      // Screen 7 (Finale): Stop background BGM and auto-play uploaded song
+      // Screen 7 (Finale): Pause background BGM and audio completely until explicit user tap
       window.dispatchEvent(new Event("pause-bgm"))
-      window.dispatchEvent(new Event("play-uploaded-song"))
+      window.dispatchEvent(new Event("pause-uploaded-song"))
     } else if (typeof to === "number" && to >= 1 && to <= 6) {
       // Screens 1 through 6: Background BGM plays continuously, uploaded song stays paused
       window.dispatchEvent(new Event("pause-uploaded-song"))
