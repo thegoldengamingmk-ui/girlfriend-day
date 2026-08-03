@@ -2564,6 +2564,7 @@ function Dashboard({
 
   const [editingSlug, setEditingSlug] = useState<string | null>(null)
   const [isLoadingEditData, setIsLoadingEditData] = useState(false)
+  const [dashboardStep, setDashboardStep] = useState<"form" | "payment">("form")
 
   const [gfName, setGfName] = useState(initialDraft?.gfName || "")
   const [bfName, setBfName] = useState(initialDraft?.bfName || "")
@@ -2614,6 +2615,7 @@ function Dashboard({
           )
         }
         setLink(`${window.location.origin}/s/${targetSlug}`)
+        setDashboardStep("form")
         window.scrollTo({ top: 550, behavior: "smooth" })
       } else {
         setErrorMsg("Failed to load details for editing.")
@@ -2636,6 +2638,7 @@ function Dashboard({
     playButtonSound()
     setEditingSlug(null)
     setLink("")
+    setDashboardStep("form")
     setGfName("")
     setBfName("")
     setLetter("")
@@ -2654,6 +2657,7 @@ function Dashboard({
     playButtonSound()
     setEditingSlug(null)
     setLink("")
+    setDashboardStep("form")
     setGfName("")
     setBfName("")
     setLetter("")
@@ -2674,6 +2678,50 @@ function Dashboard({
     try {
       localStorage.removeItem(DASHBOARD_DRAFT_KEY)
     } catch {}
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handleProceedToPayment = () => {
+    playButtonSound()
+    if (!gfName.trim()) {
+      setErrorMsg("Please enter Her Name before proceeding to payment ❤️")
+      return
+    }
+    if (!bfName.trim()) {
+      setErrorMsg("Please enter Your Name before proceeding to payment ❤️")
+      return
+    }
+    if (photos.length === 0 && photoFiles.length === 0) {
+      setErrorMsg("Please upload at least 1 photo before proceeding to payment 📸")
+      return
+    }
+    if (!letter.trim()) {
+      setErrorMsg("Please write a Love Letter before proceeding to payment 💌")
+      return
+    }
+
+    const validQuestions = secretQuestions.filter(
+      (q) => q.question.trim() && q.answer.trim(),
+    )
+    if (validQuestions.length === 0) {
+      setErrorMsg(
+        "Please answer at least 1 Secret Question before proceeding to payment 🔐",
+      )
+      return
+    }
+
+    const invalidQuestion = secretQuestions.find(
+      (q) => q.question.trim() && !q.answer.trim(),
+    )
+    if (invalidQuestion) {
+      setErrorMsg(
+        `Please enter an answer for: "${invalidQuestion.question}" 🔐`,
+      )
+      return
+    }
+
+    setErrorMsg("")
+    setDashboardStep("payment")
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
@@ -3232,17 +3280,51 @@ function Dashboard({
           borderBottom: "1px solid rgba(232,120,154,0.18)",
         }}
       >
-        <div className="dashboard-container py-4 flex items-center justify-center">
-          <h1
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: "clamp(1rem, 2.5vw, 1.4rem)",
-              fontWeight: "700",
-              color: "#1a0035",
-            }}
-          >
-            Create a Surprise ❤️
-          </h1>
+        <div className="dashboard-container py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h1
+              style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: "clamp(1rem, 2.5vw, 1.4rem)",
+                fontWeight: "700",
+                color: "#1a0035",
+              }}
+            >
+              {dashboardStep === "payment"
+                ? "Unlock & Activate Gift ❤️"
+                : "Create a Surprise ❤️"}
+            </h1>
+          </div>
+
+          {/* Step Progress Pill */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                playButtonSound()
+                setDashboardStep("form")
+              }}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                dashboardStep === "form"
+                  ? "bg-pink-600 text-white shadow-sm"
+                  : "bg-pink-100 text-pink-700 hover:bg-pink-200"
+              }`}
+            >
+              1. Fill Details {dashboardStep === "payment" ? "✓" : ""}
+            </button>
+            <span className="text-pink-400 text-xs font-bold">➔</span>
+            <button
+              type="button"
+              onClick={handleProceedToPayment}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                dashboardStep === "payment"
+                  ? "bg-pink-600 text-white shadow-sm"
+                  : "bg-pink-100 text-pink-700 hover:bg-pink-200"
+              }`}
+            >
+              2. Payment & Link (₹19)
+            </button>
+          </div>
         </div>
       </div>
 
@@ -3333,802 +3415,694 @@ function Dashboard({
           </div>
         )}
 
-        {editingSlug ? (
-          <div className="text-center mb-8 p-5 rounded-3xl bg-gradient-to-r from-purple-900/90 to-indigo-900/90 border-2 border-purple-400 text-white shadow-2xl animate-fade-up max-w-lg mx-auto backdrop-blur-md">
-            <div className="text-3xl mb-1">✏️</div>
-            <h2 className="font-serif font-bold text-xl text-purple-100">
-              Editing Website: <span className="font-mono text-amber-300">{editingSlug}</span>
-            </h2>
-            <p className="text-xs text-purple-200/80 mt-1 font-sans">
-              Modify any details below and click "Save & Update Website" to publish your changes live!
-            </p>
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-              className="mt-3 px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-xs font-bold text-white border border-white/20 cursor-pointer transition-all shadow"
-            >
-              ✕ Cancel Editing & Create New Gift
-            </button>
-          </div>
-        ) : (
-          <div className="text-center mb-8">
-            <div
-              className="mb-3 animate-pulse-heart inline-block"
-              style={{
-                fontSize: "clamp(2.5rem, 6vw, 4rem)",
-                filter: "drop-shadow(0 0 18px rgba(232,120,154,0.5))",
-              }}
-            >
-              💝
-            </div>
-            <h2
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: "clamp(1.2rem, 3vw, 1.75rem)",
-                fontWeight: "700",
-                color: "#1a0035",
-                marginBottom: "6px",
-              }}
-            >
-              Design Her Perfect Surprise
-            </h2>
-            <p
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: "clamp(0.8rem, 1.8vw, 1rem)",
-                color: "#7a0f50",
-                fontWeight: "500",
-              }}
-            >
-              A luxury digital gift made with love
-            </p>
-          </div>
-        )}
-
-        <div className="dashboard-grid">
-
-        {/* 1. Names */}
-        <div style={card}>
-          <div style={secTitle}>💑 Your Love Story</div>
-          <div style={secSub}>Tell us who this surprise is for</div>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "14px" }}
-          >
-            <div>
-              <label style={lbl}>Her Name</label>
-              <input
-                style={inp}
-                value={gfName}
-                onChange={(e) => setGfName(e.target.value)}
-                placeholder="e.g. Priya, Ananya, Sofia..."
-                onFocus={focusInp}
-                onBlur={blurInp}
-              />
-            </div>
-            <div>
-              <label style={lbl}>Your Name</label>
-              <input
-                style={inp}
-                value={bfName}
-                onChange={(e) => setBfName(e.target.value)}
-                placeholder="e.g. Arjun, Rohan, Alex..."
-                onFocus={focusInp}
-                onBlur={blurInp}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Photos */}
-        <div style={card}>
-          <div style={secTitle}>📸 Your Memories</div>
-          <div style={secSub}>Upload up to 5 special photos together</div>
-
-          <div
-            onClick={() => photoInput.current?.click()}
-            onDragOver={(e) => {
-              e.preventDefault()
-              setDragOver(true)
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => {
-              e.preventDefault()
-              setDragOver(false)
-              addPhotos(e.dataTransfer.files)
-            }}
-            className="cursor-pointer transition-all duration-200 text-center rounded-2xl p-6"
-            style={{
-              border: `2px dashed ${
-                dragOver ? "#e8789a" : "rgba(200,67,138,0.35)"
-              }`,
-              background: dragOver
-                ? "rgba(232,120,154,0.08)"
-                : "rgba(255,240,246,0.7)",
-            }}
-          >
-            <div style={{ fontSize: "28px", marginBottom: "6px" }}>📷</div>
-            <p
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: "13px",
-                color: "#7a0f50",
-                fontWeight: "600",
-              }}
-            >
-              Drag & drop or tap to upload
-            </p>
-            <p
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: "11px",
-                color: "#7a0f50",
-                fontWeight: "500",
-                marginTop: "3px",
-              }}
-            >
-              {photos.length}/5 photos uploaded
-            </p>
-            <input
-              ref={photoInput}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={(e) => addPhotos(e.target.files)}
-            />
-          </div>
-
-          {photos.length > 0 && (
-            <div className="mt-4 p-3 rounded-2xl bg-pink-500/5 border border-pink-200/40">
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                {photos.map((url, i) => (
-                  <div key={i} className="relative aspect-square group">
-                    <img
-                      src={url}
-                      alt={`Uploaded photo ${i + 1}`}
-                      className="w-full h-full object-cover rounded-xl border border-pink-300/40 shadow-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setPhotos((prev) => prev.filter((_, j) => j !== i))
-                        setPhotoFiles((prev) => prev.filter((_, j) => j !== i))
-                      }}
-                      className="absolute top-1 right-1 w-6 h-6 rounded-full text-white text-xs flex items-center justify-center cursor-pointer font-bold bg-pink-600 hover:bg-rose-700 shadow-md transition-all hover:scale-110 active:scale-95 z-10"
-                      title="Remove photo"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 3. Love Letter */}
-        <div style={card}>
-          <div style={secTitle}>💌 Your Love Letter</div>
-          <div style={secSub}>
-            Write from your heart — she will treasure this forever
-          </div>
-          <textarea
-            value={letter}
-            onChange={(e) => setLetter(e.target.value)}
-            placeholder={`My dearest love,\n\nEvery day with you feels like a dream...`}
-            rows={6}
-            style={{
-              ...inp,
-              resize: "none",
-              lineHeight: "1.65",
-              fontStyle: letter ? "italic" : "normal",
-              fontFamily: letter
-                ? "'Playfair Display', serif"
-                : "'DM Sans', sans-serif",
-            }}
-            onFocus={focusInp}
-            onBlur={blurInp}
-          />
-          <p
-            style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: "11px",
-              color: "#7a0f50",
-              fontWeight: "600",
-              textAlign: "right",
-              marginTop: "5px",
-            }}
-          >
-            {letter.length} characters
-          </p>
-        </div>
-
-        {/* 4. Voice Note */}
-        <div style={card}>
-          <div style={secTitle}>🎙️ Voice Note</div>
-          <div style={secSub}>
-            Directly record your voice or upload an audio file
-          </div>
-
-          {voiceNote ? (
-            <div
-              className="flex items-center gap-3 p-4 rounded-2xl"
-              style={{
-                background: "rgba(232,120,154,0.12)",
-                border: "1px solid rgba(232,120,154,0.3)",
-              }}
-            >
-              <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center text-xl">
-                🎵
-              </div>
-              <div className="flex-1">
-                <p
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: "13px",
-                    color: "#7a0f50",
-                    fontWeight: "700",
-                  }}
-                >
-                  Voice note recorded ✓
+        {/* ── STEP 1: FILL DETAILS FORM PAGE ────────────────────────────── */}
+        {dashboardStep === "form" && (
+          <div className="animate-fade-up">
+            {editingSlug ? (
+              <div className="text-center mb-8 p-5 rounded-3xl bg-gradient-to-r from-purple-900/90 to-indigo-900/90 border-2 border-purple-400 text-white shadow-2xl max-w-lg mx-auto backdrop-blur-md">
+                <div className="text-3xl mb-1">✏️</div>
+                <h2 className="font-serif font-bold text-xl text-purple-100">
+                  Editing Website: <span className="font-mono text-amber-300">{editingSlug}</span>
+                </h2>
+                <p className="text-xs text-purple-200/80 mt-1 font-sans">
+                  Modify any details below and click "Save & Update Website" to publish your changes live!
                 </p>
-                <p
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: "11px",
-                    color: "#7a0f50",
-                    opacity: 0.8,
-                  }}
-                >
-                  {voiceNoteFile ? voiceNoteFile.name : "Ready to surprise her"}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  playButtonSound()
-                  setVoiceNote(false)
-                  setVoiceNoteFile(null)
-                }}
-                className="px-3 py-1.5 rounded-full text-xs font-bold text-pink-700 hover:bg-pink-200/50 cursor-pointer"
-              >
-                🔄 Re-record
-              </button>
-            </div>
-          ) : isRecording ? (
-            <div
-              className="text-center rounded-2xl p-6 transition-all duration-300 animate-fade-up"
-              style={{
-                border: "2px solid #e8789a",
-                background: "rgba(255,230,240,0.85)",
-              }}
-            >
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="w-4 h-4 rounded-full bg-red-500 animate-ping inline-block" />
-                <span
-                  style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontSize: "18px",
-                    fontWeight: "700",
-                    color: "#c9438a",
-                  }}
-                >
-                  Recording... {formatSecs(recordSecs)}
-                </span>
-              </div>
-              <p
-                className="text-xs mb-4"
-                style={{
-                  color: "#7a0f50",
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
-              >
-                Speak from your heart ❤️
-              </p>
-              <button
-                type="button"
-                onClick={stopRecording}
-                className="px-6 py-3 rounded-full text-xs font-bold text-white cursor-pointer transition-all duration-200 hover:scale-105"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
-                  boxShadow: "0 4px 18px rgba(232,120,154,0.5)",
-                }}
-              >
-                ⏹️ Stop & Save Voice Note
-              </button>
-            </div>
-          ) : (
-            <div>
-              <button
-                type="button"
-                onClick={startRecording}
-                className="w-full flex flex-col items-center justify-center p-6 rounded-2xl transition-all duration-200 hover:scale-[1.02] cursor-pointer text-center select-none"
-                style={{
-                  border: "2px dashed #e8789a",
-                  background: "rgba(255,240,246,0.85)",
-                  boxShadow: "0 4px 18px rgba(232,120,154,0.12)",
-                }}
-              >
-                <div style={{ fontSize: "32px", marginBottom: "6px" }}>🎙️</div>
-                <p
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: "14px",
-                    color: "#7a0f50",
-                    fontWeight: "700",
-                  }}
-                >
-                  Tap to Record Live Voice Note
-                </p>
-                <p
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: "11px",
-                    color: "#7a0f50",
-                    opacity: 0.8,
-                    marginTop: "2px",
-                  }}
-                >
-                  Speak your message for her ❤️
-                </p>
-              </button>
-              {/* Native mobile mic fallback input */}
-              <input
-                ref={nativeMicInputRef}
-                type="file"
-                accept="audio/*"
-                capture="user"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) {
-                    setVoiceNoteFile(e.target.files[0])
-                    setVoiceNote(true)
-                  }
-                }}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* 5. Her Special Song (MP3 Upload Only) */}
-        <div style={card}>
-          <div style={secTitle}>🎵 Her Special Song (MP3 Upload)</div>
-          <div style={secSub}>
-            Upload an MP3 song file so the full song plays when she opens the
-            gift!
-          </div>
-
-          <div className="space-y-3">
-            {/* MP3 File Upload Box */}
-            <div
-              className="p-5 rounded-xl border-2 border-dashed text-center transition-all cursor-pointer hover:border-pink-500"
-              style={{
-                borderColor: musicFile ? "#c9438a" : "rgba(200,67,138,0.4)",
-                background: musicFile
-                  ? "rgba(255,240,246,0.9)"
-                  : "rgba(255,255,255,0.7)",
-              }}
-              onClick={() => musicFileInputRef.current?.click()}
-            >
-              <input
-                ref={musicFileInputRef}
-                type="file"
-                accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) {
-                    playButtonSound()
-                    setMusicFile(file)
-                    const blobUrl = URL.createObjectURL(file)
-                    setSpotifyQ(blobUrl)
-                    setSpotifyTrackId(blobUrl)
-                  }
-                }}
-              />
-              <div className="text-3xl mb-2">🎶</div>
-              <div className="text-sm font-bold text-[#7a0f50]">
-                {musicFile
-                  ? `Uploaded: ${musicFile.name}`
-                  : "Click to Upload MP3 Song File"}
-              </div>
-              <div className="text-xs text-pink-700/70 mt-1">
-                {musicFile
-                  ? `Size: ${(musicFile.size / (1024 * 1024)).toFixed(2)} MB • Click to change`
-                  : "Supports MP3, M4A, WAV audio files (100% full song playback)"}
-              </div>
-            </div>
-
-            {/* Remove file button if uploaded */}
-            {musicFile && (
-              <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    playButtonSound()
-                    setMusicFile(null)
-                    setSpotifyQ("")
-                    setSpotifyTrackId("")
-                  }}
-                  className="text-xs text-pink-600 hover:text-pink-800 underline font-medium cursor-pointer"
+                  onClick={handleCancelEdit}
+                  className="mt-3 px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-xs font-bold text-white border border-white/20 cursor-pointer transition-all shadow"
                 >
-                  🗑️ Remove Uploaded Song
+                  ✕ Cancel Editing & Create New Gift
                 </button>
+              </div>
+            ) : (
+              <div className="text-center mb-8">
+                <div
+                  className="mb-3 animate-pulse-heart inline-block"
+                  style={{
+                    fontSize: "clamp(2.5rem, 6vw, 4rem)",
+                    filter: "drop-shadow(0 0 18px rgba(232,120,154,0.5))",
+                  }}
+                >
+                  💝
+                </div>
+                <h2
+                  style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: "clamp(1.2rem, 3vw, 1.75rem)",
+                    fontWeight: "700",
+                    color: "#1a0035",
+                    marginBottom: "6px",
+                  }}
+                >
+                  Step 1: Fill Gift Details
+                </h2>
+                <p
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: "clamp(0.8rem, 1.8vw, 1rem)",
+                    color: "#7a0f50",
+                    fontWeight: "500",
+                  }}
+                >
+                  Enter names, upload photos, write your letter & secret questions below
+                </p>
               </div>
             )}
 
-            {/* Live Player Preview */}
-            {(musicFile || (spotifyQ && spotifyQ.startsWith("http"))) && (
-              <div className="mt-3">
+            <div className="dashboard-grid">
+              {/* 1. Names */}
+              <div style={card}>
+                <div style={secTitle}>💑 Your Love Story</div>
+                <div style={secSub}>Tell us who this surprise is for</div>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: "14px" }}
+                >
+                  <div>
+                    <label style={lbl}>Her Name</label>
+                    <input
+                      style={inp}
+                      value={gfName}
+                      onChange={(e) => setGfName(e.target.value)}
+                      placeholder="e.g. Priya, Ananya, Sofia..."
+                      onFocus={focusInp}
+                      onBlur={blurInp}
+                    />
+                  </div>
+                  <div>
+                    <label style={lbl}>Your Name</label>
+                    <input
+                      style={inp}
+                      value={bfName}
+                      onChange={(e) => setBfName(e.target.value)}
+                      placeholder="e.g. Rahul, Rohan, Alex..."
+                      onFocus={focusInp}
+                      onBlur={blurInp}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Photos */}
+              <div style={card}>
+                <div style={secTitle}>📸 Special Memories</div>
+                <div style={secSub}>
+                  Upload up to 5 romantic photos of you two together
+                </div>
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setDragOver(true)
+                  }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    setDragOver(false)
+                    addPhotos(e.dataTransfer.files)
+                  }}
+                  onClick={() => photoInput.current?.click()}
+                  style={{
+                    border: dragOver
+                      ? "2px dashed #c9438a"
+                      : "2px dashed rgba(232,120,154,0.45)",
+                    borderRadius: "18px",
+                    padding: "24px 16px",
+                    textAlign: "center",
+                    cursor: "pointer",
+                    background: dragOver
+                      ? "rgba(255,230,240,0.6)"
+                      : "rgba(255,245,248,0.5)",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <div style={{ fontSize: "32px", marginBottom: "6px" }}>📸</div>
+                  <p
+                    style={{
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: "14px",
+                      color: "#7a0f50",
+                      fontWeight: "700",
+                    }}
+                  >
+                    Click or Drag & Drop Photos
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: "12px",
+                      color: "#7a0f50",
+                      fontWeight: "500",
+                      marginTop: "3px",
+                    }}
+                  >
+                    {photos.length}/5 photos uploaded
+                  </p>
+                  <input
+                    ref={photoInput}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => addPhotos(e.target.files)}
+                  />
+                </div>
+
+                {photos.length > 0 && (
+                  <div className="mt-4 p-3 rounded-2xl bg-pink-500/5 border border-pink-200/40">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                      {photos.map((url, i) => (
+                        <div key={i} className="relative aspect-square group">
+                          <img
+                            src={url}
+                            alt={`Uploaded photo ${i + 1}`}
+                            className="w-full h-full object-cover rounded-xl border border-pink-300/40 shadow-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setPhotos((prev) => prev.filter((_, j) => j !== i))
+                              setPhotoFiles((prev) => prev.filter((_, j) => j !== i))
+                            }}
+                            className="absolute top-1 right-1 w-6 h-6 rounded-full text-white text-xs flex items-center justify-center cursor-pointer font-bold bg-pink-600 hover:bg-rose-700 shadow-md transition-all hover:scale-110 active:scale-95 z-10"
+                            title="Remove photo"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Love Letter */}
+              <div style={card}>
+                <div style={secTitle}>💌 Your Love Letter</div>
+                <div style={secSub}>
+                  Write from your heart — she will treasure this forever
+                </div>
+                <textarea
+                  value={letter}
+                  onChange={(e) => setLetter(e.target.value)}
+                  placeholder={`My dearest love,\n\nEvery day with you feels like a dream...`}
+                  rows={6}
+                  style={{
+                    ...inp,
+                    resize: "none",
+                    lineHeight: "1.65",
+                    fontStyle: letter ? "italic" : "normal",
+                    fontFamily: letter
+                      ? "'Playfair Display', serif"
+                      : "'DM Sans', sans-serif",
+                  }}
+                  onFocus={focusInp}
+                  onBlur={blurInp}
+                />
                 <p
                   style={{
                     fontFamily: "'DM Sans', sans-serif",
                     fontSize: "11px",
                     color: "#7a0f50",
                     fontWeight: "600",
-                    marginBottom: "6px",
+                    textAlign: "right",
+                    marginTop: "5px",
                   }}
                 >
-                  Live Player Preview:
+                  {letter.length} characters
                 </p>
-                <SpotifyPlayer trackId={spotifyQ || spotifyTrackId} />
               </div>
-            )}
-          </div>
-        </div>
-        </div> {/* end dashboard-grid */}
 
-        {/* Full-width below: Secret Questions, Pricing, etc */}
-        <div className="dashboard-grid-full">
-
-        {/* 6. Secret Questions */}
-        <div style={card}>
-          <div style={secTitle}>🔐 Secret Questions</div>
-          <div style={secSub}>
-            Customize the questions and exact answers she must reply to unlock
-            the surprise
-          </div>
-
-          {/* Quick Idea Presets */}
-          <div className="mb-4">
-            <p
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: "11px",
-                color: "#7a0f50",
-                fontWeight: "700",
-                marginBottom: "8px",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-              }}
-            >
-              💡 Need Ideas? Tap a Preset:
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {[
-                {
-                  label: "💕 Classic Firsts",
-                  items: [
-                    { question: "When did we first meet?", answer: "" },
-                    { question: "What nickname do I call you?", answer: "" },
-                    { question: "Where was our very first date?", answer: "" },
-                  ],
-                },
-                {
-                  label: "🎵 Shared Favorites",
-                  items: [
-                    {
-                      question: "What is our special couple song?",
-                      answer: "",
-                    },
-                    {
-                      question: "What food did we order on our first date?",
-                      answer: "",
-                    },
-                    {
-                      question: "Where is our dream vacation spot?",
-                      answer: "",
-                    },
-                  ],
-                },
-                {
-                  label: "✨ Cute Inside Jokes",
-                  items: [
-                    {
-                      question:
-                        "What color dress were you wearing on our first date?",
-                      answer: "",
-                    },
-                    {
-                      question: "What secret word always makes us laugh?",
-                      answer: "",
-                    },
-                    {
-                      question:
-                        "What is our favorite movie to rewatch together?",
-                      answer: "",
-                    },
-                  ],
-                },
-              ].map((p, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    playButtonSound()
-                    setSecretQuestions(p.items)
-                  }}
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer transition-all duration-200 hover:scale-105"
-                  style={{
-                    background: "rgba(255,240,246,0.9)",
-                    color: "#7a0f50",
-                    border: "1px solid rgba(200,67,138,0.25)",
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-          >
-            {secretQuestions.map((qItem, i) => (
-              <div
-                key={i}
-                className="p-4 rounded-2xl border border-pink-200/60 bg-pink-50/40 space-y-3 relative"
-              >
-                <div className="flex items-center justify-between">
-                  <span style={lbl}>Question {i + 1}</span>
-                  {secretQuestions.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSecretQuestions((prev) =>
-                          prev.filter((_, idx) => idx !== i),
-                        )
-                      }
-                      className="text-xs text-pink-600 hover:text-pink-800 font-bold cursor-pointer"
-                    >
-                      × Remove
-                    </button>
-                  )}
+              {/* 4. Voice Note */}
+              <div style={card}>
+                <div style={secTitle}>🎙️ Voice Note</div>
+                <div style={secSub}>
+                  Directly record your voice or upload an audio file
                 </div>
 
-                <div>
-                  <input
-                    style={inp}
-                    value={qItem.question}
-                    onChange={(e) => {
-                      const updated = [...secretQuestions]
-                      updated[i].question = e.target.value
-                      setSecretQuestions(updated)
-                    }}
-                    placeholder="e.g. What is our special couple song?"
-                    onFocus={focusInp}
-                    onBlur={blurInp}
-                  />
-                </div>
-
-                <div>
-                  <label
+                {voiceNote ? (
+                  <div
+                    className="flex items-center gap-3 p-4 rounded-2xl"
                     style={{
-                      ...lbl,
-                      fontSize: "11px",
-                      opacity: 0.85,
-                      marginBottom: "4px",
+                      background: "rgba(232,120,154,0.12)",
+                      border: "1px solid rgba(232,120,154,0.3)",
                     }}
                   >
-                    Expected Answer
-                  </label>
-                  {qItem.question.toLowerCase().includes("meet") ||
-                  qItem.question.toLowerCase().includes("date") ||
-                  qItem.question.toLowerCase().includes("when") ? (
-                    <RomanticCalendarPicker
-                      value={qItem.answer}
-                      placeholder="Select expected date..."
-                      isDark={false}
-                      onChange={(val) => {
-                        const updated = [...secretQuestions]
-                        updated[i].answer = val
-                        setSecretQuestions(updated)
+                    <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center text-xl">
+                      🎵
+                    </div>
+                    <div className="flex-1">
+                      <p
+                        style={{
+                          fontFamily: "'DM Sans', sans-serif",
+                          fontSize: "13px",
+                          color: "#7a0f50",
+                          fontWeight: "700",
+                        }}
+                      >
+                        Voice note recorded ✓
+                      </p>
+                      <p
+                        style={{
+                          fontFamily: "'DM Sans', sans-serif",
+                          fontSize: "11px",
+                          color: "#7a0f50",
+                          opacity: 0.8,
+                        }}
+                      >
+                        {voiceNoteFile ? voiceNoteFile.name : "Ready to surprise her"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playButtonSound()
+                        setVoiceNote(false)
+                        setVoiceNoteFile(null)
                       }}
-                    />
-                  ) : (
+                      className="px-3 py-1.5 rounded-full text-xs font-bold text-pink-700 hover:bg-pink-200/50 cursor-pointer"
+                    >
+                      🔄 Re-record
+                    </button>
+                  </div>
+                ) : isRecording ? (
+                  <div
+                    className="text-center rounded-2xl p-6 transition-all duration-300 animate-fade-up"
+                    style={{
+                      border: "2px solid #e8789a",
+                      background: "rgba(255,230,240,0.85)",
+                    }}
+                  >
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                      <span className="w-4 h-4 rounded-full bg-red-500 animate-ping inline-block" />
+                      <span
+                        style={{
+                          fontFamily: "'Playfair Display', serif",
+                          fontSize: "18px",
+                          fontWeight: "700",
+                          color: "#c9438a",
+                        }}
+                      >
+                        Recording... {formatSecs(recordSecs)}
+                      </span>
+                    </div>
+                    <p
+                      className="text-xs mb-4"
+                      style={{
+                        color: "#7a0f50",
+                        fontFamily: "'DM Sans', sans-serif",
+                      }}
+                    >
+                      Speak from your heart ❤️
+                    </p>
+                    <button
+                      type="button"
+                      onClick={stopRecording}
+                      className="px-6 py-3 rounded-full text-xs font-bold text-white cursor-pointer transition-all duration-200 hover:scale-105"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
+                        boxShadow: "0 4px 18px rgba(232,120,154,0.5)",
+                      }}
+                    >
+                      ⏹️ Stop & Save Voice Note
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={startRecording}
+                      className="w-full flex flex-col items-center justify-center p-6 rounded-2xl transition-all duration-200 hover:scale-[1.02] cursor-pointer text-center select-none"
+                      style={{
+                        border: "2px dashed #e8789a",
+                        background: "rgba(255,240,246,0.85)",
+                        boxShadow: "0 4px 18px rgba(232,120,154,0.12)",
+                      }}
+                    >
+                      <div style={{ fontSize: "32px", marginBottom: "6px" }}>🎙️</div>
+                      <p
+                        style={{
+                          fontFamily: "'DM Sans', sans-serif",
+                          fontSize: "14px",
+                          color: "#7a0f50",
+                          fontWeight: "700",
+                        }}
+                      >
+                        Tap to Record Live Voice Note
+                      </p>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* 5. Spotify Track */}
+              <div style={card}>
+                <div style={secTitle}>🎵 Special Romantic Song</div>
+                <div style={secSub}>Choose her favorite background song</div>
+                <div className="space-y-3">
+                  <div>
+                    <label style={lbl}>Spotify Track URL or Track ID</label>
                     <input
                       style={inp}
-                      value={qItem.answer}
+                      value={spotifyQ}
                       onChange={(e) => {
-                        const updated = [...secretQuestions]
-                        updated[i].answer = e.target.value
-                        setSecretQuestions(updated)
+                        setSpotifyQ(e.target.value)
+                        setSpotifyTrackId(e.target.value)
                       }}
-                      placeholder="e.g. Perfect, Sunshine, Paris..."
+                      placeholder="e.g. https://open.spotify.com/track/..."
                       onFocus={focusInp}
                       onBlur={blurInp}
                     />
-                  )}
+                  </div>
                 </div>
               </div>
-            ))}
 
-            <button
-              type="button"
-              onClick={() =>
-                setSecretQuestions((prev) => [
-                  ...prev,
-                  {
-                    question: `Secret Question ${prev.length + 1}`,
-                    answer: "",
-                  },
-                ])
-              }
-              className="w-full py-3 rounded-2xl border border-dashed border-pink-400/60 text-xs font-bold text-[#7a0f50] hover:bg-pink-100/50 cursor-pointer transition-colors"
-            >
-              + Add Another Secret Question
-            </button>
+              {/* 6. Secret Questions */}
+              <div style={card}>
+                <div style={secTitle}>🔐 Secret Romantic Questions</div>
+                <div style={secSub}>
+                  She must answer these correctly to open the gift
+                </div>
+                <div className="space-y-4">
+                  {secretQuestions.map((qItem, i) => (
+                    <div
+                      key={i}
+                      className="p-4 rounded-2xl border border-pink-200/60 bg-pink-50/40 space-y-3 relative"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span style={lbl}>Question {i + 1}</span>
+                        {secretQuestions.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSecretQuestions((prev) =>
+                                prev.filter((_, idx) => idx !== i),
+                              )
+                            }
+                            className="text-xs text-pink-600 hover:text-pink-800 font-bold cursor-pointer"
+                          >
+                            × Remove
+                          </button>
+                        )}
+                      </div>
+
+                      <div>
+                        <input
+                          style={inp}
+                          value={qItem.question}
+                          onChange={(e) => {
+                            const updated = [...secretQuestions]
+                            updated[i].question = e.target.value
+                            setSecretQuestions(updated)
+                          }}
+                          placeholder="e.g. What is our special couple song?"
+                          onFocus={focusInp}
+                          onBlur={blurInp}
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          style={{
+                            ...lbl,
+                            fontSize: "11px",
+                            opacity: 0.85,
+                            marginBottom: "4px",
+                          }}
+                        >
+                          Expected Answer
+                        </label>
+                        {qItem.question.toLowerCase().includes("meet") ||
+                        qItem.question.toLowerCase().includes("date") ||
+                        qItem.question.toLowerCase().includes("when") ? (
+                          <RomanticCalendarPicker
+                            value={qItem.answer}
+                            placeholder="Select expected date..."
+                            isDark={false}
+                            onChange={(val) => {
+                              const updated = [...secretQuestions]
+                              updated[i].answer = val
+                              setSecretQuestions(updated)
+                            }}
+                          />
+                        ) : (
+                          <input
+                            style={inp}
+                            value={qItem.answer}
+                            onChange={(e) => {
+                              const updated = [...secretQuestions]
+                              updated[i].answer = e.target.value
+                              setSecretQuestions(updated)
+                            }}
+                            placeholder="e.g. Perfect, Sunshine, Paris..."
+                            onFocus={focusInp}
+                            onBlur={blurInp}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSecretQuestions((prev) => [
+                        ...prev,
+                        {
+                          question: `Secret Question ${prev.length + 1}`,
+                          answer: "",
+                        },
+                      ])
+                    }
+                    className="w-full py-3 rounded-2xl border border-dashed border-pink-400/60 text-xs font-bold text-[#7a0f50] hover:bg-pink-100/50 cursor-pointer transition-colors"
+                  >
+                    + Add Another Secret Question
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {errorMsg && (
+              <p
+                className="mb-4 text-center text-sm font-semibold animate-fade-up"
+                style={{ color: "#d91f54", fontFamily: "'DM Sans', sans-serif" }}
+              >
+                ⚠️ {errorMsg}
+              </p>
+            )}
+
+            {/* Step 1 Form Bottom Action Button */}
+            <div className="mt-8 text-center max-w-lg mx-auto">
+              <button
+                type="button"
+                onClick={editingSlug ? handleGenerateLink : handleProceedToPayment}
+                disabled={isSubmitting}
+                className="w-full py-4 rounded-2xl text-base font-bold text-white shadow-xl cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
+                style={{
+                  background: editingSlug
+                    ? "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)"
+                    : "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
+                  boxShadow: editingSlug
+                    ? "0 8px 32px rgba(139,92,246,0.45)"
+                    : "0 8px 32px rgba(232,120,154,0.5)",
+                }}
+              >
+                {editingSlug
+                  ? "💾 Save & Update Website ❤️"
+                  : "🚀 Generate Link & Proceed to Payment (₹19) →"}
+              </button>
+            </div>
           </div>
-        </div>
-
-        {/* Error notification if any */}
-        {errorMsg && (
-          <p
-            className="mb-4 text-center text-sm font-semibold animate-fade-up"
-            style={{ color: "#d91f54", fontFamily: "'DM Sans', sans-serif" }}
-          >
-            ⚠️ {errorMsg}
-          </p>
         )}
 
-        {/* 7. Redesigned Premium Pricing Card */}
-        <div
-          className="relative overflow-hidden rounded-3xl p-6 sm:p-7 mb-5 text-white"
-          style={{
-            background:
-              "linear-gradient(135deg, #1a0035 0%, #2e0055 50%, #15002a 100%)",
-            border: "1px solid rgba(255, 192, 203, 0.3)",
-            boxShadow: "0 16px 60px rgba(200,67,138,0.3)",
-          }}
-        >
-          <div className="text-center">
-            <div className="text-4xl mb-2">🎁</div>
-            <h2
-              className="text-xl sm:text-2xl font-bold mb-2 leading-tight"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+        {/* ── STEP 2: CHECKOUT & PAYMENT PAGE ────────────────────────── */}
+        {dashboardStep === "payment" && (
+          <div className="animate-fade-up max-w-xl mx-auto space-y-6">
+            {/* Navigation back */}
+            <button
+              type="button"
+              onClick={() => {
+                playButtonSound()
+                setDashboardStep("form")
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 border border-pink-200 text-pink-700 text-xs font-bold hover:bg-pink-100 transition-all cursor-pointer shadow-sm"
             >
-              Create the Most Emotional Gift She'll Never Forget ❤️
-            </h2>
-            <p
-              className="text-xs sm:text-sm text-pink-200/70 mb-6"
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
-            >
-              Create a magical personalized experience she'll remember forever.
-            </p>
+              ← Back to Edit Details
+            </button>
 
-            {/* Price Display Area — Flat ₹19 */}
-            <div className="my-5 flex flex-col items-center justify-center">
-              <div className="flex flex-col items-center">
-                <div className="flex items-baseline justify-center gap-2">
-                  <span
-                    className="text-5xl sm:text-6xl font-bold text-pink-100 drop-shadow-md"
-                    style={{ fontFamily: "'Playfair Display', serif" }}
-                  >
-                    ₹19
-                  </span>
-                  <span className="text-xs text-pink-200/60 font-sans">
-                    one-time
-                  </span>
+            {/* Summary Card */}
+            <div className="p-5 rounded-3xl bg-white border border-pink-200/80 shadow-md">
+              <div className="flex items-center justify-between border-b border-pink-100 pb-3 mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-pink-900">
+                  🎁 Gift Summary
+                </span>
+                <span className="text-xs bg-pink-100 text-pink-800 font-bold px-2.5 py-0.5 rounded-full">
+                  Step 2 of 2
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-pink-700 font-medium block">Her Name:</span>
+                  <span className="font-bold text-[#1a0035] text-sm">{gfName || "Not set"}</span>
+                </div>
+                <div>
+                  <span className="text-pink-700 font-medium block">Your Name:</span>
+                  <span className="font-bold text-[#1a0035] text-sm">{bfName || "Not set"}</span>
+                </div>
+                <div>
+                  <span className="text-pink-700 font-medium block">Photos Uploaded:</span>
+                  <span className="font-bold text-[#1a0035]">{photos.length}/5 photos</span>
+                </div>
+                <div>
+                  <span className="text-pink-700 font-medium block">Voice Note:</span>
+                  <span className="font-bold text-[#1a0035]">{voiceNote ? "Included 🎙️" : "None"}</span>
                 </div>
               </div>
             </div>
 
-            {/* Feature List */}
-            <div className="my-6 space-y-3 text-left max-w-xs mx-auto">
-              {[
-                { icon: "❤️", text: "Personalized Love Experience" },
-                { icon: "📸", text: "Upload up to 5 Special Photos" },
-                { icon: "🎵", text: "Add Your Personal Voice Message" },
-                { icon: "💌", text: "Write a Beautiful Love Letter" },
-                { icon: "✨", text: "Premium Romantic Animations" },
-                { icon: "🔗", text: "Forever Shareable Private Link" },
-              ].map((f, i) => (
-                <div key={i} className="flex items-center gap-2.5">
-                  <span className="text-pink-300 text-sm">{f.icon}</span>
-                  <span
-                    className="text-xs sm:text-sm text-pink-100/90 font-medium"
-                    style={{ fontFamily: "'DM Sans', sans-serif" }}
-                  >
-                    {f.text}
-                  </span>
-                </div>
-              ))}
-
-              {/* Privacy Notice Box */}
-              <div className="mt-4 p-3 rounded-2xl bg-white/5 border border-pink-400/20 text-left">
+            {/* Redesigned Premium Pricing & Payment Card */}
+            <div
+              className="relative overflow-hidden rounded-3xl p-6 sm:p-7 text-white"
+              style={{
+                background:
+                  "linear-gradient(135deg, #1a0035 0%, #2e0055 50%, #15002a 100%)",
+                border: "1px solid rgba(255, 192, 203, 0.3)",
+                boxShadow: "0 16px 60px rgba(200,67,138,0.3)",
+              }}
+            >
+              <div className="text-center">
+                <div className="text-4xl mb-2">🎁</div>
+                <h2
+                  className="text-xl sm:text-2xl font-bold mb-2 leading-tight"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  Unlock Your Gift Website ❤️
+                </h2>
                 <p
-                  className="text-[11px] leading-relaxed text-pink-200/80"
+                  className="text-xs sm:text-sm text-pink-200/70 mb-6"
                   style={{ fontFamily: "'DM Sans', sans-serif" }}
                 >
-                  🔒 <strong>Your memories stay private.</strong> Photos, voice
-                  notes, love letters and personal details are securely
-                  processed and are not permanently stored on our platform,
-                  ensuring complete privacy.
+                  Pay ₹19 to publish your customized website and get a lifetime shareable link.
                 </p>
-              </div>
-            </div>
 
-            {/* Trust Badge */}
-            <div className="my-4 inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold text-pink-200 bg-white/5 border border-white/10">
-              🔒 One-Time Payment • No Subscription • Complete Privacy
-            </div>
+                {/* Price Display Area — Flat ₹19 */}
+                <div className="my-5 flex flex-col items-center justify-center">
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-baseline justify-center gap-2">
+                      <span
+                        className="text-5xl sm:text-6xl font-bold text-pink-100 drop-shadow-md"
+                        style={{ fontFamily: "'Playfair Display', serif" }}
+                      >
+                        ₹19
+                      </span>
+                      <span className="text-xs text-pink-200/60 font-sans">
+                        one-time
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Pay / Update Button / Generated Link */}
-            {!link || editingSlug ? (
-              <>
-                <button
-                  disabled={isSubmitting}
-                  onClick={handleGenerateLink}
-                  className="w-full mt-3 cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed py-4 rounded-2xl text-base font-bold text-white shadow-xl"
-                  style={{
-                    background: editingSlug
-                      ? "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)"
-                      : "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
-                    boxShadow: editingSlug
-                      ? "0 8px 32px rgba(139,92,246,0.45)"
-                      : "0 8px 32px rgba(232,120,154,0.5)",
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                >
-                  {isSubmitting
-                    ? editingSlug
-                      ? "Saving Updates... ❤️"
-                      : "Uploading & Saving... ❤️"
-                    : editingSlug
-                      ? "💾 Save & Update Website ❤️"
-                      : `Pay ₹${PLAN_PRICE} & Generate Link ❤️`}
-                </button>
-                {errorMsg && (
-                  <div className="mt-3 p-3 rounded-2xl bg-rose-950/90 border border-rose-500/50 text-rose-300 text-xs sm:text-sm font-bold text-center animate-fade-up shadow-lg flex items-center justify-center gap-2">
-                    <span>⚠️</span>
-                    <span>{errorMsg}</span>
+                {/* Feature List */}
+                <div className="my-6 space-y-3 text-left max-w-xs mx-auto">
+                  {[
+                    { icon: "❤️", text: "Personalized Love Experience" },
+                    { icon: "📸", text: "Upload up to 5 Special Photos" },
+                    { icon: "🎵", text: "Add Your Personal Voice Message" },
+                    { icon: "💌", text: "Write a Beautiful Love Letter" },
+                    { icon: "✨", text: "Premium Romantic Animations" },
+                    { icon: "🔗", text: "Forever Shareable Private Link" },
+                  ].map((f, i) => (
+                    <div key={i} className="flex items-center gap-2.5">
+                      <span className="text-pink-300 text-sm">{f.icon}</span>
+                      <span
+                        className="text-xs sm:text-sm text-pink-100/90 font-medium"
+                        style={{ fontFamily: "'DM Sans', sans-serif" }}
+                      >
+                        {f.text}
+                      </span>
+                    </div>
+                  ))}
+
+                  {/* Privacy Notice Box */}
+                  <div className="mt-4 p-3 rounded-2xl bg-white/5 border border-pink-400/20 text-left">
+                    <p
+                      className="text-[11px] leading-relaxed text-pink-200/80"
+                      style={{ fontFamily: "'DM Sans', sans-serif" }}
+                    >
+                      🔒 <strong>Your memories stay private.</strong> Photos, voice
+                      notes, love letters and personal details are securely
+                      processed and are not permanently stored on our platform,
+                      ensuring complete privacy.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Trust Badge */}
+                <div className="my-4 inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold text-pink-200 bg-white/5 border border-white/10">
+                  🔒 One-Time Payment • No Subscription • Complete Privacy
+                </div>
+
+                {/* Pay Button / Generated Link */}
+                {!link ? (
+                  <>
+                    <button
+                      disabled={isSubmitting}
+                      onClick={handleGenerateLink}
+                      className="w-full mt-3 cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed py-4 rounded-2xl text-base font-bold text-white shadow-xl"
+                      style={{
+                        background: "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
+                        boxShadow: "0 8px 32px rgba(232,120,154,0.5)",
+                        fontFamily: "'DM Sans', sans-serif",
+                      }}
+                    >
+                      {isSubmitting
+                        ? "Uploading & Saving... ❤️"
+                        : "Pay ₹19 & Generate Link ❤️"}
+                    </button>
+                    {errorMsg && (
+                      <div className="mt-3 p-3 rounded-2xl bg-rose-950/90 border border-rose-500/50 text-rose-300 text-xs sm:text-sm font-bold text-center animate-fade-up shadow-lg flex items-center justify-center gap-2">
+                        <span>⚠️</span>
+                        <span>{errorMsg}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="mt-4">
+                    <div className="p-3 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-bold text-center mb-3">
+                      🎉 Website Link Created & Active!
+                    </div>
+                    <div
+                      onClick={() => copyToClipboard(link)}
+                      className="cursor-pointer transition-all duration-200 hover:bg-white/10 p-4 rounded-2xl bg-white/5 border border-white/15 text-center"
+                    >
+                      <p className="text-xs text-pink-200/70 mb-1">
+                        Your Unique Surprise Link:
+                      </p>
+                      <p className="text-sm font-mono text-pink-300 font-bold break-all">
+                        {link}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(link)}
+                      className="w-full mt-3 py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-600 font-bold text-white text-sm cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    >
+                      {copied ? "✓ Copied to Clipboard!" : "📋 Copy Link"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCreateNewGift}
+                      className="w-full mt-2.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 font-bold text-pink-100 text-xs cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      ✨ Create Another Gift (+ New)
+                    </button>
                   </div>
                 )}
-              </>
-            ) : (
-              <div className="mt-4">
-                <div
-                  onClick={() => copyToClipboard(link)}
-                  className="cursor-pointer transition-all duration-200 hover:bg-white/10 p-4 rounded-2xl bg-white/5 border border-white/15 text-center"
-                >
-                  <p className="text-xs text-pink-200/70 mb-1">
-                    Your Unique Surprise Link:
-                  </p>
-                  <p className="text-sm font-mono text-pink-300 font-bold break-all">
-                    {link}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(link)}
-                  className="w-full mt-3 py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-600 font-bold text-white text-sm cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
-                >
-                  {copied ? "✓ Copied to Clipboard!" : "📋 Copy Link"}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCreateNewGift}
-                  className="w-full mt-2.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 font-bold text-pink-100 text-xs cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  ✨ Create Another Gift (+ New)
-                </button>
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Preview */}
         <button
@@ -4147,7 +4121,6 @@ function Dashboard({
         >
           👀 Preview Girlfriend's Surprise Flow
         </button>
-        </div> {/* end dashboard-grid-full */}
       </div>
     </div>
   )
