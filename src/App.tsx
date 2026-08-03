@@ -2684,19 +2684,19 @@ function Dashboard({
   const handleProceedToPayment = () => {
     playButtonSound()
     if (!gfName.trim()) {
-      setErrorMsg("Please enter Her Name before proceeding to payment ❤️")
+      setErrorMsg("Please enter Her Name before proceeding ❤️")
       return
     }
     if (!bfName.trim()) {
-      setErrorMsg("Please enter Your Name before proceeding to payment ❤️")
+      setErrorMsg("Please enter Your Name before proceeding ❤️")
       return
     }
     if (photos.length === 0 && photoFiles.length === 0) {
-      setErrorMsg("Please upload at least 1 photo before proceeding to payment 📸")
+      setErrorMsg("Please upload at least 1 photo before proceeding 📸")
       return
     }
     if (!letter.trim()) {
-      setErrorMsg("Please write a Love Letter before proceeding to payment 💌")
+      setErrorMsg("Please write a Love Letter before proceeding 💌")
       return
     }
 
@@ -2705,7 +2705,7 @@ function Dashboard({
     )
     if (validQuestions.length === 0) {
       setErrorMsg(
-        "Please answer at least 1 Secret Question before proceeding to payment 🔐",
+        "Please answer at least 1 Secret Question before proceeding 🔐",
       )
       return
     }
@@ -3322,7 +3322,7 @@ function Dashboard({
                   : "bg-pink-100 text-pink-700 hover:bg-pink-200"
               }`}
             >
-              2. Payment & Link (₹19)
+              2. Payment & Link
             </button>
           </div>
         </div>
@@ -3910,7 +3910,7 @@ function Dashboard({
               >
                 {editingSlug
                   ? "💾 Save & Update Website ❤️"
-                  : "🚀 Generate Link & Proceed to Payment (₹19) →"}
+                  : "🚀 Generate Link & Proceed →"}
               </button>
             </div>
           </div>
