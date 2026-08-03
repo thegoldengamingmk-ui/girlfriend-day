@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react"
-import { extractYouTubeId } from "./YouTubeSongSearch"
+import { extractYouTubeId, getYouTubeEmbedSrc } from "./YouTubeSongSearch"
 
 interface YouTubePlayerProps {
   trackId?: string
@@ -10,7 +10,6 @@ export default function YouTubePlayer({
   trackId = "BddP6PYo2gs",
   autoPlay = true,
 }: YouTubePlayerProps) {
-  const videoId = extractYouTubeId(trackId) || "BddP6PYo2gs"
   const [isPlaying, setIsPlaying] = useState(autoPlay)
   const [isMuted, setIsMuted] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
@@ -55,10 +54,7 @@ export default function YouTubePlayer({
     }
   }
 
-  // Generate YouTube Embed URL with Autoplay and JS API enabled
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=${
-    isPlaying ? 1 : 0
-  }&enablejsapi=1&playsinline=1&rel=0&loop=1&playlist=${videoId}&controls=1`
+  const embedUrl = getYouTubeEmbedSrc(trackId, isPlaying)
 
   return (
     <div className="w-full my-6 animate-fade-up">
@@ -122,7 +118,7 @@ export default function YouTubePlayer({
         {/* Embedded YouTube Iframe (Audio/Video Player) */}
         <div className="relative rounded-2xl overflow-hidden aspect-video border border-pink-400/30 bg-black shadow-inner">
           <iframe
-            key={videoId}
+            key={trackId}
             ref={iframeRef}
             src={embedUrl}
             title="YouTube Romantic Background Track"

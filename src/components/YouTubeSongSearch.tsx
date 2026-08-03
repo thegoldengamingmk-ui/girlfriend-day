@@ -85,7 +85,7 @@ export const ROMANTIC_SONG_PRESETS: SongItem[] = [
 
 export function extractYouTubeId(urlOrId: string): string | null {
   if (!urlOrId) return null
-  const trimmed = urlOrId.trim()
+  const trimmed = urlOrId.trim().replace(/^search:/, "")
   if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
     return trimmed
   }
@@ -103,10 +103,31 @@ export function extractYouTubeId(urlOrId: string): string | null {
   return null
 }
 
+export function getYouTubeEmbedSrc(trackId: string, autoPlay: boolean = false): string {
+  if (!trackId) trackId = "BddP6PYo2gs"
+  const trimmed = trackId.trim()
+
+  const directId = extractYouTubeId(trimmed)
+  if (directId) {
+    return `https://www.youtube.com/embed/${directId}?autoplay=${
+      autoPlay ? 1 : 0
+    }&enablejsapi=1&playsinline=1&rel=0&loop=1&playlist=${directId}&controls=1`
+  }
+
+  // If search query format (e.g. "search:Dil Diyan Gallan Atif Aslam" or "Dil Diyan Gallan - Atif Aslam")
+  const query = trimmed.startsWith("search:")
+    ? trimmed.replace(/^search:/, "")
+    : trimmed
+
+  return `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(
+    query,
+  )}&autoplay=${autoPlay ? 1 : 0}&enablejsapi=1&playsinline=1&rel=0&controls=1`
+}
+
 interface YouTubeSongSearchProps {
   selectedSongId: string
   selectedSongTitle: string
-  onSelectSong: (videoId: string, songTitle: string) => void
+  onSelectSong: (videoIdOrSearch: string, songTitle: string) => void
 }
 
 export default function YouTubeSongSearch({
@@ -119,7 +140,7 @@ export default function YouTubeSongSearch({
   const [searchResults, setSearchResults] = useState<SongItem[]>([])
   const [error, setError] = useState("")
 
-  const activeVideoId = extractYouTubeId(selectedSongId) || "BddP6PYo2gs"
+  const embedSrc = getYouTubeEmbedSrc(selectedSongId)
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -129,7 +150,7 @@ export default function YouTubeSongSearch({
     setIsSearching(true)
     setError("")
 
-    // Check if input is a direct YouTube URL or Video ID
+    // Check if input is a direct YouTube URL or 11-character Video ID
     const directId = extractYouTubeId(q)
     if (directId) {
       onSelectSong(directId, `YouTube Video (${directId})`)
@@ -140,68 +161,35 @@ export default function YouTubeSongSearch({
     }
 
     try {
-      // Search via multi-provider real YouTube APIs
-      const searchUrls = [
-        `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(q + " song")}&filter=music_videos`,
-        `https://yt.drgnz.club/api/v1/search?q=${encodeURIComponent(q + " song")}&type=video`,
-        `https://invidious.privacydev.net/api/v1/search?q=${encodeURIComponent(q + " song")}&type=video`,
-      ]
+      // 1. Search via iTunes API for song & artist details
+      const response = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=6`,
+      )
+      const data = await response.json()
 
-      let foundItems: SongItem[] = []
+      if (data.results && data.results.length > 0) {
+        const mappedResults: SongItem[] = data.results.map((track: any) => {
+          const pMatch = ROMANTIC_SONG_PRESETS.find(
+            (p) =>
+              p.title.toLowerCase().includes(track.trackName.toLowerCase()) ||
+              track.trackName.toLowerCase().includes(p.title.toLowerCase()),
+          )
+          const songId = pMatch
+            ? pMatch.id
+            : `search:${track.trackName} ${track.artistName}`
 
-      for (const url of searchUrls) {
-        try {
-          const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 3500)
-          const res = await fetch(url, { signal: controller.signal })
-          clearTimeout(timeoutId)
-          if (!res.ok) continue
-          const data = await res.json()
-
-          // Parse Piped format
-          if (data.items && Array.isArray(data.items)) {
-            foundItems = data.items
-              .filter((item: any) => item.url && item.url.includes("/watch?v="))
-              .slice(0, 6)
-              .map((item: any) => {
-                const vId = item.url.split("/watch?v=")[1]?.split("&")[0] || ""
-                return {
-                  id: vId,
-                  title: item.title || q,
-                  artist: item.uploaderName || "YouTube Music",
-                  thumbnail:
-                    item.thumbnail || `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`,
-                }
-              })
-              .filter((item: SongItem) => item.id.length === 11)
+          return {
+            id: songId,
+            title: track.trackName,
+            artist: track.artistName,
+            thumbnail:
+              track.artworkUrl100?.replace("100x100bb", "300x300bb") ||
+              "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300",
           }
-
-          // Parse Invidious format
-          if (foundItems.length === 0 && Array.isArray(data)) {
-            foundItems = data
-              .filter((item: any) => item.type === "video" && item.videoId)
-              .slice(0, 6)
-              .map((item: any) => ({
-                id: item.videoId,
-                title: item.title || q,
-                artist: item.author || "YouTube Music",
-                thumbnail:
-                  item.videoThumbnails?.[0]?.url ||
-                  `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`,
-              }))
-              .filter((item: SongItem) => item.id.length === 11)
-          }
-
-          if (foundItems.length > 0) break
-        } catch (err) {
-          // try next mirror
-        }
-      }
-
-      if (foundItems.length > 0) {
-        setSearchResults(foundItems)
+        })
+        setSearchResults(mappedResults)
       } else {
-        // Fallback: search within presets or iTunes metadata with preset matching
+        // Fallback: search within presets or custom search query
         const lowerQ = q.toLowerCase()
         const matchedPresets = ROMANTIC_SONG_PRESETS.filter(
           (p) =>
@@ -212,38 +200,30 @@ export default function YouTubeSongSearch({
         if (matchedPresets.length > 0) {
           setSearchResults(matchedPresets)
         } else {
-          // Final fallback to iTunes with closest preset mapping
-          const iTunesRes = await fetch(
-            `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=4`,
-          )
-          const iTunesData = await iTunesRes.json()
-          if (iTunesData.results && iTunesData.results.length > 0) {
-            const mapped = iTunesData.results.map((track: any) => {
-              const pMatch = ROMANTIC_SONG_PRESETS.find(
-                (p) =>
-                  p.title.toLowerCase().includes(track.trackName.toLowerCase()) ||
-                  track.trackName.toLowerCase().includes(p.title.toLowerCase()),
-              )
-              return {
-                id: pMatch ? pMatch.id : "BddP6PYo2gs", // fallback to verified Kesariya ID if unknown
-                title: `${track.trackName} - ${track.artistName}`,
-                artist: track.artistName,
-                thumbnail:
-                  track.artworkUrl100?.replace("100x100bb", "300x300bb") ||
-                  "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300",
-              }
-            })
-            setSearchResults(mapped)
-          } else {
-            setError(
-              `No video found for "${q}". Please pick one of the romantic hit songs below or paste a YouTube link!`,
-            )
-          }
+          // Direct custom search query result
+          setSearchResults([
+            {
+              id: `search:${q}`,
+              title: q,
+              artist: "YouTube Song Search",
+              thumbnail:
+                "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300",
+            },
+          ])
         }
       }
     } catch (err) {
-      console.warn("YouTube search error:", err)
-      setError("Search temporary unavailable. Please pick a song below.")
+      console.warn("YouTube song search error:", err)
+      // Custom fallback search item
+      setSearchResults([
+        {
+          id: `search:${q}`,
+          title: q,
+          artist: "YouTube Song Search",
+          thumbnail:
+            "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300",
+        },
+      ])
     } finally {
       setIsSearching(false)
     }
@@ -263,7 +243,7 @@ export default function YouTubeSongSearch({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search YouTube song name (e.g. Kesariya, Perfect, Lover)..."
+            placeholder="Search YouTube song name (e.g. Dil Diyan Gallan, Senorita, Kesariya)..."
             className="w-full pl-10 pr-4 py-3 rounded-2xl border border-pink-300/60 bg-white text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all placeholder:text-gray-400"
           />
           <span className="absolute left-3.5 top-3.5 text-base">🔍</span>
@@ -322,7 +302,7 @@ export default function YouTubeSongSearch({
         </p>
         <div className="flex flex-wrap gap-2">
           {ROMANTIC_SONG_PRESETS.map((song) => {
-            const isSelected = activeVideoId === song.id
+            const isSelected = selectedSongId === song.id
             return (
               <button
                 key={song.id}
@@ -361,7 +341,7 @@ export default function YouTubeSongSearch({
                 Selected YouTube Song
               </span>
               <h4 className="text-sm font-bold text-white font-serif">
-                {selectedSongTitle || `YouTube Video (${activeVideoId})`}
+                {selectedSongTitle || selectedSongId || "Kesariya - Arijit Singh"}
               </h4>
             </div>
           </div>
@@ -373,8 +353,8 @@ export default function YouTubeSongSearch({
         {/* Embedded YouTube Live Preview Box */}
         <div className="mt-3 relative rounded-xl overflow-hidden aspect-video border border-white/20 shadow-inner bg-black">
           <iframe
-            key={activeVideoId}
-            src={`https://www.youtube.com/embed/${activeVideoId}?enablejsapi=1&rel=0&controls=1&playsinline=1`}
+            key={selectedSongId}
+            src={embedSrc}
             title="YouTube Song Preview"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
