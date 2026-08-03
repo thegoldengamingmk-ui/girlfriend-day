@@ -2852,8 +2852,6 @@ function Dashboard({
     letter,
     spotifyQ,
     secretQuestions,
-    isReferralApplied,
-    appliedReferralCode,
     photoFiles,
     photos,
     voiceNoteFile,
@@ -3970,14 +3968,6 @@ function Dashboard({
           </div>
         </div>
 
-        {/* Referral Popup Modal */}
-        <ReferralPopupModal
-          isOpen={showReferralPopup && !isReferralApplied}
-          onClose={() => setShowReferralPopup(false)}
-          onApply={(code) => applyDiscountCode(code, true)}
-          errorMsg={popupErrorMsg}
-        />
-
         {/* Error notification if any */}
         {errorMsg && (
           <p
@@ -4013,57 +4003,21 @@ function Dashboard({
               Create a magical personalized experience she'll remember forever.
             </p>
 
-            {/* Price Display Area */}
+            {/* Price Display Area — Flat ₹19 */}
             <div className="my-5 flex flex-col items-center justify-center">
-              {isReferralApplied ? (
-                <motion.div
-                  initial={{ scale: 0.85, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  className="flex flex-col items-center gap-1"
-                >
-                  <div className="flex items-baseline justify-center gap-3">
-                    <span className="text-2xl line-through text-pink-300/50 font-serif font-bold">
-                      ₹99
-                    </span>
-                    <span
-                      className="text-5xl sm:text-6xl font-bold text-pink-100 drop-shadow-md"
-                      style={{ fontFamily: "'Playfair Display', serif" }}
-                    >
-                      ₹49
-                    </span>
-                    <span className="text-xs text-pink-200/60 font-sans">
-                      one-time
-                    </span>
-                  </div>
-
-                  {/* Green Discount Badge */}
-                  <motion.div
-                    initial={{ y: 8, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className="mt-2.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 flex items-center gap-1.5 shadow-lg"
+              <div className="flex flex-col items-center">
+                <div className="flex items-baseline justify-center gap-2">
+                  <span
+                    className="text-5xl sm:text-6xl font-bold text-pink-100 drop-shadow-md"
+                    style={{ fontFamily: "'Playfair Display', serif" }}
                   >
-                    <span>🎉</span> Referral Discount Applied • You Saved ₹50 ❤️
-                  </motion.div>
-                </motion.div>
-              ) : (
-                <div className="flex flex-col items-center">
-                  <div className="flex items-baseline justify-center gap-2">
-                    <span
-                      className="text-5xl sm:text-6xl font-bold text-pink-100 drop-shadow-md"
-                      style={{ fontFamily: "'Playfair Display', serif" }}
-                    >
-                      ₹99
-                    </span>
-                    <span className="text-xs text-pink-200/60 font-sans">
-                      one-time
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-pink-300/70 mt-1.5 font-medium">
-                    💡 Use a referral code to unlock 50% OFF (Pay ₹49)
-                  </p>
+                    ₹19
+                  </span>
+                  <span className="text-xs text-pink-200/60 font-sans">
+                    one-time
+                  </span>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Feature List */}
@@ -4116,14 +4070,10 @@ function Dashboard({
                   style={{
                     background: editingSlug
                       ? "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)"
-                      : isReferralApplied
-                        ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
-                        : "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
+                      : "linear-gradient(135deg, #e8789a 0%, #c9438a 100%)",
                     boxShadow: editingSlug
                       ? "0 8px 32px rgba(139,92,246,0.45)"
-                      : isReferralApplied
-                        ? "0 8px 32px rgba(16,185,129,0.4)"
-                        : "0 8px 32px rgba(232,120,154,0.5)",
+                      : "0 8px 32px rgba(232,120,154,0.5)",
                     fontFamily: "'DM Sans', sans-serif",
                   }}
                 >
@@ -4133,7 +4083,7 @@ function Dashboard({
                       : "Uploading & Saving... ❤️"
                     : editingSlug
                       ? "💾 Save & Update Website ❤️"
-                      : `Pay ₹${finalPrice} & Generate Link ❤️`}
+                      : `Pay ₹${PLAN_PRICE} & Generate Link ❤️`}
                 </button>
                 {errorMsg && (
                   <div className="mt-3 p-3 rounded-2xl bg-rose-950/90 border border-rose-500/50 text-rose-300 text-xs sm:text-sm font-bold text-center animate-fade-up shadow-lg flex items-center justify-center gap-2">
@@ -4165,66 +4115,6 @@ function Dashboard({
               </div>
             )}
           </div>
-        </div>
-
-        {/* 8. In-Page Coupon Section Below Card */}
-        <div
-          className="p-5 rounded-2xl text-center mb-8 shadow-sm"
-          style={{
-            background: "rgba(255, 255, 255, 0.75)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(200,67,138,0.25)",
-          }}
-        >
-          {isReferralApplied ? (
-            <div className="flex flex-col items-center gap-1.5">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300">
-                <span>🎉</span> Referral Code Applied:{" "}
-                <span className="font-mono">{appliedReferralCode}</span>
-              </div>
-              <p className="text-xs font-bold text-pink-700">
-                50% OFF Activated ❤️ (You Save ₹50)
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-xs font-bold text-[#7a0f50]">
-                🎁 Have a Referral Code?
-              </p>
-              <div className="flex gap-2 max-w-xs mx-auto">
-                <input
-                  type="text"
-                  value={referralCodeInput}
-                  onChange={(e) =>
-                    setReferralCodeInput(e.target.value.toUpperCase())
-                  }
-                  placeholder="Enter Code (e.g. LOVE50)"
-                  className="flex-1 px-3.5 py-2.5 rounded-xl text-xs font-mono font-bold tracking-widest text-[#7a0f50] outline-none uppercase placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-pink-900/40"
-                  style={{
-                    background: "rgba(255,255,255,0.9)",
-                    border: referralErrorMsg
-                      ? "1.5px solid #ef4444"
-                      : "1.5px solid rgba(200,67,138,0.3)",
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") applyDiscountCode(referralCodeInput)
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => applyDiscountCode(referralCodeInput)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-pink-600 hover:bg-pink-700 transition-colors cursor-pointer shadow-md"
-                >
-                  Apply
-                </button>
-              </div>
-              {referralErrorMsg && (
-                <p className="text-xs text-red-500 font-semibold">
-                  ⚠️ {referralErrorMsg}
-                </p>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Preview */}
