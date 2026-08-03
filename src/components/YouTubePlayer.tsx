@@ -14,6 +14,8 @@ export default function YouTubePlayer({
   const [isMuted, setIsMuted] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
 
+  const videoId = extractYouTubeId(trackId) || "BddP6PYo2gs"
+
   useEffect(() => {
     // Screen 7: Pause ambient background music so YouTube song takes over 100%
     window.dispatchEvent(new Event("pause-bgm"))
@@ -54,7 +56,7 @@ export default function YouTubePlayer({
     }
   }
 
-  const embedUrl = getYouTubeEmbedSrc(trackId, isPlaying)
+  const embedUrl = getYouTubeEmbedSrc(videoId, isPlaying)
 
   return (
     <div className="w-full my-6 animate-fade-up">
@@ -118,11 +120,12 @@ export default function YouTubePlayer({
         {/* Embedded YouTube Iframe (Audio/Video Player) */}
         <div className="relative rounded-2xl overflow-hidden aspect-video border border-pink-400/30 bg-black shadow-inner">
           <iframe
-            key={trackId}
+            key={videoId}
             ref={iframeRef}
             src={embedUrl}
             title="YouTube Romantic Background Track"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen
             className="w-full h-full"
           />
