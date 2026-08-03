@@ -360,11 +360,17 @@ CREATE INDEX IF NOT EXISTS idx_admin_logs_created_at ON public.admin_logs(create
 
 -- Conditional indexes (only created after column exists)
 DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='surprises' AND column_name='creator_device_token') THEN
+    ALTER TABLE public.surprises ADD COLUMN creator_device_token TEXT;
+  END IF;
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='withdrawals' AND column_name='withdrawal_id') THEN
     EXECUTE 'CREATE INDEX IF NOT EXISTS idx_withdrawals_withdrawal_id ON public.withdrawals(withdrawal_id)';
   END IF;
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='payments' AND column_name='razorpay_payment_id') THEN
     EXECUTE 'CREATE INDEX IF NOT EXISTS idx_payments_razorpay_payment_id ON public.payments(razorpay_payment_id)';
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='surprises' AND column_name='creator_device_token') THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_surprises_creator_device_token ON public.surprises(creator_device_token)';
   END IF;
 END $$;
 

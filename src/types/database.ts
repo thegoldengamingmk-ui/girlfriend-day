@@ -9,6 +9,7 @@ export interface Surprise {
   created_at: string
   creator_email?: string
   creator_user_id?: string
+  creator_device_token?: string
 }
 
 export interface Photo {
@@ -47,6 +48,7 @@ export interface CreateSurpriseInput {
   questions: CreateQuestionInput[]
   creator_email?: string
   creator_user_id?: string
+  creator_device_token?: string
 }
 
 export interface SurpriseDetailResponse {

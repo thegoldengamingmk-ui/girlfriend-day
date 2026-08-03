@@ -55,6 +55,9 @@ CREATE TABLE IF NOT EXISTS public.surprises (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug TEXT UNIQUE NOT NULL,
   user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  creator_device_token TEXT,
+  creator_email TEXT,
+  creator_user_id TEXT,
   boyfriend_name TEXT,
   girlfriend_name TEXT,
   letter TEXT,
@@ -64,6 +67,7 @@ CREATE TABLE IF NOT EXISTS public.surprises (
 );
 
 CREATE INDEX IF NOT EXISTS surprises_slug_idx ON public.surprises (slug);
+CREATE INDEX IF NOT EXISTS surprises_device_token_idx ON public.surprises (creator_device_token);
 
 -- 4. PHOTOS TABLE
 CREATE TABLE IF NOT EXISTS public.photos (

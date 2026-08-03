@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { processAdminWithdrawalAction } from "../lib/withdrawalService"
+
+async function processAdminWithdrawalAction(requestId: string, action: string, notes?: string, refId?: string) {
+  return { success: false, message: "Withdrawals disabled" }
+}
 import {
   type AdminUser,
   logoutAdminSession,

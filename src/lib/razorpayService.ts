@@ -7,8 +7,6 @@
  */
 
 import { supabase } from "./supabase"
-import { executeWalletTransaction } from "./walletService"
-import { isValidUuid } from "./userService"
 
 export const RAZORPAY_KEY_ID =
   (typeof import.meta !== "undefined" &&
@@ -217,13 +215,13 @@ export async function verifyAndProcessRazorpayPayment(params: {
     const paymentRecord = {
       payment_id: razorpayPaymentId,
 
-      user_id: userId.length > 20 && userId !== "guest" ? userId : null,
+      user_id: null,
 
       razorpay_order_id: razorpayOrderId || `ORD-${Date.now()}`,
 
       razorpay_payment_id: razorpayPaymentId,
 
-      razorpay_signature: razorpaySignature || "TEST_SIG",
+      razorpay_signature: razorpaySignature || "SIG",
 
       amount: Number(amount || 0),
 
@@ -254,59 +252,10 @@ export async function verifyAndProcessRazorpayPayment(params: {
       )
     }
 
-    // 4. Create Financial Transaction Ledger Entry
-
-    if (userId && userId !== "guest") {
-      if (isValidUuid(userId)) {
-        await executeWalletTransaction({
-          userId,
-          type: "Premium Purchase",
-          amount: Number(amount || 0),
-          referenceType: "payment",
-          referenceId: razorpayPaymentId,
-          description: `Premium Surprise Package Purchase (Razorpay ID: ${razorpayPaymentId})`,
-          status: "Completed",
-        })
-
-        // 5. Activate Premium in users & user_profiles tables
-        await supabase
-          .from("users")
-          .update({
-            status: "active",
-            updated_at: nowIso,
-          })
-          .eq("id", userId)
-      } else {
-        await supabase
-          .from("users")
-          .update({
-            status: "active",
-            updated_at: nowIso,
-          })
-          .eq("firebase_uid", userId)
-      }
-
-      if (userEmail) {
-        await supabase
-          .from("user_profiles")
-          .update({
-            subscription_status: "PREMIUM",
-            subscription_expiry: expiryIso,
-            updated_at: nowIso,
-          })
-          .eq("email", userEmail.trim().toLowerCase())
-      }
-
-      console.log(
-        "[Premium Activated] Successfully activated Premium subscription for user:",
-        userId,
-      )
-    }
-
     return {
       success: true,
 
-      message: "Razorpay Payment Verified & Premium Activated Successfully!",
+      message: "Razorpay Payment Verified & Recorded Successfully!",
 
       paymentId: razorpayPaymentId,
     }

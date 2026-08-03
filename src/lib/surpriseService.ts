@@ -40,6 +40,9 @@ export async function createSurprise(
   if (input.creator_user_id) {
     payload.creator_user_id = input.creator_user_id
   }
+  if (input.creator_device_token) {
+    payload.creator_device_token = input.creator_device_token
+  }
 
   // 1. Insert Surprise Record
   const { data: surpriseData, error: surpriseError } = await supabase
@@ -224,7 +227,8 @@ export async function verifyQuestions(
 }
 
 /**
- * Retrieves all gift surprises created by a user (by email or user_id) from Supabase.
+ * Retrieves all gift surprises created by a device (by device token) from Supabase.
+ * Falls back to email/userId lookup for backward compatibility with old records.
  */
 export async function getUserCreatedSurprises(
   identifier: string,
@@ -237,15 +241,27 @@ export async function getUserCreatedSurprises(
   if (!identifier) return []
 
   try {
+    // Primary: query by device token (new system)
+    const { data: byToken } = await supabase
+      .from("surprises")
+      .select("slug, girlfriend_name, boyfriend_name, created_at")
+      .eq("creator_device_token", identifier)
+      .order("created_at", { ascending: false })
+
+    if (byToken && byToken.length > 0) {
+      return byToken
+    }
+
+    // Fallback: legacy email/userId lookup for old records
     const cleanId = identifier.trim().toLowerCase()
-    const { data } = await supabase
+    const { data: byLegacy } = await supabase
       .from("surprises")
       .select("slug, girlfriend_name, boyfriend_name, created_at")
       .or(`creator_email.eq.${cleanId},creator_user_id.eq.${identifier}`)
       .order("created_at", { ascending: false })
 
-    if (data && data.length > 0) {
-      return data
+    if (byLegacy && byLegacy.length > 0) {
+      return byLegacy
     }
   } catch (err) {
     console.warn("getUserCreatedSurprises notice:", err)

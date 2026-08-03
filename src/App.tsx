@@ -18,25 +18,9 @@ import {
   updateSurprise,
   invalidateSurpriseCache,
 } from "./lib/surpriseService"
-import {
-  signUpUserWithEmail,
-  sendEmailOtp,
-  verifyEmailOtpToken,
-  signInUserWithPassword,
-  sendPasswordResetOtp,
-  updatePassword,
-  getOrCreateReferralProfile,
-  type UserReferralProfile,
-} from "./lib/referralService"
+import { getOrCreateDeviceToken } from "./lib/deviceToken"
 import { AdminLoginModal } from "./components/AdminLoginModal"
 import { SuperAdminSetupModal } from "./components/SuperAdminSetupModal"
-import { AuthModal } from "./components/auth/AuthModal"
-import {
-  getCurrentSession,
-  signOutUser,
-  subscribeToAuthChanges,
-} from "./lib/authService"
-import { validateAndApplyReferralCode } from "./lib/userService"
 import { launchRazorpayCheckout } from "./lib/razorpayService"
 import { getActiveAdminSession, resetAdminSetupLock, type AdminUser } from "./lib/adminAuthService"
 import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
@@ -45,11 +29,6 @@ import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
 const AdminDashboard = lazy(() =>
   import("./components/AdminDashboard").then((m) => ({
     default: m.AdminDashboard,
-  })),
-)
-const ReferralDashboardModal = lazy(() =>
-  import("./components/auth/ReferralDashboardModal").then((m) => ({
-    default: m.ReferralDashboardModal,
   })),
 )
 
@@ -2341,204 +2320,12 @@ function S7({
   )
 }
 
-// ── WITHDRAW MODAL ─────────────────────────────────────────────────────────
-
-function WithdrawModal({
-  isOpen,
-  onClose,
-  onSubmit,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onSubmit: (details: { type: "upi" | "bank"; value: string }) => void
-}) {
-  const [method, setMethod] = useState<"upi" | "bank">("upi")
-  const [upiId, setUpiId] = useState("")
-  const [accountName, setAccountName] = useState("")
-  const [accountNumber, setAccountNumber] = useState("")
-  const [ifscCode, setIfscCode] = useState("")
-  const [error, setError] = useState("")
-
-  if (!isOpen) return null
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (method === "upi") {
-      if (!upiId.trim()) {
-        setError("Please enter your UPI ID")
-        return
-      }
-      onSubmit({ type: "upi", value: upiId.trim() })
-    } else {
-      if (!accountName.trim() || !accountNumber.trim() || !ifscCode.trim()) {
-        setError("Please fill in all bank details")
-        return
-      }
-      onSubmit({
-        type: "bank",
-        value: `${accountName} (${accountNumber}, ${ifscCode.toUpperCase()})`,
-      })
-    }
-  }
-
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[320] flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/80 backdrop-blur-md"
-        />
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative z-10 w-full max-w-sm p-6 rounded-3xl text-white shadow-2xl overflow-hidden"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(25, 5, 45, 0.98), rgba(65, 12, 55, 0.98))",
-            backdropFilter: "blur(24px)",
-            border: "1.5px solid rgba(255, 192, 203, 0.35)",
-          }}
-        >
-          <div className="text-center mb-5">
-            <div className="text-3xl mb-1">🏦</div>
-            <h3
-              className="text-xl font-bold text-white"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              Withdraw Earnings
-            </h3>
-            <p className="text-xs text-pink-200/70">
-              Enter your UPI ID or Bank account details below
-            </p>
-          </div>
-
-          <div className="flex gap-2 p-1 rounded-2xl bg-black/40 border border-white/10 mb-4">
-            <button
-              type="button"
-              onClick={() => {
-                setMethod("upi")
-                setError("")
-              }}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                method === "upi"
-                  ? "bg-pink-600 text-white shadow-md"
-                  : "text-pink-200/60 hover:text-white"
-              }`}
-            >
-              UPI ID
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMethod("bank")
-                setError("")
-              }}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                method === "bank"
-                  ? "bg-pink-600 text-white shadow-md"
-                  : "text-pink-200/60 hover:text-white"
-              }`}
-            >
-              Bank Transfer
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-3">
-            {method === "upi" ? (
-              <div>
-                <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
-                  UPI ID (Google Pay, PhonePe, Paytm)
-                </label>
-                <input
-                  type="text"
-                  value={upiId}
-                  onChange={(e) => setUpiId(e.target.value)}
-                  placeholder="e.g. name@upi or 9876543210@paytm"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white outline-none placeholder:text-pink-200/40"
-                />
-              </div>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
-                    Account Holder Name
-                  </label>
-                  <input
-                    type="text"
-                    value={accountName}
-                    onChange={(e) => setAccountName(e.target.value)}
-                    placeholder="e.g. Rahul Sharma"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white outline-none placeholder:text-pink-200/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
-                    Account Number
-                  </label>
-                  <input
-                    type="text"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
-                    placeholder="Enter Account Number"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white outline-none placeholder:text-pink-200/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase text-pink-200/80 mb-1">
-                    IFSC Code
-                  </label>
-                  <input
-                    type="text"
-                    value={ifscCode}
-                    onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
-                    placeholder="e.g. SBIN0001234"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white outline-none uppercase placeholder:normal-case placeholder:text-pink-200/40"
-                  />
-                </div>
-              </>
-            )}
-
-            {error && (
-              <p className="text-xs text-red-400 text-center font-medium animate-fade-up">
-                ⚠️ {error}
-              </p>
-            )}
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 py-3 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 border border-white/10 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="flex-1 py-3 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 shadow-lg cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Submit Request
-              </button>
-            </div>
-          </form>
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  )
-}
-
 // ── HAMBURGER MENU ─────────────────────────────────────────────────────────
 
 function HamburgerMenu({
-  onOpenReferrals,
   onOpenDashboard,
   onPreview,
 }: {
-  onOpenReferrals: () => void
   onOpenDashboard: () => void
   onPreview: () => void
 }) {
@@ -2562,7 +2349,6 @@ function HamburgerMenu({
         aria-label="Toggle Menu"
       >
         {isOpen ? (
-          /* SVG Close Icon */
           <svg
             className="w-5 h-5 text-pink-200"
             fill="none"
@@ -2577,7 +2363,6 @@ function HamburgerMenu({
             />
           </svg>
         ) : (
-          /* SVG Crisp 3-Lines Icon */
           <svg
             className="w-5 h-5 text-pink-200"
             fill="none"
@@ -2622,18 +2407,6 @@ function HamburgerMenu({
                 onClick={() => {
                   setIsOpen(false)
                   playButtonSound()
-                  onOpenReferrals()
-                }}
-                className="w-full px-3.5 py-3 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-3 transition-colors cursor-pointer"
-              >
-                <span className="text-base">🎁</span> My Referrals
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsOpen(false)
-                  playButtonSound()
                   onOpenDashboard()
                 }}
                 className="w-full px-3.5 py-3 rounded-xl text-xs font-bold text-left text-pink-100 hover:bg-pink-500/20 flex items-center gap-3 transition-colors cursor-pointer"
@@ -2652,222 +2425,11 @@ function HamburgerMenu({
               >
                 <span className="text-base">👀</span> Preview Flow
               </button>
-
-
             </motion.div>
           </>
         )}
       </AnimatePresence>
     </div>
-  )
-}
-
-// ── REFERRALS LOCKED MODAL ─────────────────────────────────────────────────
-
-function ReferralsLockedModal({
-  isOpen,
-  onClose,
-  onCreateSurprise,
-  onOpenSignIn,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onCreateSurprise: () => void
-  onOpenSignIn: () => void
-}) {
-  if (!isOpen) return null
-
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/80 backdrop-blur-md"
-        />
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.88, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.88, y: 20 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="relative z-10 w-full max-w-sm p-6 sm:p-7 rounded-center text-center shadow-2xl overflow-hidden text-white"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(25, 5, 45, 0.98), rgba(65, 12, 55, 0.98))",
-            backdropFilter: "blur(24px)",
-            border: "1.5px solid rgba(255, 192, 203, 0.35)",
-            boxShadow:
-              "0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255,105,180,0.3)",
-          }}
-        >
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40 flex items-center justify-center text-3xl shadow-lg animate-pulse">
-            🔒
-          </div>
-
-          <h3
-            className="text-xl sm:text-2xl font-bold text-white mb-2 leading-snug"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            Referrals Dashboard Locked
-          </h3>
-
-          <p
-            className="text-xs sm:text-sm text-pink-200/80 mb-6 font-sans leading-relaxed"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}
-          >
-            To unlock your{" "}
-            <strong className="text-pink-300">Referral Dashboard</strong> and
-            start earning <strong className="text-emerald-400">₹10</strong> for
-            every friend who purchases, first create a gift or sign in!
-          </p>
-
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={() => {
-                onClose()
-                playButtonSound()
-                onCreateSurprise()
-              }}
-              className="w-full py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 shadow-lg shadow-pink-500/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Create Gift For Her ❤️
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                onClose()
-                playButtonSound()
-                onOpenSignIn()
-              }}
-              className="w-full py-3 rounded-2xl text-xs font-semibold text-pink-200/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
-            >
-              Already Have An Account? Sign In
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
-  )
-}
-
-// ── REFERRAL POPUP MODAL ───────────────────────────────────────────────────
-
-function ReferralPopupModal({
-  isOpen,
-  onClose,
-  onApply,
-  errorMsg,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onApply: (code: string) => void
-  errorMsg: string
-}) {
-  const [code, setCode] = useState("")
-
-  if (!isOpen) return null
-
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/75 backdrop-blur-md"
-        />
-
-        {/* Modal Card */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.88, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.88, y: 20 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="relative z-10 w-full max-w-xs sm:max-w-sm p-6 sm:p-7 rounded-3xl text-center shadow-2xl overflow-hidden"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(25, 5, 45, 0.96), rgba(65, 12, 55, 0.96))",
-            backdropFilter: "blur(24px)",
-            border: "1.5px solid rgba(255, 192, 203, 0.35)",
-            boxShadow:
-              "0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255,105,180,0.3)",
-          }}
-        >
-          {/* Top Icon Badge */}
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/40 flex items-center justify-center text-3xl shadow-lg animate-pulse-heart">
-            🎁
-          </div>
-
-          <h3
-            className="text-xl sm:text-2xl font-bold text-white mb-2 leading-snug"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            Have a Referral Code?
-          </h3>
-          <p
-            className="text-xs sm:text-sm text-pink-200/80 mb-6 font-sans leading-relaxed"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}
-          >
-            Use a friend's referral code and unlock{" "}
-            <span className="text-emerald-400 font-bold">50% OFF</span>{" "}
-            instantly!
-          </p>
-
-          <div className="space-y-4">
-            <div>
-              <input
-                type="text"
-                value={code}
-                onChange={(e) => {
-                  setCode(e.target.value.toUpperCase())
-                }}
-                placeholder="Enter Referral Code (e.g. LOVE50)"
-                className="w-full px-4 py-3.5 rounded-2xl text-center font-mono font-bold tracking-widest text-white text-sm outline-none transition-all uppercase placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-pink-200/40"
-                style={{
-                  background: "rgba(255,255,255,0.08)",
-                  border: errorMsg
-                    ? "1.5px solid #ef4444"
-                    : "1px solid rgba(255,192,203,0.3)",
-                  boxShadow: "inset 0 2px 4px rgba(0,0,0,0.2)",
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") onApply(code)
-                }}
-              />
-              {errorMsg && (
-                <p className="text-xs text-red-400 font-semibold mt-2 animate-fade-up">
-                  ⚠️ {errorMsg}
-                </p>
-              )}
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 py-3.5 rounded-2xl text-xs font-semibold text-pink-200/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
-              >
-                Skip
-              </button>
-              <button
-                type="button"
-                onClick={() => onApply(code)}
-                className="flex-1 py-3.5 rounded-2xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 shadow-lg shadow-pink-500/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Apply Code ✨
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
   )
 }
 
@@ -2916,22 +2478,20 @@ function Dashboard({
   onBack,
   spotifyTrackId,
   setSpotifyTrackId,
-  onRequestCreateAccount,
+  onPay,
   link,
   setLink,
-  userProfile,
+  deviceToken,
   onSurpriseUpdated,
   initialEditSlug,
 }: {
   onBack: () => void
   spotifyTrackId: string
   setSpotifyTrackId: (id: string) => void
-  onRequestCreateAccount: (
-    saveSurpriseFn: (authProfile?: UserReferralProfile | null) => Promise<void>,
-  ) => void
+  onPay: (saveSurpriseFn: () => Promise<void>) => void
   link: string
   setLink: (link: string) => void
-  userProfile?: UserReferralProfile | null
+  deviceToken: string
   onSurpriseUpdated?: (slug: string) => Promise<void>
   initialEditSlug?: string | null
 }) {
@@ -2944,12 +2504,11 @@ function Dashboard({
     }
   })
 
-  // Fetch created surprises from database when user is authenticated
+  // Fetch created surprises from database when device token is available
   useEffect(() => {
-    const identifier = userProfile?.email || userProfile?.id
-    if (!identifier) return
+    if (!deviceToken) return
 
-    getUserCreatedSurprises(identifier).then((dbSurprises) => {
+    getUserCreatedSurprises(deviceToken).then((dbSurprises) => {
       if (dbSurprises && dbSurprises.length > 0) {
         const origin =
           typeof window !== "undefined"
@@ -2989,7 +2548,7 @@ function Dashboard({
         })
       }
     })
-  }, [userProfile?.email, userProfile?.id])
+  }, [deviceToken])
 
   // Auto-restore link if link is empty but created surprises exist
   useEffect(() => {
@@ -3100,102 +2659,8 @@ function Dashboard({
 
   const nativeMicInputRef = useRef<HTMLInputElement>(null)
 
-  // Pricing & Referral Architecture State
-  const ORIGINAL_PRICE = 99
-  const DISCOUNTED_PRICE = 49
-
-  const [isReferralApplied, setIsReferralApplied] = useState(
-    initialDraft?.isReferralApplied || false,
-  )
-  const [appliedReferralCode, setAppliedReferralCode] = useState(
-    initialDraft?.appliedReferralCode || "",
-  )
-  const [referralCodeInput, setReferralCodeInput] = useState("")
-  const [referralErrorMsg, setReferralErrorMsg] = useState("")
-
-  const [showReferralPopup, setShowReferralPopup] = useState(() => {
-    try {
-      const hasSeen = localStorage.getItem("has_seen_referral_popup")
-      if (hasSeen === "true") return false
-    } catch {}
-    return initialDraft ? !initialDraft.isReferralApplied : true
-  })
-  const [popupErrorMsg, setPopupErrorMsg] = useState("")
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("has_seen_referral_popup", "true")
-    } catch {}
-  }, [])
-
-  const finalPrice = isReferralApplied ? DISCOUNTED_PRICE : ORIGINAL_PRICE
-
-  const applyDiscountCode = async (code: string, isFromPopup = false) => {
-    playButtonSound()
-    console.log("[Referral Input Received] Raw Input:", code)
-    const trimmed = code.trim().toUpperCase()
-    console.log("[Normalized Referral Code]:", trimmed)
-
-    if (!trimmed) {
-      const errText = "Please enter a referral code."
-      if (isFromPopup) setPopupErrorMsg(errText)
-      else setReferralErrorMsg(errText)
-      return false
-    }
-
-    const referredUserId = userProfile?.id || ""
-    const referredUserEmail = userProfile?.email || ""
-
-    console.log("[Referral Execution Arguments]:", {
-      referredUserId,
-      referredUserEmail,
-      enteredCode: trimmed,
-    })
-
-    try {
-      // Validate directly against Supabase Database
-      const res = await validateAndApplyReferralCode(
-        referredUserId,
-        referredUserEmail,
-        trimmed,
-      )
-      console.log("[Referral Database Query Result]:", res)
-
-      if (res.success || trimmed === "LOVE50") {
-        setIsReferralApplied(true)
-        setAppliedReferralCode(trimmed)
-        if (isFromPopup) {
-          setShowReferralPopup(false)
-          setPopupErrorMsg("")
-        }
-        setReferralErrorMsg("")
-
-        if (typeof window !== "undefined" && (window as any).confetti) {
-          ;(window as any).confetti({
-            particleCount: 75,
-            spread: 80,
-            origin: { y: 0.6 },
-            colors: ["#22c55e", "#ffc8d6", "#f4a0b5", "#ffffff"],
-          })
-        }
-        return true
-      } else {
-        const errText = res.message || "Invalid Referral Code"
-        if (isFromPopup) {
-          setPopupErrorMsg(errText)
-        } else {
-          setReferralErrorMsg(errText)
-        }
-        return false
-      }
-    } catch (err: any) {
-      console.error("[Referral Thrown Exception]:", err)
-      const errText = err.message || "Failed to validate referral code."
-      if (isFromPopup) setPopupErrorMsg(errText)
-      else setReferralErrorMsg(errText)
-      return false
-    }
-  }
+  // Price fixed to ₹19
+  const PLAN_PRICE = 19
 
   const startRecording = async () => {
     playButtonSound()
@@ -3359,8 +2824,6 @@ function Dashboard({
           letter,
           spotifyQ,
           secretQuestions,
-          isReferralApplied,
-          appliedReferralCode,
           photoBase64s,
           voiceNoteBase64,
           updatedAt: Date.now(),
@@ -3535,15 +2998,15 @@ function Dashboard({
       return
     }
 
-    // Launch Razorpay Checkout Modal (Test Key: rzp_test_TJJpml3f29qMoT)
+    // Launch Razorpay Checkout Modal
     await launchRazorpayCheckout({
-      amount: finalPrice,
+      amount: PLAN_PRICE,
       description: `Romantic Gift Website Customization (${gfName} & ${bfName})`,
-      userEmail: userProfile?.email || "",
-      userName: userProfile?.name || bfName,
+      userEmail: "",
+      userName: bfName,
       onSuccess: async (paymentRes) => {
         console.log("[Razorpay Verified Payment]:", paymentRes)
-        onRequestCreateAccount(async (authProfile?: UserReferralProfile | null) => {
+        onPay(async () => {
           setIsSubmitting(true)
           try {
             // Parallelize all photo, music, and voice note uploads for 80% faster processing speed
@@ -3583,8 +3046,6 @@ function Dashboard({
               spotifyTrackId.trim() ||
               "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
 
-            const activeProfile = authProfile || userProfile
-
             const result = await createSurprise({
               girlfriend_name: gfName.trim(),
               boyfriend_name: bfName.trim(),
@@ -3593,8 +3054,7 @@ function Dashboard({
               spotify_url: finalSpotifyUrl,
               voice_note_url: voiceNotePublicUrl || undefined,
               questions: questionRecords,
-              creator_email: activeProfile?.email || undefined,
-              creator_user_id: activeProfile?.id || undefined,
+              creator_device_token: deviceToken || undefined,
             })
 
             const fullShareLink = `${window.location.origin}/s/${result}`
@@ -4799,86 +4259,10 @@ function App() {
   const [surpriseData, setSurpriseData] =
     useState<SurpriseDetailResponse | null>(null)
   const [isLoadingSlug, setIsLoadingSlug] = useState(false)
-
-  // Referral & User Auth State
-  const [userProfile, setUserProfile] = useState<UserReferralProfile | null>(
-    null,
-  )
-  const [showReferralModal, setShowReferralModal] = useState(false)
-  const [showLockedModal, setShowLockedModal] = useState(false)
-  const [showPostPaymentModal, setShowPostPaymentModal] = useState(false)
-  const [showLoginModal, setShowLoginModal] = useState(false)
-  const [pendingSaveSurpriseFn, setPendingSaveSurpriseFn] =
-    useState<((profile?: UserReferralProfile | null) => Promise<void>) | null>(null)
   const [generatedLink, setGeneratedLink] = useState("")
 
-  // Restore persistent Firebase Auth session across browser refreshes & restarts
-  useEffect(() => {
-    const unsubscribe = subscribeToAuthChanges((profile) => {
-      if (profile) {
-        setUserProfile(profile)
-      }
-    })
-    return () => unsubscribe()
-  }, [])
-
-  const handleOpenReferralsMenu = () => {
-    if (userProfile) {
-      setShowReferralModal(true)
-    } else {
-      setShowLockedModal(true)
-    }
-  }
-
-  const handleRequestCreateAccount = (
-    saveSurpriseFn: (profile?: UserReferralProfile | null) => Promise<void>,
-  ) => {
-    if (userProfile) {
-      // User is already logged in with Google account — save surprise directly
-      saveSurpriseFn(userProfile)
-    } else {
-      // User is not logged in — open modal to sign in with Google so surprise is bound to account
-      setPendingSaveSurpriseFn(() => saveSurpriseFn)
-      setShowPostPaymentModal(true)
-    }
-  }
-
-  const handleAuthSuccess = async (profile: any) => {
-    setUserProfile(profile)
-    setShowLoginModal(false)
-    setShowPostPaymentModal(false)
-    setShowLockedModal(false)
-
-    // Process pending referral code from URL if present
-    const pendingRef = sessionStorage.getItem("pending_ref_code")
-    if (pendingRef && profile && profile.id) {
-      sessionStorage.removeItem("pending_ref_code")
-      try {
-        const result = await validateAndApplyReferralCode(
-          profile.id,
-          profile.email,
-          pendingRef,
-        )
-        console.log("[Referral Application Result]:", result)
-      } catch (err) {
-        console.warn("Referral application notice:", err)
-      }
-    }
-
-    if (pendingSaveSurpriseFn) {
-      const fn = pendingSaveSurpriseFn
-      setPendingSaveSurpriseFn(null)
-      await fn(profile)
-    } else {
-      setShowReferralModal(true)
-    }
-  }
-
-  const handleLogout = async () => {
-    await signOutUser()
-    setUserProfile(null)
-    setShowReferralModal(false)
-  }
+  // Device Token Identity — initialised once on first visit, persisted in cookie + localStorage
+  const [deviceToken] = useState<string>(() => getOrCreateDeviceToken())
 
   // Admin State
   const [adminUser, setAdminUser] = useState<AdminUser | null>(() =>
@@ -4921,14 +4305,6 @@ function App() {
 
     const searchParams = new URLSearchParams(window.location.search)
     let slug = searchParams.get("s") || searchParams.get("surprise") || ""
-    const refCode = searchParams.get("ref") || searchParams.get("referral")
-    if (refCode) {
-      sessionStorage.setItem("pending_ref_code", refCode.trim().toUpperCase())
-      console.log(
-        "[Referral Auto-Capture] Pending referral code stored from URL:",
-        refCode,
-      )
-    }
     const path = window.location.pathname
 
     const ADMIN_SECRET = "cg_admin_secret_7x9k2m"
@@ -5055,10 +4431,14 @@ function App() {
     }
   }
 
+  // onPay: called after Razorpay payment completes — executes the save function directly using device token
+  const handlePay = (saveSurpriseFn: () => Promise<void>) => {
+    saveSurpriseFn()
+  }
+
   return (
     <div>
       <HamburgerMenu
-        onOpenReferrals={handleOpenReferralsMenu}
         onOpenDashboard={() => go("dashboard")}
         onPreview={() => go(1)}
       />
@@ -5080,40 +4460,6 @@ function App() {
           go("admin-dashboard")
         }}
       />
-
-      <ReferralsLockedModal
-        isOpen={showLockedModal}
-        onClose={() => setShowLockedModal(false)}
-        onCreateSurprise={() => go("dashboard")}
-        onOpenSignIn={() => {
-          setShowLockedModal(false)
-          setShowLoginModal(true)
-        }}
-      />
-
-      <AuthModal
-        isOpen={showLoginModal || showPostPaymentModal}
-        initialTab={showPostPaymentModal ? "signup" : "signin"}
-        onClose={() => {
-          setShowLoginModal(false)
-          setShowPostPaymentModal(false)
-        }}
-        onSuccess={handleAuthSuccess}
-      />
-
-      <Suspense fallback={null}>
-        <ReferralDashboardModal
-          isOpen={showReferralModal}
-          userProfile={userProfile}
-          onClose={() => setShowReferralModal(false)}
-          onLogout={handleLogout}
-          onEditSurprise={(slug) => {
-            setShowReferralModal(false)
-            setPendingEditSlug(slug)
-            go("dashboard")
-          }}
-        />
-      </Suspense>
 
       {isFemaleUserExperience && <RomanticBGMPlayer />}
 
@@ -5169,10 +4515,10 @@ function App() {
           onBack={() => go(1)}
           spotifyTrackId={spotifyTrackId}
           setSpotifyTrackId={setSpotifyTrackId}
-          onRequestCreateAccount={handleRequestCreateAccount}
+          onPay={handlePay}
           link={generatedLink}
           setLink={setGeneratedLink}
-          userProfile={userProfile}
+          deviceToken={deviceToken}
           onSurpriseUpdated={handleSurpriseUpdated}
           initialEditSlug={pendingEditSlug || (activeSlug || null)}
         />
