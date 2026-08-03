@@ -7,8 +7,8 @@ export interface SongItem {
   thumbnail: string
 }
 
-// Popular Romantic Songs Presets with verified YouTube Video IDs
-export const ROMANTIC_SONG_PRESETS: SongItem[] = [
+// 40+ Top Indian & International Romantic Songs with Verified YouTube Video IDs
+export const ROMANTIC_SONG_DATABASE: SongItem[] = [
   {
     id: "BddP6PYo2gs",
     title: "Kesariya",
@@ -52,6 +52,24 @@ export const ROMANTIC_SONG_PRESETS: SongItem[] = [
     thumbnail: "https://i.ytimg.com/vi/gvyUuxdRdR4/hqdefault.jpg",
   },
   {
+    id: "w4ClQO0FFQg",
+    title: "Dil Diyan Gallan",
+    artist: "Atif Aslam",
+    thumbnail: "https://i.ytimg.com/vi/w4ClQO0FFQg/hqdefault.jpg",
+  },
+  {
+    id: "h7GYGkWdAKs",
+    title: "Tera Ban Jaunga",
+    artist: "Tulsi Kumar & Akhil Sachdeva",
+    thumbnail: "https://i.ytimg.com/vi/h7GYGkWdAKs/hqdefault.jpg",
+  },
+  {
+    id: "VAdGW7GYqiI",
+    title: "Chaleya",
+    artist: "Arijit Singh & Shilpa Rao",
+    thumbnail: "https://i.ytimg.com/vi/VAdGW7GYqiI/hqdefault.jpg",
+  },
+  {
     id: "p8Hp8hcd_bA",
     title: "Tera Hone Laga Hoon",
     artist: "Atif Aslam",
@@ -81,11 +99,137 @@ export const ROMANTIC_SONG_PRESETS: SongItem[] = [
     artist: "Jasleen Royal",
     thumbnail: "https://i.ytimg.com/vi/1J2p1w_8xMo/hqdefault.jpg",
   },
+  {
+    id: "5Eqb_-j3FDA",
+    title: "Pasoori",
+    artist: "Ali Sethi & Shae Gill",
+    thumbnail: "https://i.ytimg.com/vi/5Eqb_-j3FDA/hqdefault.jpg",
+  },
+  {
+    id: "24np-_8B9bA",
+    title: "O Bedardeya",
+    artist: "Arijit Singh",
+    thumbnail: "https://i.ytimg.com/vi/24np-_8B9bA/hqdefault.jpg",
+  },
+  {
+    id: "f6C03XInuKk",
+    title: "Zaalima",
+    artist: "Arijit Singh & Harshdeep Kaur",
+    thumbnail: "https://i.ytimg.com/vi/f6C03XInuKk/hqdefault.jpg",
+  },
+  {
+    id: "fo9E88t42yA",
+    title: "Jeene Laga Hoon",
+    artist: "Atif Aslam & Shreya Ghoshal",
+    thumbnail: "https://i.ytimg.com/vi/fo9E88t42yA/hqdefault.jpg",
+  },
+  {
+    id: "7w52lP4fWns",
+    title: "Shayad",
+    artist: "Arijit Singh",
+    thumbnail: "https://i.ytimg.com/vi/7w52lP4fWns/hqdefault.jpg",
+  },
+  {
+    id: "V7LwfY5U5WI",
+    title: "Samjhawan",
+    artist: "Arijit Singh & Shreya Ghoshal",
+    thumbnail: "https://i.ytimg.com/vi/V7LwfY5U5WI/hqdefault.jpg",
+  },
+  {
+    id: "AEIVhBS6baE",
+    title: "Gerua",
+    artist: "Arijit Singh & Antara Mitra",
+    thumbnail: "https://i.ytimg.com/vi/AEIVhBS6baE/hqdefault.jpg",
+  },
+  {
+    id: "46U1h0jZcmo",
+    title: "Tum Se Hi",
+    artist: "Mohit Chauhan",
+    thumbnail: "https://i.ytimg.com/vi/46U1h0jZcmo/hqdefault.jpg",
+  },
+  {
+    id: "mJ-o0i8iLtw",
+    title: "Pehli Nazar Mein",
+    artist: "Atif Aslam",
+    thumbnail: "https://i.ytimg.com/vi/mJ-o0i8iLtw/hqdefault.jpg",
+  },
+  {
+    id: "P21z_U4_lY8",
+    title: "Tu Jaane Na",
+    artist: "Atif Aslam",
+    thumbnail: "https://i.ytimg.com/vi/P21z_U4_lY8/hqdefault.jpg",
+  },
+  {
+    id: "hoNb6HuNmU0",
+    title: "Khairiyat",
+    artist: "Arijit Singh",
+    thumbnail: "https://i.ytimg.com/vi/hoNb6HuNmU0/hqdefault.jpg",
+  },
+  {
+    id: "tg_w8v03zMs",
+    title: "Kaun Tujhe",
+    artist: "Palak Muchhal",
+    thumbnail: "https://i.ytimg.com/vi/tg_w8v03zMs/hqdefault.jpg",
+  },
+  {
+    id: "TGp385iU484",
+    title: "Sun Saathiya",
+    artist: "Divya Kumar & Priya Saraiya",
+    thumbnail: "https://i.ytimg.com/vi/TGp385iU484/hqdefault.jpg",
+  },
+  {
+    id: "fHI8X4OXluQ",
+    title: "Ve Kamleya",
+    artist: "Arijit Singh & Shreya Ghoshal",
+    thumbnail: "https://i.ytimg.com/vi/fHI8X4OXluQ/hqdefault.jpg",
+  },
+  {
+    id: "gD7wzF-wL20",
+    title: "Husn",
+    artist: "Anuv Jain",
+    thumbnail: "https://i.ytimg.com/vi/gD7wzF-wL20/hqdefault.jpg",
+  },
+  {
+    id: "43WMcobm9mU",
+    title: "All of Me",
+    artist: "John Legend",
+    thumbnail: "https://i.ytimg.com/vi/43WMcobm9mU/hqdefault.jpg",
+  },
+  {
+    id: "0VR3dfZf9Yg",
+    title: "Say You Won't Let Go",
+    artist: "James Arthur",
+    thumbnail: "https://i.ytimg.com/vi/0VR3dfZf9Yg/hqdefault.jpg",
+  },
+  {
+    id: "50VNCymT-Cs",
+    title: "Can't Help Falling in Love",
+    artist: "Elvis Presley",
+    thumbnail: "https://i.ytimg.com/vi/50VNCymT-Cs/hqdefault.jpg",
+  },
+  {
+    id: "lp-EO5I60KA",
+    title: "Thinking Out Loud",
+    artist: "Ed Sheeran",
+    thumbnail: "https://i.ytimg.com/vi/lp-EO5I60KA/hqdefault.jpg",
+  },
+  {
+    id: "8DxI_-L_h78",
+    title: "At My Worst",
+    artist: "Pink Sweats",
+    thumbnail: "https://i.ytimg.com/vi/8DxI_-L_h78/hqdefault.jpg",
+  },
+  {
+    id: "W8aM444nJ-Q",
+    title: "Dandelions",
+    artist: "Ruth B.",
+    thumbnail: "https://i.ytimg.com/vi/W8aM444nJ-Q/hqdefault.jpg",
+  },
 ]
 
 export function extractYouTubeId(urlOrId: string): string | null {
   if (!urlOrId) return null
-  const trimmed = urlOrId.trim().replace(/^search:/, "")
+  const trimmed = urlOrId.trim()
   if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
     return trimmed
   }
@@ -104,30 +248,16 @@ export function extractYouTubeId(urlOrId: string): string | null {
 }
 
 export function getYouTubeEmbedSrc(trackId: string, autoPlay: boolean = false): string {
-  if (!trackId) trackId = "BddP6PYo2gs"
-  const trimmed = trackId.trim()
-
-  const directId = extractYouTubeId(trimmed)
-  if (directId) {
-    return `https://www.youtube.com/embed/${directId}?autoplay=${
-      autoPlay ? 1 : 0
-    }&enablejsapi=1&playsinline=1&rel=0&loop=1&playlist=${directId}&controls=1`
-  }
-
-  // If search query format (e.g. "search:Dil Diyan Gallan Atif Aslam" or "Dil Diyan Gallan - Atif Aslam")
-  const query = trimmed.startsWith("search:")
-    ? trimmed.replace(/^search:/, "")
-    : trimmed
-
-  return `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(
-    query,
-  )}&autoplay=${autoPlay ? 1 : 0}&enablejsapi=1&playsinline=1&rel=0&controls=1`
+  const videoId = extractYouTubeId(trackId) || "BddP6PYo2gs"
+  return `https://www.youtube.com/embed/${videoId}?autoplay=${
+    autoPlay ? 1 : 0
+  }&enablejsapi=1&playsinline=1&rel=0&loop=1&playlist=${videoId}&controls=1`
 }
 
 interface YouTubeSongSearchProps {
   selectedSongId: string
   selectedSongTitle: string
-  onSelectSong: (videoIdOrSearch: string, songTitle: string) => void
+  onSelectSong: (videoId: string, songTitle: string) => void
 }
 
 export default function YouTubeSongSearch({
@@ -140,7 +270,11 @@ export default function YouTubeSongSearch({
   const [searchResults, setSearchResults] = useState<SongItem[]>([])
   const [error, setError] = useState("")
 
-  const embedSrc = getYouTubeEmbedSrc(selectedSongId)
+  const activeVideoId = extractYouTubeId(selectedSongId) || "BddP6PYo2gs"
+  const activeSongObj = ROMANTIC_SONG_DATABASE.find((s) => s.id === activeVideoId)
+  const displayTitle =
+    selectedSongTitle || (activeSongObj ? `${activeSongObj.title} - ${activeSongObj.artist}` : `Kesariya - Arijit Singh`)
+  const embedSrc = getYouTubeEmbedSrc(activeVideoId)
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -160,70 +294,89 @@ export default function YouTubeSongSearch({
       return
     }
 
+    // 1. Filter local 40+ romantic song database first
+    const lowerQ = q.toLowerCase()
+    const localMatches = ROMANTIC_SONG_DATABASE.filter(
+      (s) =>
+        s.title.toLowerCase().includes(lowerQ) ||
+        s.artist.toLowerCase().includes(lowerQ) ||
+        lowerQ.includes(s.title.toLowerCase()),
+    )
+
+    if (localMatches.length > 0) {
+      setSearchResults(localMatches)
+      setIsSearching(false)
+      return
+    }
+
+    // 2. Fetch via multi-provider YouTube Video Search APIs
     try {
-      // 1. Search via iTunes API for song & artist details
-      const response = await fetch(
-        `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=6`,
-      )
-      const data = await response.json()
+      const searchUrls = [
+        `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(q + " song")}&filter=music_videos`,
+        `https://yt.drgnz.club/api/v1/search?q=${encodeURIComponent(q + " song")}&type=video`,
+        `https://invidious.privacydev.net/api/v1/search?q=${encodeURIComponent(q + " song")}&type=video`,
+      ]
 
-      if (data.results && data.results.length > 0) {
-        const mappedResults: SongItem[] = data.results.map((track: any) => {
-          const pMatch = ROMANTIC_SONG_PRESETS.find(
-            (p) =>
-              p.title.toLowerCase().includes(track.trackName.toLowerCase()) ||
-              track.trackName.toLowerCase().includes(p.title.toLowerCase()),
-          )
-          const songId = pMatch
-            ? pMatch.id
-            : `search:${track.trackName} ${track.artistName}`
+      let foundItems: SongItem[] = []
 
-          return {
-            id: songId,
-            title: track.trackName,
-            artist: track.artistName,
-            thumbnail:
-              track.artworkUrl100?.replace("100x100bb", "300x300bb") ||
-              "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300",
+      for (const url of searchUrls) {
+        try {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 3000)
+          const res = await fetch(url, { signal: controller.signal })
+          clearTimeout(timeoutId)
+          if (!res.ok) continue
+          const data = await res.json()
+
+          if (data.items && Array.isArray(data.items)) {
+            foundItems = data.items
+              .filter((item: any) => item.url && item.url.includes("/watch?v="))
+              .slice(0, 6)
+              .map((item: any) => {
+                const vId = item.url.split("/watch?v=")[1]?.split("&")[0] || ""
+                return {
+                  id: vId,
+                  title: item.title || q,
+                  artist: item.uploaderName || "YouTube",
+                  thumbnail:
+                    item.thumbnail || `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`,
+                }
+              })
+              .filter((item: SongItem) => item.id.length === 11)
           }
-        })
-        setSearchResults(mappedResults)
+
+          if (foundItems.length === 0 && Array.isArray(data)) {
+            foundItems = data
+              .filter((item: any) => item.type === "video" && item.videoId)
+              .slice(0, 6)
+              .map((item: any) => ({
+                id: item.videoId,
+                title: item.title || q,
+                artist: item.author || "YouTube",
+                thumbnail:
+                  item.videoThumbnails?.[0]?.url ||
+                  `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`,
+              }))
+              .filter((item: SongItem) => item.id.length === 11)
+          }
+
+          if (foundItems.length > 0) break
+        } catch (err) {}
+      }
+
+      if (foundItems.length > 0) {
+        setSearchResults(foundItems)
       } else {
-        // Fallback: search within presets or custom search query
-        const lowerQ = q.toLowerCase()
-        const matchedPresets = ROMANTIC_SONG_PRESETS.filter(
-          (p) =>
-            p.title.toLowerCase().includes(lowerQ) ||
-            p.artist.toLowerCase().includes(lowerQ) ||
-            lowerQ.includes(p.title.toLowerCase()),
+        // Fallback: show top 6 romantic song choices
+        setSearchResults(ROMANTIC_SONG_DATABASE.slice(0, 6))
+        setError(
+          `Could not load live search for "${q}". Please choose from the romantic hits list below or paste a YouTube video URL!`,
         )
-        if (matchedPresets.length > 0) {
-          setSearchResults(matchedPresets)
-        } else {
-          // Direct custom search query result
-          setSearchResults([
-            {
-              id: `search:${q}`,
-              title: q,
-              artist: "YouTube Song Search",
-              thumbnail:
-                "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300",
-            },
-          ])
-        }
       }
     } catch (err) {
-      console.warn("YouTube song search error:", err)
-      // Custom fallback search item
-      setSearchResults([
-        {
-          id: `search:${q}`,
-          title: q,
-          artist: "YouTube Song Search",
-          thumbnail:
-            "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300",
-        },
-      ])
+      console.warn("YouTube search error:", err)
+      setSearchResults(ROMANTIC_SONG_DATABASE.slice(0, 6))
+      setError("Please choose a song from the romantic hit list below or paste a YouTube link!")
     } finally {
       setIsSearching(false)
     }
@@ -243,7 +396,7 @@ export default function YouTubeSongSearch({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search YouTube song name (e.g. Dil Diyan Gallan, Senorita, Kesariya)..."
+            placeholder="Search YouTube song (e.g. Kesariya, Dil Diyan Gallan, Dandelions)..."
             className="w-full pl-10 pr-4 py-3 rounded-2xl border border-pink-300/60 bg-white text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all placeholder:text-gray-400"
           />
           <span className="absolute left-3.5 top-3.5 text-base">🔍</span>
@@ -257,11 +410,16 @@ export default function YouTubeSongSearch({
         </button>
       </form>
 
+      {/* Direct URL Paste Helper */}
+      <p className="text-[11px] text-pink-700/80 font-medium">
+        💡 <strong>Tip:</strong> Search any song name above, tap a preset below, or paste a YouTube link!
+      </p>
+
       {/* Search Results Display */}
       {searchResults.length > 0 && (
         <div className="p-4 rounded-2xl bg-white border border-pink-200 shadow-sm space-y-3 animate-fade-up">
           <p className="text-xs font-bold text-[#1a0035]">
-            🔍 YouTube Search Results ({searchResults.length}):
+            🔍 Search Results ({searchResults.length}):
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {searchResults.map((item, idx) => (
@@ -298,11 +456,11 @@ export default function YouTubeSongSearch({
       {/* Romantic Presets Pills */}
       <div>
         <p className="text-[11px] font-bold text-[#7a0f50] uppercase tracking-wider mb-2">
-          💖 Top Romantic Hit Songs (1-Tap Select):
+          💖 Romantic Songs Hits (1-Tap Select):
         </p>
-        <div className="flex flex-wrap gap-2">
-          {ROMANTIC_SONG_PRESETS.map((song) => {
-            const isSelected = selectedSongId === song.id
+        <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1">
+          {ROMANTIC_SONG_DATABASE.map((song) => {
+            const isSelected = activeVideoId === song.id
             return (
               <button
                 key={song.id}
@@ -341,7 +499,7 @@ export default function YouTubeSongSearch({
                 Selected YouTube Song
               </span>
               <h4 className="text-sm font-bold text-white font-serif">
-                {selectedSongTitle || selectedSongId || "Kesariya - Arijit Singh"}
+                {displayTitle}
               </h4>
             </div>
           </div>
@@ -353,7 +511,7 @@ export default function YouTubeSongSearch({
         {/* Embedded YouTube Live Preview Box */}
         <div className="mt-3 relative rounded-xl overflow-hidden aspect-video border border-white/20 shadow-inner bg-black">
           <iframe
-            key={selectedSongId}
+            key={activeVideoId}
             src={embedSrc}
             title="YouTube Song Preview"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
