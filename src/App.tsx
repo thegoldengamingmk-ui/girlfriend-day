@@ -66,7 +66,7 @@ const DEFAULT_LETTER = `My dearest love,
 
 Every single day with you feels like a dream I never want to wake up from. You are the reason my mornings are beautiful, my evenings are warm, and my heart is completely full.
 
-On this special Girlfriend Day, I want you to know that loving you is the greatest adventure of my life. You make everything brighter — every moment sweeter, every memory worth treasuring forever.
+On this special day, I want you to know that loving you is the greatest adventure of my life. You make everything brighter — every moment sweeter, every memory worth treasuring forever.
 
 I fall in love with you more every single day, and I am so grateful you are mine.
 
@@ -2299,7 +2299,7 @@ function S7({
               textShadow: "0 0 44px rgba(255,180,200,0.65)",
             }}
           >
-            Happy Girlfriend Day ❤️
+            I Love You Forever & Always ❤️
           </h1>
           <p
             className="text-sm mb-12"
@@ -4113,7 +4113,7 @@ function Dashboard({
             fontWeight: "500",
           }}
         >
-          👀 Preview Girlfriend's Surprise Flow
+          👀 Preview Romantic Surprise Flow
         </button>
       </div>
     </div>
