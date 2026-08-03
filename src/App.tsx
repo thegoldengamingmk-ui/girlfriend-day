@@ -2651,7 +2651,8 @@ function Dashboard({
     setExistingVoiceNoteUrl(null)
     setExistingSpotifyUrl(null)
     setMusicFile(null)
-    setSpotifyQ("")
+    setSpotifyQ("Kesariya - Arijit Singh")
+    setSpotifyTrackId("BddP6PYo2gs")
     setErrorMsg("")
   }
 
@@ -2670,7 +2671,8 @@ function Dashboard({
     setExistingVoiceNoteUrl(null)
     setExistingSpotifyUrl(null)
     setMusicFile(null)
-    setSpotifyQ("")
+    setSpotifyQ("Kesariya - Arijit Singh")
+    setSpotifyTrackId("BddP6PYo2gs")
     setSecretQuestions([
       { question: "When did we first meet?", answer: "" },
       { question: "What nickname do I call you?", answer: "" },
@@ -4121,7 +4123,7 @@ function Dashboard({
 // ── APP ────────────────────────────────────────────────────────────────────
 
 function App() {
-  const [spotifyTrackId, setSpotifyTrackId] = useState("4cOdK2wGLETKBW3PvgPWqT")
+  const [spotifyTrackId, setSpotifyTrackId] = useState("BddP6PYo2gs")
   const [activeSlug, setActiveSlug] = useState<string>("")
   const [pendingEditSlug, setPendingEditSlug] = useState<string | null>(null)
   const [surpriseData, setSurpriseData] =

@@ -7,10 +7,10 @@ interface YouTubePlayerProps {
 }
 
 export default function YouTubePlayer({
-  trackId = "2Vv-BfVoq4g",
+  trackId = "BddP6PYo2gs",
   autoPlay = true,
 }: YouTubePlayerProps) {
-  const videoId = extractYouTubeId(trackId) || "2Vv-BfVoq4g"
+  const videoId = extractYouTubeId(trackId) || "BddP6PYo2gs"
   const [isPlaying, setIsPlaying] = useState(autoPlay)
   const [isMuted, setIsMuted] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
@@ -122,6 +122,7 @@ export default function YouTubePlayer({
         {/* Embedded YouTube Iframe (Audio/Video Player) */}
         <div className="relative rounded-2xl overflow-hidden aspect-video border border-pink-400/30 bg-black shadow-inner">
           <iframe
+            key={videoId}
             ref={iframeRef}
             src={embedUrl}
             title="YouTube Romantic Background Track"
