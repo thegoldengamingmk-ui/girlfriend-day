@@ -21,6 +21,8 @@ import {
 import { getOrCreateDeviceToken } from "./lib/deviceToken"
 import { AdminLoginModal } from "./components/AdminLoginModal"
 import { SuperAdminSetupModal } from "./components/SuperAdminSetupModal"
+import YouTubeSongSearch from "./components/YouTubeSongSearch"
+import YouTubePlayer from "./components/YouTubePlayer"
 import { launchRazorpayCheckout } from "./lib/razorpayService"
 import { getActiveAdminSession, resetAdminSetupLock, type AdminUser } from "./lib/adminAuthService"
 import type { SurpriseDetailResponse, PublicQuestion } from "./types/database"
@@ -2280,7 +2282,7 @@ function S7({
 
       <div className="finale-container relative z-10 py-10">
         <div className="max-w-xl mx-auto">
-          <SpotifyPlayer trackId={trackId} />
+          <YouTubePlayer trackId={trackId} />
         </div>
         <Slideshow photos={photos} />
         <LoveLetter letter={letter} />
@@ -3756,26 +3758,19 @@ function Dashboard({
                 )}
               </div>
 
-              {/* 5. Spotify Track */}
+              {/* 5. Special YouTube Romantic Song */}
               <div style={card}>
-                <div style={secTitle}>🎵 Special Romantic Song</div>
-                <div style={secSub}>Choose her favorite background song</div>
-                <div className="space-y-3">
-                  <div>
-                    <label style={lbl}>Spotify Track URL or Track ID</label>
-                    <input
-                      style={inp}
-                      value={spotifyQ}
-                      onChange={(e) => {
-                        setSpotifyQ(e.target.value)
-                        setSpotifyTrackId(e.target.value)
-                      }}
-                      placeholder="e.g. https://open.spotify.com/track/..."
-                      onFocus={focusInp}
-                      onBlur={blurInp}
-                    />
-                  </div>
-                </div>
+                <div style={secTitle}>🎵 Special YouTube Romantic Song</div>
+                <div style={secSub}>Search official song name or pick a romantic hit below</div>
+                <YouTubeSongSearch
+                  selectedSongId={spotifyTrackId || spotifyQ}
+                  selectedSongTitle={spotifyQ}
+                  onSelectSong={(videoId, songTitle) => {
+                    playButtonSound()
+                    setSpotifyQ(songTitle)
+                    setSpotifyTrackId(videoId)
+                  }}
+                />
               </div>
 
               {/* 6. Secret Questions */}
