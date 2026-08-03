@@ -2550,13 +2550,6 @@ function Dashboard({
     })
   }, [deviceToken])
 
-  // Auto-restore link if link is empty but created surprises exist
-  useEffect(() => {
-    if (!link && createdSurprises.length > 0) {
-      setLink(createdSurprises[0].link)
-    }
-  }, [createdSurprises, link, setLink])
-
   const initialDraft = useMemo(() => {
     try {
       const saved = localStorage.getItem(DASHBOARD_DRAFT_KEY)
@@ -2655,6 +2648,33 @@ function Dashboard({
     setMusicFile(null)
     setSpotifyQ("")
     setErrorMsg("")
+  }
+
+  const handleCreateNewGift = () => {
+    playButtonSound()
+    setEditingSlug(null)
+    setLink("")
+    setGfName("")
+    setBfName("")
+    setLetter("")
+    setPhotos([])
+    setPhotoFiles([])
+    setVoiceNote(false)
+    setVoiceNoteFile(null)
+    setExistingVoiceNoteUrl(null)
+    setExistingSpotifyUrl(null)
+    setMusicFile(null)
+    setSpotifyQ("")
+    setSecretQuestions([
+      { question: "When did we first meet?", answer: "" },
+      { question: "What nickname do I call you?", answer: "" },
+      { question: "What is our favorite memory together?", answer: "" },
+    ])
+    setErrorMsg("")
+    try {
+      localStorage.removeItem(DASHBOARD_DRAFT_KEY)
+    } catch {}
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const nativeMicInputRef = useRef<HTMLInputElement>(null)
@@ -3252,21 +3272,7 @@ function Dashboard({
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  playButtonSound()
-                  setLink("")
-                  setGfName("")
-                  setBfName("")
-                  setLetter("")
-                  setPhotos([])
-                  setPhotoFiles([])
-                  setVoiceNote(false)
-                  setVoiceNoteFile(null)
-                  setMusicFile(null)
-                  setSpotifyQ("")
-                  setErrorMsg("")
-                  window.scrollTo({ top: 500, behavior: "smooth" })
-                }}
+                onClick={handleCreateNewGift}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-pink-700 bg-pink-100/90 hover:bg-pink-200 cursor-pointer transition-all border border-pink-200 shadow-sm hover:scale-105 active:scale-95"
               >
                 ➕ Create Another Gift
@@ -4111,6 +4117,13 @@ function Dashboard({
                   className="w-full mt-3 py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-600 font-bold text-white text-sm cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                   {copied ? "✓ Copied to Clipboard!" : "📋 Copy Link"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateNewGift}
+                  className="w-full mt-2.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 font-bold text-pink-100 text-xs cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  ✨ Create Another Gift (+ New)
                 </button>
               </div>
             )}
