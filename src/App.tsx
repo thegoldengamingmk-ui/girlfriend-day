@@ -3019,11 +3019,9 @@ function Dashboard({
           undefined
 
         const finalSpotifyUrl =
-          musicPublicUrl ||
-          (spotifyQ && spotifyQ.startsWith("http") ? spotifyQ : null) ||
-          existingSpotifyUrl ||
           spotifyTrackId.trim() ||
-          "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
+          musicPublicUrl ||
+          "BddP6PYo2gs"
 
         await updateSurprise(editingSlug, {
           girlfriend_name: gfName.trim(),
@@ -3109,10 +3107,9 @@ function Dashboard({
               }))
 
             const finalSpotifyUrl =
-              musicPublicUrl ||
-              spotifyQ.trim() ||
               spotifyTrackId.trim() ||
-              "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
+              musicPublicUrl ||
+              "BddP6PYo2gs"
 
             const result = await createSurprise({
               girlfriend_name: gfName.trim(),
